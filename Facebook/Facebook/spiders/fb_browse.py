@@ -4,20 +4,25 @@ import requests
 import json
 import MySQLdb
 import xlwt
+import os
+import md5
+import traceback
+import logging
+import logging.handlers
 from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy.spider import BaseSpider
 from scrapy.selector import Selector
 from scrapy.http import Request, FormRequest
-import md5
 from fb_browse_queries import *
 
-class FbBrowse(BaseSpider):
-    name = "fbbrowse"
+class FacebookBrowse(BaseSpider):
+    name = "facebook_browse"
     start_urls = ['https://www.facebook.com/login']
     handle_httpstatus_list = [404, 302, 303, 403, 500]
+
     def __init__(self, *args, **kwargs):
-        super(FbBrowse, self).__init__(*args, **kwargs)
+        super(FacebookBrowse, self).__init__(*args, **kwargs)
 	self.login = kwargs.get('login', 'sindu')
 	self.domain = "https://mbasic.facebook.com"
         self.con = MySQLdb.connect(db   = 'FACEBOOK', \
@@ -31,6 +36,10 @@ class FbBrowse(BaseSpider):
 	self.cur.execute(get_qry_params)
 	self.profiles_list = [i for i in self.cur.fetchall()]
 	self.res_afterlogin = ''
+	self.cur_date = str(datetime.datetime.now().date())
+        self.myname = os.path.basename(__file__).replace(".py", '')
+        self.log_dir = os.path.join(os.getcwd(), 'logs')
+        self.init_logger("%s_%s.log" %(self.myname,self.cur_date))
 	dispatcher.connect(self.spider_closed, signals.spider_closed)
 
     def spider_closed(self, spider):
@@ -41,7 +50,21 @@ class FbBrowse(BaseSpider):
 			cv = requests.get(login_urlf).text
 			data = Selector(text=cv)
 			login_xpat = data.xpath('//a[contains(@href,"/login.php")]/@href')
-			if login_xpat: print 'Logout Sucessfully'
+			if not login_xpat: self.log.info("Message - %s" %("Logout Successfully"))
+
+    def init_logger(self, filename, level=''):
+        if not os.path.isdir(self.log_dir):
+            os.mkdir(self.log_dir)
+        file_name = os.path.join(self.log_dir, filename)
+        self.log = logging.getLogger(file_name)
+        handler = logging.handlers.RotatingFileHandler(
+        file_name, maxBytes=524288000, backupCount=5)
+        formatter = logging.Formatter(
+        '%(asctime)s.%(msecs)d: %(filename)s: %(lineno)d: \
+        %(funcName)s: %(levelname)s: %(message)s', "%Y%m%dT%H%M%S")
+        handler.setFormatter(formatter)
+        self.log.addHandler(handler)
+        self.log.setLevel(logging.DEBUG)
 
     def parse(self, response):
         sel = Selector(response)
@@ -72,7 +95,7 @@ class FbBrowse(BaseSpider):
         elif self.login == 'rama':
                 return [FormRequest.from_response(response, formname = 'login_form',\
                         formdata={'email':'srinivasaramanujan427@gmail.com','pass':'dotoday1#','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
-        elif self.login == 'cheedella':
+        elif self.login == 'ch':
                 return [FormRequest.from_response(response, formname = 'login_form',\
                         formdata={'email':'cheedellach@gmail.com','pass':'cheedellach427','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
 
@@ -368,7 +391,8 @@ class FbBrowse(BaseSpider):
                         up_aux1.update({alk[1]:self.replacefun('<>'.join(set(alk[0])))}) 
                     self.cur.execute(updateqry_params%(keyf, json.dumps(up_aux1,ensure_ascii=False, encoding="utf-8"),sk))
     
-                except Exception,e: print str(e)
+                except Exception,e: self.log.error(
+                                        "Error: %s", traceback.format_exc())
 
     def replacefun(self, text):
         text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###')

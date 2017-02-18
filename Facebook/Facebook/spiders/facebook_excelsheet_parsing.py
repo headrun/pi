@@ -7,6 +7,7 @@ import md5
 import json
 
 class Fbparsing(object):
+
 	def __init__(self):
 		self.con = MySQLdb.connect(db='FACEBOOK',
 		user='root', passwd='root',
@@ -63,14 +64,11 @@ class Fbparsing(object):
 				    	fbpro = self.rep_spl(row[facebook_profile])
 					if not fbpro: continue
 					if addr == 'Email': continue
-					print addr, fbpro
 					meta_date_from_browse = {}
 					meta_date_from_browse.update({"email_address":addr, "mbasic_url":fbpro.replace('www','mbasic')})
 					sk = md5.md5("%s%s"%(addr, fbpro)).hexdigest()
 					values = (sk, fbpro, 'facebook', 0,json.dumps(meta_date_from_browse),'facebook', json.dumps(meta_date_from_browse))
 					self.cur.execute(self.query, values)
-					#print values
-					print '**************'
 				
 if __name__ == '__main__':
     Fbparsing().main()

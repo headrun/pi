@@ -8,6 +8,7 @@ class Fbmail(object):
 
 	def __init__(self):
 		self.social_processing_path = '/root/Facebook/Facebook/spiders/excelfiles'
+
 	def main(self):
 		m = imaplib.IMAP4_SSL("imap.gmail.com")
 		m.login('facebookdummyfb01@gmail.com','01123123')
