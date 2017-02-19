@@ -131,6 +131,7 @@ class LinkedinBrowse(scrapy.Spider):
         connections = ''.join(sel.xpath('//div[@class="member-connections"]//strong//text()').extract())
         summary = ''.join(sel.xpath('//div[@class="summary"]//p[@class="description"]//text()').extract())
         if name:
+	    self.cur.execute(update_get_params%(1,sk))
             name = name.split(' ')
             if len(name) == 2:
                 name1, lname = name
