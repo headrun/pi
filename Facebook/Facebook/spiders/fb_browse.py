@@ -50,7 +50,7 @@ class FacebookBrowse(BaseSpider):
 			cv = requests.get(login_urlf).text
 			data = Selector(text=cv)
 			login_xpat = data.xpath('//a[contains(@href,"/login.php")]/@href')
-			if not login_xpat: self.log.info("Message - %s" %("Logout Successfully"))
+			if  login_xpat: self.log.info("Message - %s" %("Logout Successfully"))
 
     def init_logger(self, filename, level=''):
         if not os.path.isdir(self.log_dir):
@@ -105,7 +105,7 @@ class FacebookBrowse(BaseSpider):
             sk = profilei[0]
             meta_data = json.loads(profilei[2])
 	    profile = meta_data.get('mbasic_url','')
-	    email_address = meta_data.get('email_address')
+	    email_address = meta_data.get('email_address','')
 	    if not profile: continue
 	    vals = (sk, profilei[1], sk, profilei[1])
 	    self.cur.execute(qry_params, vals)
@@ -390,9 +390,7 @@ class FacebookBrowse(BaseSpider):
                     else:
                         up_aux1.update({alk[1]:self.replacefun('<>'.join(set(alk[0])))}) 
                     self.cur.execute(updateqry_params%(keyf, json.dumps(up_aux1,ensure_ascii=False, encoding="utf-8"),sk))
-    
-                except Exception,e: self.log.error(
-                                        "Error: %s", traceback.format_exc())
+                except Exception,e: self.log.error("Error: %s", traceback.format_exc())
 
     def replacefun(self, text):
         text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###')
