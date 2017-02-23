@@ -1,0 +1,63 @@
+# -*- coding: utf-8 -*-
+
+from scrapy.item import Item, Field
+class JuicerItem(Item):
+    pass
+class BestSellers(Item):
+    product_id                  = Field()
+    name                        = Field()
+    no_of_reviews               = Field()
+    star_rating                 = Field()
+    price                       = Field()
+    rank                        = Field()
+    week_number                 = Field()
+    category                    = Field()
+    is_prime                    = Field()
+    product_url                 = Field()
+    reference_url               = Field()
+class Products(Item):
+    id                          = Field()
+    name                        = Field()
+    original_price              = Field()
+    discount_price              = Field()
+    features                    = Field()
+    description                 = Field()
+    item_number                 = Field()
+    date_available              = Field()
+    best_sellerrank             = Field()
+    aux_info                    = Field()
+    reference_url               = Field()
+class RelatedSellers(Item):
+    related_sk                  = Field()
+    product_id                  = Field()
+    name                        = Field()
+    category                    = Field()
+    product_condition           = Field()
+    seller_name                 = Field()
+    seller_no_of_rating         = Field()
+    seller_rating_percentage    = Field()
+    seller_price                = Field()
+    is_prime                    = Field()
+    aux_info                    = Field()
+class RichMedia(Item):
+    sk                          = Field()
+    product_id                  = Field()
+    category                    = Field()
+    size                        = Field()
+    dimensions                  = Field()
+    image_url                   = Field()
+    reference_url               = Field()
+    aux_info                    = Field()
+class CustomerReviews(Item):
+    sk                          = Field()
+    product_id                  = Field()
+    name                        = Field()
+    reviewed_by                 = Field()
+    reviewed_on                 = Field()
+    review                      = Field()
+    category                    = Field()
+    review_url                  = Field()
+    review_rating               = Field()
+    verified_purchase_flag      = Field()
+    aux_info                    = Field()
+
