@@ -8,10 +8,10 @@ class Mouthshutbrowse(JuicerSpider):
 
     def __init__(self, *args, **kwargs):
         super(Mouthshutbrowse, self).__init__(*args, **kwargs)
-        #self.browse_list = ['Apollo hospitals', 'apollo']
-        self.browse_list = ['Apollo hospitals']
+        self.browse_list = 'Apollo hospitals'
         self.search_url = "https://www.mouthshut.com/search/prodsrch.aspx?data=%s&type=&p=0"
-        self.search = kwargs.get('search', 'Apollo Hospitals')
+        self.browse_list =  kwargs.get('search', self.browse_list)
+        self.browse_list = self.browse_list.split(',')
         self.domain = "https://www.mouthshut.com"
         for br in self.browse_list:
             self.start_urls.append(self.search_url%br)
@@ -47,7 +47,6 @@ class Mouthshutbrowse(JuicerSpider):
         reviews_urls = sel.xpath('//div[@class="box product"]//div[@class="rtitle"]/a/@href').extract()
         for review in reviews_urls:
             revi_url = "{}{}".format(self.domain, review)
-            #sk = revi_url.split('-')[-1]
             sk = md5(revi_url)
             aux_meta = {}
             aux_meta.update({"browse":browse})
