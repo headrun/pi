@@ -27,7 +27,6 @@ class Mouthshutreviewterminal(JuicerSpider):
             comment_t = extract_data(node, './/div[@class="comment-clk"]//span[@id]/text()')
             query_data = extract_data(node, './div[@class="row"]/div/script/text()')
             likes = self.parse_query(query_data)
-            print  likes
             comment = ''
             if comment_t:
                 comment = textify(re.findall('\((.*?)\)',comment_t))
@@ -75,7 +74,6 @@ class Mouthshutreviewterminal(JuicerSpider):
             spi = extract_data(nd,'./span[2]/text()')
             spi = textify(re.findall('\((.*?)\)',spi))
             dict1.update({spu:spi})
-        print dict1
         return json.dumps(dict1)
 
 
