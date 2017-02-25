@@ -119,7 +119,7 @@ class JuicerSpider(Spider):
             self._sks = defaultdict(set)
             self.location_file = self.lineup_file = self.richmedia_file = self.relatedsellers_file= None
             self.source = self.json_file = self.bestsellers_file = self.products_file = self.customerreviews_file=  None
-            self.custom_query_file  = self.created_file= None
+            self.custom_query_file  = self.created_file= self.twitter_file= None
 
             self.urlQ_cursor = None
             self.got_page_sks_len = 0
@@ -364,6 +364,11 @@ class JuicerSpider(Spider):
 
             return self.products_file
 
+        def get_twitter_file(self):
+            if self.twitter_file : return self.twitter_file
+            twitter_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_twitter_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.twitter_file = open(twitter_queries_filename,'w')
+            return self.twitter_file
 
         def get_json_file(self):
             if self.json_file: return self.json_file
@@ -399,7 +404,7 @@ class JuicerSpider(Spider):
 
         def close_all_opened_query_files(self):
             files_list = [
-                self.bestsellers_file , self.products_file , self.customerreviews_file, self.created_file, self.richmedia_file, self.relatedsellers_file
+                self.bestsellers_file , self.products_file , self.customerreviews_file, self.created_file, self.richmedia_file, self.relatedsellers_file, self.twitter_file
             ]
             for f in files_list:
                 if not isinstance(f, file): continue

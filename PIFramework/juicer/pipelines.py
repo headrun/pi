@@ -65,5 +65,12 @@ class JuicerPipeline(object):
             spider.get_customerreviews_file().flush()
 
             self.write_item_into_avail_file(item, spider, 'customerreviews')
+        if isinstance(item, Twitter):
+            twitter_values = '#<>#'.join([
+                item['sk'], item.get('screen_name',''), item.get('name',''), item.get('description',''),item.get('location',''),item.get('tweets',''),item.get('following',''),item.get('followers',''),item.get('likes',''),item.get('image',''),item.get('lists',''),item.get('timezone',''), item.get('language',''), item.get('is_verified',''), item.get('twitter_url',''), str(item.get('aux_info', ''))
+            ])
+            spider.get_twitter_file().write('%s\n' %twitter_values)
+            spider.get_twitter_file().flush()
+            self.write_item_into_avail_file(item, spider, 'twitter')
 
         return item
