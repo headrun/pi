@@ -16,6 +16,8 @@ class Consumercomlaintsreviews(JuicerSpider):
         reviews = extract_data(sel, '//span[@typeof="v:Rating"]//text()[contains(., "Review")]')
         review_description = extract_data(sel, '//td[@class="compl-text"]/div[not(@*)]/text()')
         reviedw_by = extract_data(sel, '//td/a[contains(@href, "profile")]/text()')
+        author_profile = extract_data(sel, '//td/a[contains(@href, "profile")][@class]/@href')
+        if author_profile: author_profile = "https://www.consumercomplaints.in%s"%author_profile
         date_txt = extract_data(sel, '//td/a[contains(@href, "profile")]/../text()')
         comment = extract_data(sel, '//td/a/text()[contains(., "Comment")]')
         date1 = ''
@@ -23,6 +25,7 @@ class Consumercomlaintsreviews(JuicerSpider):
         aux_info.update({"browse":browse})
         if comment: aux_info.update({"comment":comment})
         if reviews: aux_info.update({"no_of_reviews":reviews})
+        if author_profile: aux_info.update({"author_profile":author_profile})
         if date_txt:
             date1 = str(parse_date(date_txt))
         customerReviews = CustomerReviews()

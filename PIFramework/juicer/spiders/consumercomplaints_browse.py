@@ -6,11 +6,11 @@ class Consumerbrowse(JuicerSpider):
     start_urls = []
     def __init__(self, *args, **kwargs):
         super(Consumerbrowse, self).__init__(*args, **kwargs)
-        self.search = kwargs.get('search', 'Apollo Hospitals')
         self.search_url = 'https://www.consumercomplaints.in/?search='
         self.domain = "https://www.consumercomplaints.in"
-        #self.browse_list = ['apollo hospitals','apollo']
-        self.browse_list = ['apollo hospitals']
+        self.browse_list = 'Apollo hospitals'#comma seperated values
+        self.browse_list =  kwargs.get('search', self.browse_list)
+        self.browse_list = self.browse_list.split(',')
         for br in self.browse_list:
             self.start_urls.append("{}{}".format(self.search_url,br))
 
@@ -24,7 +24,6 @@ class Consumerbrowse(JuicerSpider):
         review_urls = sel.xpath('//td[@class="complaint"]/a/@href').extract()
         for review in review_urls:
             review_ = "{}{}".format(self.domain, review)
-            #sk = review.split('-')[-1].replace('.html','')
             sk = md5(review)
             self.get_page('consumercomplaints_review_terminal',review_, sk, aux_info)
         next_page = textify(sel.xpath('//nav[@class="pg"]/ul//li/a[contains(text(),"Next")]/@href').extract())
