@@ -3,11 +3,15 @@ import MySQLdb
 import json
 import datetime
 import re
+import sys
+import optparse
 
 class Lixlsfile(object):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, options):
+        self.db_list     = options.db_name
         self.row_count = 1
+        self.db_list = self.db_list.split(',')
         self.selectqry = 'select sk , product_id, name, reviewed_by, reviewed_on, review, review_url, review_rating, aux_info from CustomerReviews'
         self.excel_file_name = 'reviews_%s.xls'%str(datetime.datetime.now().date())
         self.todays_excel_file = xlwt.Workbook(encoding="utf-8")
@@ -15,6 +19,7 @@ class Lixlsfile(object):
         header_params = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp', 'star_rating', 'count_views', 'count_likes', 'count_comments', 'count_replies', 'count_helpful', 'location', 'flake_flag', 'authors_no_of_reviews', 'review url', 'author_url', 'review_text']
         for i, row in enumerate(header_params):
             self.todays_excel_sheet1.write(0, i, row)
+        self.main()
 
     def create_cursor(self, db_, user_, pswd_, host_):
         try:
@@ -34,8 +39,7 @@ class Lixlsfile(object):
         if conn: conn.close()
 
     def send_xls(self):
-        #dbs = ['MOUTHSHUT', 'CONSUMERCOMPLAINTS']
-        dbs = ['MOUTHSHUT']
+        dbs = self.db_list
         for db in dbs:
             con2_,cur2_ = self.create_cursor(db, 'root','hdrn59!','localhost')
             cur2_.execute(self.selectqry)
@@ -58,6 +62,7 @@ class Lixlsfile(object):
                 if not comment: comment = aux_infof.get('no_comments:','')
                 location = aux_infof.get('location','')
                 authorurl = aux_infof.get('author_url','')
+                if not authorurl: authorurl = aux_infof.get('author_profile','')
                 revits = aux_infof.get('post_title','')
                 noofrev = aux_infof.get('no_of_reviews','')
                 comment = ''.join(re.findall('\d+',comment))
@@ -65,17 +70,19 @@ class Lixlsfile(object):
                 views =  ''.join(re.findall('\d+',views))
                 fake = aux_infof.get('fake','')
                 values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), review_rating, views, likes, comment, '', useful,  location, fake, noofrev, review_url, authorurl, revits]
-                print values
                 for col_count, value in enumerate(values):
                     self.todays_excel_sheet1.write(self.row_count, col_count, value)
                 self.row_count = self.row_count+1
             self.close_sql_connection(con2_, cur2_)
         self.todays_excel_file.save(self.excel_file_name)
 
-def main():
-        obj = Lixlsfile()
-        obj.send_xls()
+    def main(self):
+        self.send_xls()
+
 if __name__ == '__main__':
-        main()
+        parser = optparse.OptionParser()
+        parser.add_option('-d', '--db-name', default='', help = 'db_name')
+        (options, args) = parser.parse_args()
+        Lixlsfile(options)
 
 
