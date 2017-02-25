@@ -29,7 +29,7 @@ class TwitterBrowse(JuicerSpider):
         oauth_timestamp=str(int(time.time())),
         oauth_nonce=binascii.b2a_hex(uuid.uuid4().bytes),
         oauth_version="1.0a",
-        )   
+        )
         args = {}
         args.update(base_args)
         args.update(parameters)
@@ -39,9 +39,8 @@ class TwitterBrowse(JuicerSpider):
         return base_args
 
     def parse(self, response):
-        with open('twitter.txt', 'r') as f:
+        with open('twitter1.txt', 'r') as f:
             rows = f.readlines()
-
             for row in rows:
                 screen_url = row.strip()
                 if not screen_url: continue
@@ -53,5 +52,6 @@ class TwitterBrowse(JuicerSpider):
                 arguments.update(extra_arguments)
                 arguments = urlencode(arguments)
                 url = '%s?%s' %(TW_URL, arguments)
-                self.get_page('twitter_profiles_terminal', url, screen_name)
+                meta_aux = {"twitter_url":screen_url}
+                self.get_page('twitter_profiles_terminal', url, screen_name, meta_aux)
 
