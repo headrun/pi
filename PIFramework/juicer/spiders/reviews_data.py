@@ -19,8 +19,11 @@ class Lixlsfile(object):
         self.todays_excel_sheet1 = self.todays_excel_file.add_sheet("sheet1")
         header_params = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp', 'star_rating', 'count_views', 'count_likes', 'count_comments', 'count_replies', 'count_helpful', 'location', 'flake_flag', 'authors_no_of_reviews', 'review url', 'author_url', 'review_text']
         header_params1 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp','category', 'location', 'review url', 'author_url', 'author_email', 'author_contact_number', 'author_address']
+        header_params2 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp','count_replies', 'count_views', 'post_title', 'author_url','review url', 'forum_url', 'forum_name', 'user_title','last_post_author', 'last_post_author_url','last_post_date']
         if 'INDIA' in ''.join(self.db_list):
             header_params = header_params1
+        if 'COURT' in ''.join(self.db_list):
+            header_params =  header_params2
         for i, row in enumerate(header_params):
             self.todays_excel_sheet1.write(0, i, row)
         self.main()
@@ -72,6 +75,7 @@ class Lixlsfile(object):
                     if not comment: comment = aux_infof.get('no_comments:','')
                     location = aux_infof.get('location','')
                     authorurl = aux_infof.get('author_url','')
+                    last_post_date = aux_infof.get('last_post_date','')
                     if not authorurl: authorurl = aux_infof.get('author_profile','')
                     revits = aux_infof.get('post_title','')
                     email = aux_infof.get('email','')
@@ -82,8 +86,18 @@ class Lixlsfile(object):
                     noofrev = ''.join(re.findall('\d+',noofrev))
                     views =  ''.join(re.findall('\d+',views))
                     fake = aux_infof.get('fake','')
+                    forum_title = aux_infof.get('forum_title','')
+                    forum_replies = aux_infof.get('forum_replies','')
+                    forum_views = aux_infof.get('forum_views','')
+                    last_post_author_name = aux_infof.get('last_post_author_name','')
+                    last_post_author_url = aux_infof.get('last_post_author_url','')
+                    forum_url = aux_infof.get('forum_url','')
+                    forum_name = aux_infof.get('forum_name','')
+                    user_title = aux_infof.get('author_title','')
                     if 'INDIA' in db:
                         values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), category, location, review_url, authorurl, email, contact_num, address]
+                    elif 'COURT' in db:
+                        values = [db.lower(), keywor, forum_title, review, reviewed_by, str(reviewed_on),forum_replies, forum_views,  name, authorurl, review_url,forum_url, forum_name, user_title, last_post_author_name, last_post_author_url, last_post_date]
                     else:
                         values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), review_rating, views, likes, comment, '', useful,  location, fake, noofrev, review_url, authorurl, revits]
                     for col_count, value in enumerate(values):
