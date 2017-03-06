@@ -57,6 +57,19 @@ class Complaintsboardreviews(JuicerSpider):
             if author_name: aux_info.update({"author_name":self.replacefun(author_name)})
             cus_rev = self.get_customer(sk_,title, author_name, post_date, review_description, response.url, category, review_rating, aux_info)
             if cus_rev: yield cus_rev
+        comment_nodes = get_nodes(sel, '//div/table[@itemprop="comment"]')
+        for cn in comment_nodes:
+            comment_by = extract_data(cn, './/td[@class="comments"][not(@id)]//a[@itemprop="author"]/span[@itemprop="givenName"]/text()')
+            comment_on = extract_data(cn, './/td[@class="comments"][not(@id)]//span[@itemprop="dateCreated"]/text()')
+            if comment_on: comment_on = str(dateparser.parse(comment_on))
+            commnt = extract_data(cn, './/td//div[@itemprop="text"]//text()')
+            comment_votes = extract_data(cn, './/span[@class="small"][contains(text(),"Votes")]//text()')
+            coment = Comments()
+            sk_c = md5(sk_+commnt+comment_by+comment_on+comment_votes)
+            coment.update({"sk":normalize(sk_c),"review_sk":normalize(sk_),"comment":normalize(commnt),"comment_by":normalize(comment_by),"comment_on":normalize(comment_on),"comment_votes":normalize(comment_votes)})
+            yield coment
+
+
 
         if response.meta.get('data',''):
             self.got_page(sk,1)

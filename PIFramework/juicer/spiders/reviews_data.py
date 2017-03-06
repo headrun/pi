@@ -12,6 +12,7 @@ class Lixlsfile(object):
         self.db_list     = options.db_name
         self.row_count = 1
         self.db_list = self.db_list.split(',')
+        self.commentqry = 'select sk ,review_sk, comment_name, comment_by, comment_on, comment, comment_votes, aux_info from Comments where review_sk ="%s"'
         self.selectqry = 'select sk , product_id, name, reviewed_by, reviewed_on, review, review_url, review_rating, aux_info from CustomerReviews'
         self.selectqry1 = 'select sk , product_id, name, reviewed_by, reviewed_on, review, category,  review_url, review_rating, aux_info from CustomerReviews'
         self.excel_file_name = 'reviews_%s.xls'%str(datetime.datetime.now().date())
@@ -21,7 +22,7 @@ class Lixlsfile(object):
         header_params1 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp','category', 'location', 'review url', 'author_url', 'author_email', 'author_contact_number', 'author_address']
         header_params2 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp','count_replies', 'count_views', 'post_title', 'author_url','review url', 'forum_url', 'forum_name', 'user_title','last_post_author', 'last_post_author_url','last_post_date']
         header_params3 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp',  'post_title', 'author_url','review url','location','author_location','author_since_date']
-        header_params4 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp', 'review_rating', 'count_comments', 'location','category', 'review url', 'author_url', 'review_text', 'aggregate_rating_count','aggregate_rating_value', 'address','author_location','author_since_date', 'author_reputation_points','author_no_of_comments','author_no_of_complaints','author_location','author_badge_bronze','author_badge_silver', 'author_badge_gold']
+        header_params4 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp', 'review_rating', 'count_comments', 'location','category', 'review url', 'author_url', 'review_text', 'comment','comment_by','comment_on','comment_votes','aggregate_rating_count','aggregate_rating_value', 'address','author_location','author_since_date', 'author_reputation_points','author_no_of_comments','author_no_of_complaints','author_location','author_badge_bronze','author_badge_silver', 'author_badge_gold']
         if 'INDIA' in ''.join(self.db_list):
             header_params = header_params1
         elif 'COURT' in ''.join(self.db_list):
@@ -77,6 +78,12 @@ class Lixlsfile(object):
                 if 'INDIA' in db or 'COMPLAINTSBOARD' in db:
                     sk , product_id, name, reviewed_by, reviewed_on, review, category, review_url, review_rating, aux_info = record
                 else: sk , product_id, name, reviewed_by, reviewed_on, review, review_url, review_rating, aux_info = record
+                recordscomment1 = [('sk' ,'review_sk', 'comment_name', 'comment_by', 'comment_on', 'comment', 'comment_votes', 'aux_info')]
+                if 'COMPLAINTSBOARD' in db:
+                    cur2_.execute(self.commentqry%sk)
+                    recordscomment = cur2_.fetchall()
+                    if not recordscomment:
+                        recordscomment = recordscomment1
                 if sk:
                     aux_infof = {}
                     useful = ''
@@ -124,24 +131,38 @@ class Lixlsfile(object):
                     author_badge_gold = self.restore(aux_infof.get('badge-gold',''))
                     author_no_of_comments = self.restore(aux_infof.get('author_no_of_comments',''))
                     author_no_of_complaints = self.restore(aux_infof.get('author_no_of_complaints',''))
+                    if db =='COMPLAINTSBOARD':
+                        keyword = self.check_keyword(review, name)
+                        for recorcom in recordscomment:
+                            skc ,review_skc, comment_namec, comment_byc, comment_onc, commentc, comment_votesc, aux_infoc = recorcom
+                            keywordc = ''
+                            if not keyword:
+                                if 'apollo hospitals' in commentc.lower():
+                                    keyword = 'Apollo hospitals'
+                                    keywordc = 'check'
 
-                    if 'INDIA' in db:
-                        values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), category, location, review_url, authorurl, email, contact_num, address]
-                    elif db=='COMPLAINTSBOARD':
-                        keyword = self.check_keyword(review, name)
-                        if not keyword: continue
-                        values = [db.lower(),keywor,name,review,reviewed_by,str(reviewed_on),review_rating,comment, location, category, review_url, authorurl, revits, aggregate_rating_count, aggregate_rating_value, address,author_location, author_since_date, author_reputation_points, author_no_of_comments, author_no_of_complaints, author_location, author_badge_bronze, author_badge_silver, author_badge_gold]
-                    elif  db == 'COMPLAINTBOARD':
-                        keyword = self.check_keyword(review, name)
-                        if not keyword: continue
-                        values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), revits, authorurl, review_url, location, author_location, author_since_date]
-                    elif 'COURT' in db:
-                        values = [db.lower(), keywor, forum_title, review, reviewed_by, str(reviewed_on),forum_replies, forum_views,  name, authorurl, review_url,forum_url, forum_name, user_title, last_post_author_name, last_post_author_url, last_post_date]
+                            if keyword:
+                                    if keywordc: keyword = ''
+                                    if skc == 'sk': skc = review_skc= comment_namec=comment_byc = comment_onc = commentc = comment_votesc = ''
+                                    comment_votesc =  ''.join(re.findall('\d+',comment_votesc))
+                                    values = [db.lower(),keywor,name,review,reviewed_by,str(reviewed_on),review_rating,comment, location, category, review_url, authorurl, revits, commentc, comment_byc, str(comment_onc), comment_votesc, aggregate_rating_count, aggregate_rating_value, address,author_location, author_since_date, author_reputation_points, author_no_of_comments, author_no_of_complaints, author_location, author_badge_bronze, author_badge_silver, author_badge_gold]
+                                    for col_count, value in enumerate(values):
+                                        self.todays_excel_sheet1.write(self.row_count, col_count, value)
+                                    self.row_count = self.row_count+1
                     else:
-                        values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), review_rating, views, likes, comment, '', useful,  location, fake, noofrev, review_url, authorurl, revits]
-                    for col_count, value in enumerate(values):
-                        self.todays_excel_sheet1.write(self.row_count, col_count, value)
-                    self.row_count = self.row_count+1
+                        if 'INDIA' in db:
+                            values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), category, location, review_url, authorurl, email, contact_num, address]
+                        elif  db == 'COMPLAINTBOARD':
+                            keyword = self.check_keyword(review, name)
+                            if not keyword: continue
+                            values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), revits, authorurl, review_url, location, author_location, author_since_date]
+                        elif 'COURT' in db:
+                            values = [db.lower(), keywor, forum_title, review, reviewed_by, str(reviewed_on),forum_replies, forum_views,  name, authorurl, review_url,forum_url, forum_name, user_title, last_post_author_name, last_post_author_url, last_post_date]
+                        else:
+                            values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), review_rating, views, likes, comment, '', useful,  location, fake, noofrev, review_url, authorurl, revits]
+                        for col_count, value in enumerate(values):
+                            self.todays_excel_sheet1.write(self.row_count, col_count, value)
+                        self.row_count = self.row_count+1
             self.close_sql_connection(con2_, cur2_)
         self.todays_excel_file.save(self.excel_file_name)
 
