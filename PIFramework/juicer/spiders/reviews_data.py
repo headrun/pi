@@ -22,7 +22,9 @@ class Lixlsfile(object):
         header_params1 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp','category', 'location', 'review url', 'author_url', 'author_email', 'author_contact_number', 'author_address']
         header_params2 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp','count_replies', 'count_views', 'post_title', 'author_url','review url', 'forum_url', 'forum_name', 'user_title','last_post_author', 'last_post_author_url','last_post_date']
         header_params3 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp',  'post_title', 'author_url','review url','location','author_location','author_since_date']
-        header_params4 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp', 'review_rating', 'count_comments', 'location','category', 'review url', 'author_url', 'review_text', 'comment','comment_by','comment_on','comment_votes','aggregate_rating_count','aggregate_rating_value', 'address','author_location','author_since_date', 'author_reputation_points','author_no_of_comments','author_no_of_complaints','author_location','author_badge_bronze','author_badge_silver', 'author_badge_gold']
+        header_params4 = ['source', 'search_keyword', 'title', 'post_text', 'author', 'post_timestamp', 'review_rating', 'count_comments', 'location','category', 'review url', 'author_url', 'review_text', 'comment','comment_by','comment_on','comment_votes','no_of_votes','aggregate_rating_value', 'address','author_location','author_since_date', 'author_reputation_points','author_no_of_comments','author_no_of_complaints','author_location','author_badge_bronze','author_badge_silver', 'author_badge_gold']
+        header_params5 = ['source', 'search_keyword', 'title', 'post_text', 'author','post_timestamp', 'review_rating', 'location','review url','author_url','product_score']
+        header_params6 = ['source', 'search_keyword', 'title', 'post_text', 'author','post_timestamp', 'no_of_comments', 'category', 'country', 'state', 'city', 'review url']
         if 'INDIA' in ''.join(self.db_list):
             header_params = header_params1
         elif 'COURT' in ''.join(self.db_list):
@@ -31,6 +33,10 @@ class Lixlsfile(object):
             header_params =  header_params3
         elif ''.join(self.db_list) == "COMPLAINTSBOARD":
             header_params =  header_params4
+        elif ''.join(self.db_list) == "CONSUMERDADDY":
+            header_params =  header_params5
+        elif ''.join(self.db_list) == "COMPLAINTLISTS":
+            header_params =  header_params6
         for i, row in enumerate(header_params):
             self.todays_excel_sheet1.write(0, i, row)
         self.main()
@@ -69,13 +75,13 @@ class Lixlsfile(object):
         dbs = self.db_list
         for db in dbs:
             con2_,cur2_ = self.create_cursor(db, 'root','hdrn59!','localhost')
-            if 'INDIA' in db or 'COMPLAINTSBOARD' in db:
+            if 'INDIA' in db or 'COMPLAINTSBOARD' in db or 'COMPLAINTLISTS' in db:
                 cur2_.execute(self.selectqry1)
             else:
                 cur2_.execute(self.selectqry)
             records = cur2_.fetchall()
             for record in records:
-                if 'INDIA' in db or 'COMPLAINTSBOARD' in db:
+                if 'INDIA' in db or 'COMPLAINTSBOARD' in db or 'COMPLAINTLISTS' in db:
                     sk , product_id, name, reviewed_by, reviewed_on, review, category, review_url, review_rating, aux_info = record
                 else: sk , product_id, name, reviewed_by, reviewed_on, review, review_url, review_rating, aux_info = record
                 recordscomment1 = [('sk' ,'review_sk', 'comment_name', 'comment_by', 'comment_on', 'comment', 'comment_votes', 'aux_info')]
@@ -94,10 +100,11 @@ class Lixlsfile(object):
                         except: pass
                     except:
                         pass
-                    keywor = self.restore(aux_infof.get('browse','').replace('%20',' ').replace('+',' '))
+                    keywor = self.restore(aux_infof.get('browse','').replace('%20',' ').replace('+',' ').replace('-',' '))
                     views = self.restore(aux_infof.get('views', ''))
                     likes = self.restore(aux_infof.get('likes', ''))
                     comment = self.restore(aux_infof.get('no_comments',''))
+                    if not comment: comment = self.restore(aux_infof.get('no_of_comments',''))
                     if not comment: comment = self.restore(aux_infof.get('comment',''))
                     if not comment: comment = self.restore(aux_infof.get('no_comments:',''))
                     location = self.restore(aux_infof.get('location',''))
@@ -131,6 +138,12 @@ class Lixlsfile(object):
                     author_badge_gold = self.restore(aux_infof.get('badge-gold',''))
                     author_no_of_comments = self.restore(aux_infof.get('author_no_of_comments',''))
                     author_no_of_complaints = self.restore(aux_infof.get('author_no_of_complaints',''))
+                    rated_score = self.restore(aux_infof.get('rated_score',''))
+                    product_score = self.restore(aux_infof.get('product_score',''))
+                    review_on = self.restore(aux_infof.get('review_on',''))
+                    country = self.restore(aux_infof.get('country',''))
+                    city = self.restore(aux_infof.get('city',''))
+                    state = self.restore(aux_infof.get('state',''))
                     if db =='COMPLAINTSBOARD':
                         keyword = self.check_keyword(review, name)
                         for recorcom in recordscomment:
@@ -141,7 +154,7 @@ class Lixlsfile(object):
                                     keyword = 'Apollo hospitals'
                                     keywordc = 'check'
 
-                            if keyword:
+                            if keywor:
                                     if keywordc: keyword = ''
                                     if skc == 'sk': skc = review_skc= comment_namec=comment_byc = comment_onc = commentc = comment_votesc = ''
                                     comment_votesc =  ''.join(re.findall('\d+',comment_votesc))
@@ -152,6 +165,10 @@ class Lixlsfile(object):
                     else:
                         if 'INDIA' in db:
                             values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), category, location, review_url, authorurl, email, contact_num, address]
+                        elif db == 'CONSUMERDADDY':
+                            values = [db.lower(), keywor, name, review, reviewed_by, review_on, rated_score, location,review_url, authorurl, product_score]
+                        elif db == "COMPLAINTLISTS":
+                            values = [db.lower(), keywor, name, review, reviewed_by, str(reviewed_on), comment, category, country, city, state, review_url]
                         elif  db == 'COMPLAINTBOARD':
                             keyword = self.check_keyword(review, name)
                             if not keyword: continue
