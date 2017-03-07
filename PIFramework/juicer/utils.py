@@ -119,7 +119,7 @@ class JuicerSpider(Spider):
             self._sks = defaultdict(set)
             self.location_file = self.lineup_file = self.richmedia_file = self.relatedsellers_file= None
             self.source = self.json_file = self.bestsellers_file = self.products_file = self.customerreviews_file=  None
-            self.custom_query_file  = self.created_file= self.twitter_file= None
+            self.custom_query_file  = self.created_file= self.twitter_file = self.comments_file= None
 
             self.urlQ_cursor = None
             self.got_page_sks_len = 0
@@ -370,6 +370,13 @@ class JuicerSpider(Spider):
             self.twitter_file = open(twitter_queries_filename,'w')
             return self.twitter_file
 
+        def get_comments_file(self):
+            if self.comments_file : return self.comments_file
+            comments_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_comments_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.comments_file = open(comments_queries_filename,'w')
+            return self.comments_file
+
+
         def get_json_file(self):
             if self.json_file: return self.json_file
 
@@ -404,7 +411,7 @@ class JuicerSpider(Spider):
 
         def close_all_opened_query_files(self):
             files_list = [
-                self.bestsellers_file , self.products_file , self.customerreviews_file, self.created_file, self.richmedia_file, self.relatedsellers_file, self.twitter_file
+                self.bestsellers_file , self.products_file , self.customerreviews_file, self.created_file, self.richmedia_file, self.relatedsellers_file, self.twitter_file, self.comments_file
             ]
             for f in files_list:
                 if not isinstance(f, file): continue

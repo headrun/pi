@@ -76,3 +76,12 @@ class Twitter(Item):
     language                    = Field()
     is_verified                 = Field()
     twitter_url                 = Field()
+class Comments(Item):
+    sk                          = Field()
+    review_sk                   = Field()
+    comment_name                = Field()
+    comment_by                  = Field()
+    comment_on                  = Field()
+    comment                     = Field()
+    comment_votes               = Field()
+    aux_info                    = Field()

@@ -73,4 +73,11 @@ class JuicerPipeline(object):
             spider.get_twitter_file().flush()
             self.write_item_into_avail_file(item, spider, 'twitter')
 
+        if isinstance(item, Comments):
+            comments_values = '#<>#'.join([
+                item['sk'], item.get('review_sk',''),  item.get('comment_name',''), item.get('comment_by', ''), item.get('comment_on', ''), item.get('comment',''),item.get('comment_votes',''),str(item.get('aux_info', ''))
+            ])
+            spider.get_comments_file().write('%s\n' %comments_values)
+            spider.get_comments_file().flush()
+            self.write_item_into_avail_file(item, spider, 'comments')
         return item
