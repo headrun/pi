@@ -13,6 +13,8 @@ BOT_NAME = 'Linkedin'
 
 SPIDER_MODULES = ['Linkedin.spiders']
 NEWSPIDER_MODULE = 'Linkedin.spiders'
+#ITEM_PIPELINES=['Linkedin.pipelines.LinkedinPipeline']
+ITEM_PIPELINES = {'Linkedin.pipelines.LinkedinPipeline': 400,}
 
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
@@ -27,7 +29,8 @@ ROBOTSTXT_OBEY = True
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 10
+#DOWNLOAD_DELAY = 10
+DOWNLOAD_DELAY = 1
 DOWNLOAD_TIMEOUT = 360
 RANDOMIZE_DOWNLOAD_DELAY = True
 
@@ -56,10 +59,18 @@ RANDOMIZE_DOWNLOAD_DELAY = True
 # Enable or disable downloader middlewares
 # See http://scrapy.readthedocs.org/en/latest/topics/downloader-middleware.html
 #DOWNLOADER_MIDDLEWARES = {
-#    'Linkedin.middlewares.MyCustomDownloaderMiddleware': 543,
-#     'Linkedin.middlewares.CustomHttpProxyMiddleware': 543,
-#    'Linkedin.middlewares.CustomUserAgentMiddleware': 545,
+    #'Linkedin.middlewares.MyCustomDownloaderMiddleware': 543,
+     #'Linkedin.middlewares.CustomHttpProxyMiddleware': 543,
+    #'Linkedin.middlewares.CustomUserAgentMiddleware': 545,
 #}
+"""HTTP_PROXY = 'http://176.9.181.45:3279'
+DOWNLOADER_MIDDLEWARES = {
+      'Linkedin.middlewares.ProxyMiddleware':410
+}"""
+#DOWNLOADER_MIDDLEWARES = {
+#    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 110,
+#    'Linkedin.middlewares.ProxyMiddleware': 100,
+#}##others
 
 # Enable or disable extensions
 # See http://scrapy.readthedocs.org/en/latest/topics/extensions.html
@@ -70,7 +81,7 @@ RANDOMIZE_DOWNLOAD_DELAY = True
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 #ITEM_PIPELINES = {
-#    'Linkedin.pipelines.LinkedinPipeline': 300,
+    #'Linkedin.pipelines.LinkedinPipeline': 300,
 #}
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -93,3 +104,5 @@ AUTOTHROTTLE_MAX_DELAY = 6#60
 #HTTPCACHE_DIR = 'httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES = []
 #HTTPCACHE_STORAGE = 'scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+
