@@ -20,10 +20,6 @@ class LinkedinpremiumBrowse(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
 	super(LinkedinpremiumBrowse, self).__init__(*args, **kwargs)
-        self.con = MySQLdb.connect(db   = 'FACEBOOK', \
-        host = 'localhost', charset="utf8", use_unicode=True, \
-        user = 'root', passwd = 'root')
-        self.cur = self.con.cursor()
 	self.conn_url = 'https://www.linkedin.com/mynetwork/invite-connect/connections/'
 	self.account_mail =  kwargs.get('mail', 'rajaqx@gmail.com')
 	self.account_password =  kwargs.get('password', 'linkedinpw')
@@ -118,7 +114,6 @@ class LinkedinpremiumBrowse(scrapy.Spider):
     def parse_connections(self, response):
         sel = Selector(response)
         sk = response.meta['sk']
-        self.cur.execute(selectconn_params%sk)
         temp = json.loads(response.body)
         all_keys = temp['content']
         connections_ = all_keys.get('connections','')
