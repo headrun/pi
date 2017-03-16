@@ -14,9 +14,11 @@ BOT_NAME = 'Linkedin'
 SPIDER_MODULES = ['Linkedin.spiders']
 NEWSPIDER_MODULE = 'Linkedin.spiders'
 #ITEM_PIPELINES=['Linkedin.pipelines.LinkedinPipeline']
-ITEM_PIPELINES = {'Linkedin.pipelines.LinkedinPipeline': 400,}
+ITEM_PIPELINES = {'Linkedin.pipelines.LinkedinPipeline': 400,
+		'scrapy.pipelines.images.ImagesPipeline':1,}
+		#'Linkedin.pipelines.MyImagesPipeline': 1,}
 
-
+IMAGES_STORE = '/root/Linkedin/Linkedin/spiders/images'
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'Pibot (+http://www.positiveintegers.com)'
 

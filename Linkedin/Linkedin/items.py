@@ -16,7 +16,8 @@ class LinkedinItem(Item):
     member_id   = Field()
     headline	= Field()
     name        = Field()
-    image       = Field()
+    image_url       = Field()
+    image_path 	= Field()
     aux_info    = Field()
     reference_url = Field()
 class Linkedinaccounts(Item):
@@ -26,3 +27,7 @@ class Linkedinaccounts(Item):
     password	= Field()
     aux_info	= Field()
     reference_url = Field()
+
+class ImageItem(Item):
+    image_urls = Field()
+    images = Field()

@@ -56,8 +56,8 @@ class LinkedinSpiderMiddleware(object):
         spider.logger.info('Spider opened: %s' % spider.name)
 
 from scrapy import log
-from proxy import PROXIES
-from agents import AGENTS
+#from proxy import PROXIES
+#from agents import AGENTS
 
 import random
 
@@ -65,15 +65,16 @@ import random
 Custom proxy provider. 
 """
 class CustomHttpProxyMiddleware(object):
-    
     def process_request(self, request, spider):
         # TODO implement complex proxy providing algorithm
         if self.use_proxy(request):
-            p = random.choice(PROXIES)
+            #p = random.choice(PROXIES)
             try:
-                request.meta['proxy'] = "http://%s" % p['ip_port']
+                #request.meta['proxy'] = "http://%s" % p['ip_port']
+		request.meta['proxy'] = "http://176.9.181.45:3279"
             except Exception, e:
                 log.msg("Exception %s" % e, _level=log.CRITICAL)
+	    print request.meta['proxy']
                 
     
     def use_proxy(self, request):
@@ -94,3 +95,9 @@ class CustomUserAgentMiddleware(object):
     def process_request(self, request, spider):
         agent = random.choice(AGENTS)
         request.headers['User-Agent'] = agent
+
+from scrapy.conf import settings
+class ProxyMiddleware(object):
+    def process_request(self, request, spider):
+        request.meta['proxy'] = settings.get('HTTP_PROXY')
+
