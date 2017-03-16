@@ -11,7 +11,9 @@ from scrapy.selector import Selector
 from scrapy.http import Request, FormRequest
 from scrapy.xlib.pydispatch import dispatcher
 from linkedin_queries import *
-from Linkedin.items import LinkedinItem, Linkedinaccounts
+from Linkedin.items import *
+from scrapy.pipelines.images import ImagesPipeline
+#from scrapy.contrib.pipeline.images import ImagesPipeline
 
 class LinkedinpremiumBrowse(scrapy.Spider):
     name = "linkedinpremium_browse"
@@ -135,7 +137,10 @@ class LinkedinpremiumBrowse(scrapy.Spider):
 		conne_item['headline'] = self.normalize(headline)
 		conne_item['member_id'] = self.normalize(memberID)
 		conne_item['name']  = self.normalize(conne_na)
-		conne_item['image'] = self.normalize(mem_pic)
+		conne_item['image_url'] = self.normalize(mem_pic)
 	   	conne_item['reference_url'] = self.normalize(response.url)
+		if mem_pic: 
+		    yield ImageItem(image_urls=[mem_pic])
+		    hashs = hashlib.sha1((mem_pic).encode('utf-8', 'strict')).hexdigest()
+		    conne_item['image_path'] =  "%s%s%s"%("/root/Linkedin/Linkedin/spiders/images/full/",hashs,'.jpg')
 		if conne_item['sk']: yield conne_item
-
