@@ -34,7 +34,7 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 	#self.cur.execute(get_query_param)
 	#self.profiles_list = [i for i in self.cur.fetchall()]
 	self.profiles_list = [('aaaaa','https://www.linkedin.com/in/rajaemmela/','{}'),('bbbb','https://www.linkedin.com/in/aravindrajanm/','{}'),('cccc','https://www.linkedin.com/in/prrashi/','{}'),('dddd','https://www.linkedin.com/in/karthikbalait/','{}'),('eeee','https://www.linkedin.com/in/prashanthazharuddin/','{}'),('ffff',"https://www.linkedin.com/in/phanipriya/",'{}'),('ggg','https://www.linkedin.com/in/kiranmayi-cheedella-b87699a3/','{}'),('hhh','https://www.linkedin.com/in/sowjanya-puppala-5aab8466/','{}'),('iii','https://www.linkedin.com/in/niranjan-sagar-30ba7721/','{}'),('jjj','https://www.linkedin.com/in/saranravipati/','{}')]
-	#self.profiles_list = [('jjj','https://www.linkedin.com/in/saranravipati/','{}')]
+	#self.profiles_list = [('jjj','https://www.linkedin.com/in/aravindrajanm/','{}')]
 	#self.profiles_list = [('aaaaa','https://www.linkedin.com/in/rajaemmela/','{}')]
 	dispatcher.connect(self.spider_closed, signals.spider_closed)
 	self.ajax1 = "https://www.linkedin.com/profile/mappers?x-a=profile_v2_megaphone_articles%2Cprofile_v2_discovery%2Cprofile_v2_browse_map%2Cprofile_v2_references%2Cprofile_v2_background%2Cprofile_v2_courses%2Cprofile_v2_test_scores%2Cprofile_v2_patents%2Cprofile_v2_badge%2Cprofile_v2_basic_info%2Cprofile_v2_publications%2Cprofile_v2_name_bi%2Cprofile_v2_additional_info%2Cprofile_v2_volunteering%2Cprofile_v2_location_bi%2Cprofile_v2_contact_info%2Cprofile_v2_groups%2Cprofile_v2_skills%2Cprofile_v2_connections%2Cprofile_v2_follow%2Cprofile_v2_educations%2Cprofile_v2_summary%2Cprofile_v2_positions%2Cprofile_v2_honors%2Cprofile_v2_certifications%2Cprofile_v2_languages%2Cprofile_v2_projects%2Cprofile_v2_organizations%2Cprofile_v2_course_recommendations%2Cprofile_v2_endorsements&x-p=profile_v2_connections.distance%3A1%2Ctop_card.profileContactsIntegrationStatus%3A0%2Cprofile_v2_right_fixed_discovery.records%3A12%2Cprofile_v2_right_fixed_discovery.offset%3A0%2Cprofile_v2_browse_map.pageKey%3Anprofile_view_nonself%2Cprofile_v2_discovery.offset%3A0%2Cprofile_v2_discovery.records%3A12%2Cprofile_v2_discovery.records%3A12%2Ctop_card.tc%3Atrue%2Cprofile_v2_discovery.offset%3A0%2Cprofile_v2_summary_upsell.summaryUpsell%3Atrue&x-oa=bottomAliases&id="
@@ -464,9 +464,8 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 		    yield linkedin_hon_
 
                     
-                    
             if certifications:
-                inner_certifications = certifications.get('certifications', [])
+                inner_certifications = certifications.get('certsMpr',{}).get('certifications', [])
                 for cer in inner_certifications:
                     authority = cer.get('authorityV2', {})
                     au_com_name = authority.get('name', '')
@@ -479,13 +478,13 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 		    cer_dataid = str(cer.get('certificationIdData',''))
                     cer_iso_stdate = cer.get('startdate_iso', '')
 		    linkedin_cer_ = Linkedincertifications()
-		    linkedin_cer_['sk'] = self.md5("%s%s%s%s%s"%(sk, cer_di, cer_name, cer_iso_stdate))
+		    linkedin_cer_['sk'] = self.md5("%s%s%s%s%s"%(sk, cer_id, cer_name, cer_iso_stdate,au_com_name))
 		    linkedin_cer_['profile_sk'] = self.normalize(sk)
 		    linkedin_cer_['certification_id']= self.normalize(cer_id)
 		    linkedin_cer_['certification_date'] = self.normalize(cer_iso_stdate)
 		    linkedin_cer_['certification_title'] = self.normalize(cer_name)
 		    linkedin_cer_['certification_company_logo'] = self.normalize(au_media_logo)
-		    inkedin_cer_['certification_company_name'] = self.normalize(au_com_name)
+		    linkedin_cer_['certification_company_name'] = self.normalize(au_com_name)
 		    if cer_id or cer_name or au_media_logo: yield linkedin_cer_
 
 
@@ -834,8 +833,7 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 	return ', '.join(vars_list)
 
     def parse_allcompanies(self, response):
-	try: temp = json.loads(response.body)
-	except: import pdb;pdb.set_trace()
+	temp = json.loads(response.body)
 	sk = response.meta.get('sk','')
 	followingcomp = temp.get('content',{}).get('Following',{})
 	if followingcomp:
