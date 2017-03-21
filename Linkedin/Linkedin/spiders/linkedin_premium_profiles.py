@@ -11,7 +11,6 @@ from scrapy.spider import BaseSpider
 from scrapy.selector import Selector
 from scrapy.http import Request, FormRequest
 from scrapy.xlib.pydispatch import dispatcher
-from scrapy.xlib.pydispatch import dispatcher
 from linkedin_queries import *
 from Linkedin.items import *
 
@@ -27,15 +26,9 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
         host = 'localhost', charset="utf8", use_unicode=True, \
         user = 'root', passwd = 'root')
 	self.cur = self.con.cursor()
-	#get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 limit 5"
-	pattern_search = "%"+"2017-03-16"+"%"
-	patter_url = "%"+"prrashi/"+"%"
-	get_query_param = 'select sk, url, meta_data, crawl_status from linkedin_crawl where created_at like "%s" and url like "%s" limit 1'%(pattern_search,patter_url)
-	#self.cur.execute(get_query_param)
-	#self.profiles_list = [i for i in self.cur.fetchall()]
-	self.profiles_list = [('aaaaa','https://www.linkedin.com/in/rajaemmela/','{}'),('bbbb','https://www.linkedin.com/in/aravindrajanm/','{}'),('cccc','https://www.linkedin.com/in/prrashi/','{}'),('dddd','https://www.linkedin.com/in/karthikbalait/','{}'),('eeee','https://www.linkedin.com/in/prashanthazharuddin/','{}'),('ffff',"https://www.linkedin.com/in/phanipriya/",'{}'),('ggg','https://www.linkedin.com/in/kiranmayi-cheedella-b87699a3/','{}'),('hhh','https://www.linkedin.com/in/sowjanya-puppala-5aab8466/','{}'),('iii','https://www.linkedin.com/in/niranjan-sagar-30ba7721/','{}'),('jjj','https://www.linkedin.com/in/saranravipati/','{}')]
-	#self.profiles_list = [('jjj','https://www.linkedin.com/in/aravindrajanm/','{}')]
-	#self.profiles_list = [('aaaaa','https://www.linkedin.com/in/rajaemmela/','{}')]
+	get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 limit 1"
+	self.cur.execute(get_query_param)
+	self.profiles_list = [i for i in self.cur.fetchall()]
 	dispatcher.connect(self.spider_closed, signals.spider_closed)
 	self.ajax1 = "https://www.linkedin.com/profile/mappers?x-a=profile_v2_megaphone_articles%2Cprofile_v2_discovery%2Cprofile_v2_browse_map%2Cprofile_v2_references%2Cprofile_v2_background%2Cprofile_v2_courses%2Cprofile_v2_test_scores%2Cprofile_v2_patents%2Cprofile_v2_badge%2Cprofile_v2_basic_info%2Cprofile_v2_publications%2Cprofile_v2_name_bi%2Cprofile_v2_additional_info%2Cprofile_v2_volunteering%2Cprofile_v2_location_bi%2Cprofile_v2_contact_info%2Cprofile_v2_groups%2Cprofile_v2_skills%2Cprofile_v2_connections%2Cprofile_v2_follow%2Cprofile_v2_educations%2Cprofile_v2_summary%2Cprofile_v2_positions%2Cprofile_v2_honors%2Cprofile_v2_certifications%2Cprofile_v2_languages%2Cprofile_v2_projects%2Cprofile_v2_organizations%2Cprofile_v2_course_recommendations%2Cprofile_v2_endorsements&x-p=profile_v2_connections.distance%3A1%2Ctop_card.profileContactsIntegrationStatus%3A0%2Cprofile_v2_right_fixed_discovery.records%3A12%2Cprofile_v2_right_fixed_discovery.offset%3A0%2Cprofile_v2_browse_map.pageKey%3Anprofile_view_nonself%2Cprofile_v2_discovery.offset%3A0%2Cprofile_v2_discovery.records%3A12%2Cprofile_v2_discovery.records%3A12%2Ctop_card.tc%3Atrue%2Cprofile_v2_discovery.offset%3A0%2Cprofile_v2_summary_upsell.summaryUpsell%3Atrue&x-oa=bottomAliases&id="
 	self.ajax2 = "&locale=en_US&snapshotID=&authToken="
@@ -111,9 +104,10 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 	for li in self.profiles_list:
             meta_data = json.loads(li[2])
             email_address = meta_data.get('email_address','')
-            #sk = li[0]
-	    sk = self.md5(li[1])
+            sk = li[0]
+	    #sk = self.md5(li[1])
             vals = (sk, li[1], sk, li[1])
+	    self.cur.execute(update_get_params%(9,sk))
             #yield Request(li[1], callback=self.parse_again, headers=meat_headers,meta={"sk":sk, 'email_address':email_address})
 	    yield Request(li[1], callback=self.parse_correct, meta={"sk":sk, 'email_address':email_address})
 
@@ -148,7 +142,7 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 	if not memb_id: self.cur.execute(update_get_params%(6,sk))
 	if memb_id and linkedin_auth:
 	    req_url = "{}{}{}{}{}".format(self.ajax1, memb_id,self.ajax2, linkedin_auth, self.ajax3)
-	    #self.cur.execute(update_get_params%(9,sk))
+	    self.cur.execute(update_get_params%(1,sk))
 	    yield Request(req_url, callback=self.parse_ajax,meta={"sk":sk,"ref_url":response.url,"memb_id":memb_id,"linkedin_auth":linkedin_auth})
 
     def parse_ajax(self, response):
