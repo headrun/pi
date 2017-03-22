@@ -17,7 +17,8 @@ class Lixlsfilepremium(object):
         self.todays_excel_sheet1 = self.todays_excel_file.add_sheet("sheet1")
 	self.header_params = ['profile_url', 'profileview_url', 'name', 'first_name', 'last_name', 'member_id', 'headline', 'no_of_followers', 'profile_post_url', 'summary', 'number_of_connections', 'industry', 'location', 'languages', 'emails', 'websites', 'addresses', 'message_handles', 'phone_numbers', 'birthday', 'birth_year', 'birth_month', 'twitter_accounts', 'profile_image', 'interests']
 	self.query1 = "select sk,profile_url,profileview_url,name,first_name,last_name,member_id,headline,no_of_followers,profile_post_url,summary,number_of_connections,industry,location,languages,emails,websites,addresses,message_handles,phone_numbers,birthday,birth_year,birth_month,twitter_accounts,profile_image,interests from linkedin_meta"
-	self.list_tables = ['linkedin_certifications','linkedin_courserecommendations','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_skills']
+
+	self.list_tables = ['linkedin_certifications','linkedin_courserecommendations','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_skills','linkedin_volunteer_experiences']
 	self.list_tables1 = ['linkedin_educations','linkedin_experiences','linkedin_honors']
         #for i, row in enumerate(header_params):
             #self.todays_excel_sheet1.write(0, i, row)
@@ -46,7 +47,8 @@ class Lixlsfilepremium(object):
 	for val in values:
 		vals_ = list(val)[2:-3]
 		#valf = map(lambda x,y:x+':- '+y if y,fil_list,vals_)
-		valf = map(lambda x,y:x+':- '+y, fil_list,vals_)
+		#valf = map(lambda x,y:x+':- '+y, fil_list,vals_)
+		valf = filter(None, map(lambda a,b: (a+':-'+b) if b else '', fil_list,vals_))
 		final_to_update.append(', '.join(valf))
 	return ' <> '.join(final_to_update)
 
