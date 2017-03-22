@@ -26,7 +26,7 @@ class AmazonBestsellersterminal(JuicerSpider):
 
     def name_clean(self, text):
         text = re.sub('\((.*?)\)','',text)
-        text = text.replace('#','').replace('(','').replace(')','').replace(u'\xc2\xa0','').replace(u'\xa0','').replace(u'\xf0\x9f\x92\x99','').replace(u'\U0001f499','').replace(u'\U0001f917','').replace(u'\U0001f44d','').strip().strip('<>').strip()
+        text = text.replace('#','').replace('(','').replace(')','').replace(u'\xc2\xa0','').replace(u'\xa0','').replace(u'\xf0\x9f\x92\x99','').replace(u'\U0001f499','').replace(u'\U0001f917','').replace(u'\U0001f44d','').replace('  <>','<>').replace(' <>','<>').strip().strip('<>').strip()
         return text
 
     def parse(self, response):
@@ -45,21 +45,38 @@ class AmazonBestsellersterminal(JuicerSpider):
         if not item_part_number: item_part_number = normalize(extract_data(sel,self.prod_detxpath%'Item model number'))
         if not item_part_number: item_part_number = extract_data(sel, '//td[h2[contains(text(),"Product details")]]//li[b[contains(text(),"item")][contains(text(),"number")]]/text()')
         date_first_avail = normalize(extract_data(sel,self.prod_detxpath%'Date first available at Amazon'))
+        if not date_first_avail: date_first_avail = extract_data(sel,'//tr[@class="date-first-available"]/td[@class="value"]/text()')
         asin_number = normalize(extract_data(sel,self.prod_detxpath%'ASIN'))
+        if not asin_number: asin_number = normalize(extract_data(sel, '//input[@id="ASIN"]/@value'))
+        if not asin_number: asin_number = normalize(extract_data(sel,"//tr[td[@class='label'][contains(text(),'ASIN')]]/td[@class='value']/text()"))
+        if not asin_number:
+            try: asin_number =  json.loads(sel.xpath('//span[@class="a-declarative"][@data-action="a-modal"]/@data-a-modal').extract()[0]).get('asin','')
+            except: pass
         seller_mrank = self.name_clean(extract_data(sel,self.prod_detxpath%'Amazon Bestsellers Rank'))
         seller_rank = self.name_clean(extract_data(sel, '//li[@class="zg_hrsr_item"]//text()',' '))
         seller_rk = ''
         if seller_mrank or seller_rank:
             seller_rk = normalize(self.name_clean("%s%s%s"%(seller_mrank,'<>',seller_rank)))
+        if not seller_rk: seller_rk = extract_data(sel, '//tr[@id="SalesRank"]/td[@class="value"]//text()', ' ').replace('\n','').replace('  ',' ').replace(u'\xa0','').replace('#','<>')
         if date_first_avail:
             date_first_avail = str(parse_date(date_first_avail))
         customer_reviews = extract_list_data(sel, '//td[h2[contains(text(),"Product details")]]//a[contains(text(), "customer reviews")]/@href')
+        if not customer_reviews:
+            customer_reviews = extract_list_data(sel,'//tr[@class="average_customer_reviews"]//a[contains(text(), "customer reviews")]/@href')
+        if not customer_reviews:
+            customer_reviews = extract_list_data(sel, '//a[id="acrCustomerReviewLink"]/@href')
         if customer_reviews: customer_reviews[0]
         produ_aux = {}
         original_price = extract_data(sel,'//div[@id="price"]//span[@class="a-text-strike"]/text()').strip()
         if not original_price: original_price = extract_data(sel, '//div[@id="price"]//span[@id="priceblock_ourprice"]/text()').strip()
         discount_price = extract_data(sel, '//div[@id="price"]//span[@id="priceblock_saleprice"]/text()').strip()
         if product_dime: produ_aux.update({"product_dimensions":product_dime})
+        extra_technical_info = get_nodes(sel, '//div[contains(@class,"techD")][div[span[contains(text(),"Technical Details")]]]/div[contains(@class,"content")]//table//tr[td[@class="label"]]')
+        for tech in extra_technical_info:
+            tech_key = extract_data(tech, './td[@class="label"]/text()')
+            tech_value = extract_data(tech, './td[@class="value"]/text()')
+            if tech_key and tech_value:
+                produ_aux.update({tech_key:tech_value})
         products_item = Products()
         products_item.update({"id":normalize(sk),"name":normalize(title),"original_price":normalize(original_price),"discount_price":normalize(discount_price),"features":normalize(features),"description":normalize(description),"item_number":normalize(item_part_number),"date_available":normalize(date_first_avail),"best_sellerrank":normalize(seller_rk),"reference_url":normalize(response.url)})
         if produ_aux:
@@ -154,7 +171,8 @@ class AmazonBestsellersterminal(JuicerSpider):
     def parse_related(self, url1, price_pop, prod_state, merchant_name, responseurl, sk, title, category):
         data = requests.get(url1, headers=self.headers).text
         hxs = Selector(text=data)
-        whole_txt = extract_data(hxs, '//div//text()',',').replace(',,','').replace(',',' ')
+        #whole_txt = extract_data(hxs, '//div//text()',',').replace(',,','').replace(',',' ')
+        whole_txt = extract_data(hxs, '//div//text()[not(ancestor::style)][not(ancestor::script)]',',').replace(',,',' ').replace(',',' ')
         seller_rat_inte, seller_rat_per = '', ''
         seller_ratings = extract_data(hxs,'//a[contains(text(),"seller ratings")]/text()')
         seller_rat_perc = extract_data(hxs, '//div[b[contains(text(),"%")]]/b/text()')
