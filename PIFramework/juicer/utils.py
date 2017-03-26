@@ -119,7 +119,7 @@ class JuicerSpider(Spider):
             self._sks = defaultdict(set)
             self.location_file = self.lineup_file = self.richmedia_file = self.relatedsellers_file= None
             self.source = self.json_file = self.bestsellers_file = self.products_file = self.customerreviews_file=  None
-            self.custom_query_file  = self.created_file= self.twitter_file = self.comments_file= None
+            self.custom_query_file  = self.created_file= self.twitter_file = self.comments_file = self.linkedinpositions_file= self.linkedinviewers_file = self.linkedin_file= None
 
             self.urlQ_cursor = None
             self.got_page_sks_len = 0
@@ -395,6 +395,32 @@ class JuicerSpider(Spider):
             return self.custom_query_file
 
 
+
+        def get_linkedin_file(self):
+            if self.linkedin_file: return self.linkedin_file
+
+            linkedin_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_linkedin_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.linkedin_file = open(linkedin_queries_filename, 'w')
+
+            return self.linkedin_file
+
+        def get_linkedinpositions_file(self):
+            if self.linkedinpositions_file: return self.linkedinpositions_file
+
+            linkedinpositions_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_linkedinpositions_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.linkedinpositions_file = open(linkedinpositions_queries_filename, 'w')
+
+            return self.linkedinpositions_file
+        def get_linkedinviewers_file(self):
+            if self.linkedinviewers_file: return self.linkedinviewers_file
+
+            linkedinviewers_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_linkedinviewers_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.linkedinviewers_file = open(linkedinviewers_queries_filename, 'w')
+
+            return self.linkedinviewers_file
+
+
+
         def get_customerreviews_file(self):
             if self.customerreviews_file: return self.customerreviews_file
 
@@ -411,7 +437,7 @@ class JuicerSpider(Spider):
 
         def close_all_opened_query_files(self):
             files_list = [
-                self.bestsellers_file , self.products_file , self.customerreviews_file, self.created_file, self.richmedia_file, self.relatedsellers_file, self.twitter_file, self.comments_file
+                self.bestsellers_file , self.products_file , self.customerreviews_file, self.created_file, self.richmedia_file, self.relatedsellers_file, self.twitter_file, self.comments_file, self.linkedinpositions_file, self.linkedinviewers_file, self.linkedin_file
             ]
             for f in files_list:
                 if not isinstance(f, file): continue

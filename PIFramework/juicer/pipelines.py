@@ -80,4 +80,27 @@ class JuicerPipeline(object):
             spider.get_comments_file().write('%s\n' %comments_values)
             spider.get_comments_file().flush()
             self.write_item_into_avail_file(item, spider, 'comments')
+        if isinstance(item, Linkedin):
+            linkedin_values = '#<>#'.join([
+                item['sk'], item.get('name',''), item.get('first_name',''), item.get('last_name',''), item.get('locality',''), item.get('image',''), item.get('member_url',''), item.get('mark',''), item.get('url','')
+            ])
+            spider.get_linkedin_file().write('%s\n' %linkedin_values)
+            spider.get_linkedin_file().flush()
+            self.write_item_into_avail_file(item, spider, 'linkedin')
+        if isinstance(item, Linkedinpostions):
+            linkedinpositions_values = '#<>#'.join([
+                item['sk'], item['profile_sk'], item.get('title',''), item.get('organization','')
+                ])
+            spider.get_linkedinpositions_file().write('%s\n' %linkedinpositions_values)
+            spider.get_linkedinpositions_file().flush()
+            self.write_item_into_avail_file(item, spider, 'linkedinpositions')
+
+        if isinstance(item, Linkedinviewers):
+            linkedinviewers_values = '#<>#'.join([
+                item['sk'], item['profile_sk'], item.get('title',''), item.get('viewer_url',''), item.get('viewer_name',''), item.get('viewer_headline','')
+                ])
+            spider.get_linkedinviewers_file().write('%s\n' %linkedinviewers_values)
+            spider.get_linkedinviewers_file().flush()
+            self.write_item_into_avail_file(item, spider, 'linkedinviewers')
+
         return item

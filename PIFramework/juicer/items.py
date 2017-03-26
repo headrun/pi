@@ -76,6 +76,27 @@ class Twitter(Item):
     language                    = Field()
     is_verified                 = Field()
     twitter_url                 = Field()
+class Linkedin(Item):
+    sk                          = Field()
+    name                        = Field()
+    first_name                  = Field()
+    last_name                   = Field()
+    locality                    = Field()
+    image                       = Field()
+    member_url                  = Field()
+    mark                        = Field()
+    url                         = Field()
+class Linkedinpostions(Item):
+    sk                          = Field()
+    profile_sk                  = Field()
+    title                       = Field()
+    organization                = Field()
+class Linkedinviewers(Item):
+    sk                          = Field()
+    profile_sk                  = Field()
+    viewer_url                  = Field()
+    viewer_name                 = Field()
+    viewer_headline             = Field()
 class Comments(Item):
     sk                          = Field()
     review_sk                   = Field()
