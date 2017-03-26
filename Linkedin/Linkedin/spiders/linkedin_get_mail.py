@@ -30,7 +30,9 @@ class Fbmail(object):
 					    if part.get('Content-Disposition') is None:
 						continue
 					    filename = part.get_filename()
-					    if 'social' not in filename: continue
+					
+					    #if 'social' not in filename: continue
+					    #if 'copy' not in filename.lower(): continue
 					    filename = 'Social_%s.xlsx'%datetime.datetime.strftime(datetime.datetime.now(), '%s')
 					    cnt = 1
 					    if not filename:

@@ -13,7 +13,6 @@ from scrapy.http import Request, FormRequest
 from scrapy.xlib.pydispatch import dispatcher
 from linkedin_queries import *
 from Linkedin.items import *
-
 class LinkedinpremiumprofilesBrowse(scrapy.Spider):
     name = "linkedinpremiumprofiles_browse"
     allowed_domains = ["linkedin.com"]
@@ -26,7 +25,7 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
         host = 'localhost', charset="utf8", use_unicode=True, \
         user = 'root', passwd = 'root')
 	self.cur = self.con.cursor()
-	get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 limit 1"
+	get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 limit 15"
 	self.cur.execute(get_query_param)
 	self.profiles_list = [i for i in self.cur.fetchall()]
 	dispatcher.connect(self.spider_closed, signals.spider_closed)

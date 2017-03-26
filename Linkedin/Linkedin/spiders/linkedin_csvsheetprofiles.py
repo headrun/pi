@@ -5,21 +5,9 @@ import datetime
 import md5
 from itertools import chain
 import re
-#from openpyxl import load_workbook
+import csv
 
-def Y(data):
-   return data.replace('\n', '').replace('\t', '').replace('\r', '').replace('&amp;', '&').replace('&quot;', '"')
-
-def new_str(data):
-   try:  
-       return str(data)
-   except:
-       try:
-           return ''.join([chr(ord(x)) for x in data]).decode('utf8').encode('utf8')
-       except ValueError:
-           return data.encode('utf8')
-
-class Lixlsfilepremium(object):
+class Licsvfilepremium(object):
 
     def __init__(self, *args, **kwargs):
         self.con = MySQLdb.connect(db   = 'FACEBOOK', \
@@ -27,15 +15,11 @@ class Lixlsfilepremium(object):
         user = 'root', passwd ='root')
         self.cur = self.con.cursor()
         self.row_count = 1
-        self.excel_file_name = 'linkedin_profiles_premium_%s.xls'%str(datetime.datetime.now().date())
-	#self.excel_file_name = 'linkedin_profiles_premium_%s.xlsx'%str(datetime.datetime.now().date())
-        self.todays_excel_file = xlwt.Workbook(encoding="utf-8")
-	#self.todays_excel_file =  load_workbook(filename=self.excel_file_name, read_only=True)
-	
-        self.todays_excel_sheet1 = self.todays_excel_file.add_sheet("sheet1")
-	#self.todays_excel_sheet1 = self.todays_excel_file.create_sheet()
+        self.excel_file_name = 'linkedin_profiles_premium_%s.csv'%str(datetime.datetime.now().date())
+	oupf = open(self.excel_file_name, 'ab+')
+	self.todays_excel_file  = csv.writer(oupf)
 	self.header_params =  []
-	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl limit 733, 100"
+	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl"
 	self.list_tables = ['linkedin_certifications','linkedin_courserecommendations','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_skills','linkedin_volunteer_experiences']
 	self.list_tables1 = ['linkedin_educations','linkedin_experiences','linkedin_honors']
 
@@ -45,7 +29,6 @@ class Lixlsfilepremium(object):
             text = set(text.split('<>'))
             text = '<>'.join(text)
         return text
-
 
     def xcode(self, text, encoding='utf8', mode='strict'):
         return text.encode(encoding, mode) if isinstance(text, unicode) else text
@@ -84,7 +67,6 @@ class Lixlsfilepremium(object):
         if compacted != text:
             compacted = self.compact(compacted, level+1)
 	return compacted.strip()
-
 
 
     def replacefun(self, text):
@@ -181,7 +163,7 @@ class Lixlsfilepremium(object):
 			data_avai = 'Not Available'
 		if '/profile/view?id' in given_url: genuni = 'DOUBT'
 		if inde == 0: self.header_params.extend(['original_url','id', 'status of url','Data Available/UnAvailable','GENUINITY'])
-		values_final.extend([given_url, given_id, status_url, data_avai,  genuni])
+		values_final.extend([given_url, given_id, status_url, data_avai, genuni])
 		callfun3 = self.metadesign('linkedin_meta', sk, inde)
 		values_final.extend(callfun3)
 		if values_final[7] == '':
@@ -196,17 +178,11 @@ class Lixlsfilepremium(object):
 			values_final.extend(calfun2)
 		values_final =  [self.normalize(i) for i in values_final]
 		if inde == 0:
-			for i, row in enumerate(self.header_params):
-				self.todays_excel_sheet1.write(0, i, row)
-		for col_count, value in enumerate(values_final):
-			self.todays_excel_sheet1.write(self.row_count, col_count, value)
-			#try: self.todays_excel_file.save(self.excel_file_name)
-			#except: print value	
-		self.row_count = self.row_count+1
-	self.todays_excel_file.save(self.excel_file_name)
+			self.todays_excel_file.writerow(self.header_params)
+		self.todays_excel_file.writerow(values_final)
 
 def main():
-        obj = Lixlsfilepremium()
+        obj = Licsvfilepremium()
         obj.send_xls()
 if __name__ == '__main__':
         main()
