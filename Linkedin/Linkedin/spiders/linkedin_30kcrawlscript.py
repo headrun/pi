@@ -14,7 +14,7 @@ class Linkedincrawl3(object):
 		charset="utf8", host='localhost', use_unicode=True)
 		self.cur = self.con.cursor()
 		self.query = 'insert into linkedin_crawl(sk, url, content_type ,crawl_status, meta_data,created_at, modified_at) values(%s, %s, %s, %s, %s,now(), now()) on duplicate key update modified_at=now(), content_type=%s, crawl_status=%s, meta_data=%s, sk=%s'
-		self.selectqry = 'select sk, clean_url, meta_data, flag from linkedin_crawl30'
+		self.selectqry = 'select sk, clean_url, meta_data, crawl_status flag from linkedin_crawl30'
 
 	def __del__(self):
 		self.cur.close()
@@ -31,10 +31,10 @@ class Linkedincrawl3(object):
 		self.cur.execute(self.selectqry)
 		records = self.cur.fetchall()
 		for inde , record in enumerate(records):
-			sk, clean_url, meta_data, flag = record
+			sk, clean_url, meta_data, flag, stau = record
 			#try: clean_url = urllib.quote(clean_url)
 			#except: import pdb;pdb.set_trace()
-			stau  = 5
+			if stau!=10: stau  = 5
 			if 'true' in flag.lower(): stau  = 0
 			values = (sk, clean_url, 'linkedin', stau, meta_data,'linkedin', stau, meta_data,sk)
 			self.cur.execute(self.query, values)

@@ -18,8 +18,7 @@ class Litablespremium(object):
 	self.QUERY_FILES_CRAWLOUT_DIR = os.path.join(self.file_dirs, 'crawl_out')
 	self.na = 'linkedin_all'
 	self.tables_file = self.get_tables_file()
-	self.header_params =  []
-	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at)>= '2017-03-27' limit 1"
+	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at)>= '2017-03-27'"
 	self.list_tables = ['linkedin_educations', 'linkedin_experiences', 'linkedin_honors','linkedin_certifications','linkedin_courserecommendations','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_volunteer_experiences', 'linkedin_skills']
 	self.quer = 'INSERT INTO linkedin_all(sk,  original_url,  id,  status_of_url,  data_available_flag, profile_url, profileview_url, name, first_name, last_name, member_id, headline, no_of_followers, profile_post_url, summary, number_of_connections, industry, location, languages, emails, websites, addresses, message_handles, phone_numbers, birthday, birth_year, birth_month, twitter_accounts, profile_image, interests, linkedin_educations, linkedin_experiences, linkedin_honors, linkedin_certifications, linkedin_courserecommendations, linkedin_following_channels, linkedin_following_companies, linkedin_following_influencers, linkedin_following_schools, linkedin_given_recommendations, linkedin_groups, linkedin_organizations, linkedin_posts, linkedin_projects, linkedin_received_recommendations, linkedin_volunteer_experiences, linkedin_skills, created_at, modified_at, last_seen) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk=%s, original_url=%s, id=%s, status_of_url=%s, data_available_flag=%s, profile_url=%s, profileview_url=%s, name=%s, first_name=%s, last_name=%s, member_id=%s, headline=%s, no_of_followers=%s, profile_post_url=%s, summary=%s, number_of_connections=%s, industry=%s, location=%s, languages=%s, emails=%s, websites=%s, addresses=%s, message_handles=%s, phone_numbers=%s, birthday=%s, birth_year=%s, birth_month=%s, twitter_accounts=%s, profile_image=%s, interests=%s, linkedin_educations=%s, linkedin_experiences=%s, linkedin_honors=%s, linkedin_certifications=%s, linkedin_courserecommendations=%s, linkedin_following_channels=%s, linkedin_following_companies=%s, linkedin_following_influencers=%s, linkedin_following_schools=%s, linkedin_given_recommendations=%s, linkedin_groups=%s, linkedin_organizations=%s, linkedin_posts=%s, linkedin_projects=%s, linkedin_received_recommendations=%s, linkedin_volunteer_experiences=%s, linkedin_skills=%s'
 
@@ -56,9 +55,6 @@ class Litablespremium(object):
     def md5(self, x):
         return hashlib.md5(self.xcode(x)).hexdigest()
 
-    def replacefun(self, text):
-        text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###').replace(u'\u2013','').strip()
-        return text
 
     def restore(self, text):
         text = text.replace('<>#<>','"').replace("<>##<>","'").replace('###',',')
@@ -93,7 +89,8 @@ class Litablespremium(object):
 
 
     def replacefun(self, text):
-        text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###')
+        #text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###')
+	text = text.replace(' :- ','').replace('<br>','').replace('</br>','').replace('  ','').strip()
         return text
 
     def colum (self, table, sk ):
@@ -111,9 +108,9 @@ class Litablespremium(object):
 		for ind_, recv in enumerate(cntf, start=1):
 			inner_cntf = {}
 			list_con = list(recv)
-			lis_key  = filter(None, map(lambda a,b: (a+' :- '+b) if b else '', fil_list, recv))	
+			lis_key  = filter(None, map(lambda a,b: (a+' :--- '+self.replacefun(b)) if b else '', fil_list, recv))	
 			for innerky in lis_key:
-				keyf, valuef =  innerky.split(' :- ')
+				keyf, valuef =  innerky.split(' :--- ')
 				inner_cntf.update({keyf:valuef})
 			cntf_.update({ind_:inner_cntf})
 	if not cntf_: cntf_ = ''
@@ -179,6 +176,7 @@ class Litablespremium(object):
 		#self.cur.execute(self.quer%tuple(values_final))
 		self.tables_file.write('%s\n%s\n' %(self.quer, tuple(values_final)))
 		self.tables_file.flush()
+		print inde
 	self.close_all_opened_query_files()
 		
 		

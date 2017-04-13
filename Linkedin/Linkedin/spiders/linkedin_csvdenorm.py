@@ -17,14 +17,16 @@ class Lifilepde(object):
         self.file_dirs = os.path.join(os.getcwd(),'OUTPUT')
         self.QUERY_FILES_DIR = os.path.join(self.file_dirs, 'processing')
         self.QUERY_FILES_CRAWLOUT_DIR = os.path.join(self.file_dirs, 'crawl_out')
-        self.na = 'linkedin_newall'
+        self.na = 'linkedin_newless'
         self.tables_file = self.get_tables_file()
-	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at)>= '2017-03-27' limit 1"
+	#self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at)>= '2017-03-27' and date(modified_at) < '2017-04-07'"
+	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at) >= '2017-04-12'"
 	self.list_tables = ['linkedin_certifications','linkedin_courserecommendations','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_skills','linkedin_volunteer_experiences']
 	self.list_tables1 = ['linkedin_educations','linkedin_experiences','linkedin_honors']
-	self.altertable = 'alter table linkedin_newall add column %s %s COLLATE utf8_unicode_ci after %s'
-	self.quer1 = 'INSERT INTO linkedin_newall ('
-	self.quer2 = ['sk', 'original_url', 'id', 'status_of_url', 'data_available_flag', 'profile_url', 'profileview_url', 'name', 'first_name', 'last_name', 'member_id', 'headline', 'no_of_followers', 'profile_post_url', 'summary', 'number_of_connections', 'industry', 'location', 'languages', 'emails', 'websites', 'addresses', 'message_handles', 'phone_numbers', 'birthday', 'birth_year', 'birth_month', 'twitter_accounts', 'profile_image', 'interests']
+	self.altertable = 'alter table linkedin_newless add column %s %s COLLATE utf8_unicode_ci after %s'
+	self.altertable1 = 'alter table linkedin_newless add column %s %s after %s'
+	self.quer1 = 'INSERT INTO linkedin_newless ('
+	self.quer2 = ['sk', 'original_url', 'id', 'status_of_url', 'data_available_flag', 'email_id','profile_url', 'profileview_url', 'name', 'first_name', 'last_name', 'member_id', 'headline', 'no_of_followers', 'profile_post_url', 'summary', 'number_of_connections', 'industry', 'location', 'languages', 'emails', 'websites', 'addresses', 'message_handles', 'phone_numbers', 'birthday', 'birth_year', 'birth_month', 'twitter_accounts', 'profile_image', 'interests']
 
     def restore(self, text):
         text = text.replace('<>#<>','"').replace("<>##<>","'").replace('###',',').replace('\\','')
@@ -91,9 +93,12 @@ class Lifilepde(object):
 		valf = filter(None, map(lambda a,b: (a+':-'+b) if b else '', fil_list,vals_))
 		final_to_update.append(', '.join(valf))
 	if hindex == 0:
+		"""try: self.cur.execute(self.altertable%(tble, 'longtext',lasttbl))
+		except: pass"""
 		try: self.cur.execute(self.altertable%(tble, 'longtext',lasttbl))
-		except: pass
-		self.quer2.append(tble)
+		except: import pdb;pdb.set_trace()
+		
+		self.quer2.extend([tble])
 	return ' <> '.join(final_to_update)
 
     def colum (self, table, sk, inde, lastbln):
@@ -102,37 +107,53 @@ class Lifilepde(object):
 	fields = self.cur.fetchall()
 	fileds_list = list(fields)
 	fil_list = list(chain.from_iterable(fileds_list))[2:-3]
-	q6 = "select count(*)  from %s where date(modified_at)>= '2017-03-27' group by profile_sk order by count(*) desc limit 1"%table
+	q6 = "select count(*)  from %s where date(modified_at)>= '2017-04-12' group by profile_sk order by count(*) desc limit 1"%table
 	self.cur.execute(q6)
 	large_count = self.cur.fetchall()
 	max_count = ''
 	try: max_count = int(large_count[0][0])
 	except: max_count = ''
-	vatab = []
+	"""vatab = []
 	if max_count:
 		for fi in range(1,max_count+1):
-			vatab.append(table+str(fi))
+			vatab.append(table+str(fi))"""
+	va = []
+        if max_count:
+                for fi in range(1,max_count+1):
+                        for fl in fil_list:
+                                va.append(fl+str(fi))
 	#if vatab: lastbln = vatab[-1]	
-	if inde == 0 and vatab:
-		for vtb in vatab:
-			try:
-				self.cur.execute(self.altertable%(vtb, 'text',lastbln))
-				lastbln = vtb
-			except: pass
-			self.quer2.append(vtb)
+	if inde == 0 and va:
+		for vac in va:
+			"""try:
+				if 'summary' in vac or 'logo' in vac:
+ 					self.cur.execute(self.altertable%(vac, "text",lastbln))
+					print self.altertable%(vac, "text",lastbln)
+				else:
+					self.cur.execute(self.altertable1%(vac, "varchar(255) NOT NULL DEFAULT ''",lastbln))
+					print self.altertable1%(vac, "varchar(255) NOT NULL DEFAULT ''",lastbln)
+				lastbln = vac
+			except: pass"""
+
+			self.cur.execute(self.altertable%(vac, "text",lastbln))
+			#print self.altertable%(vac, "text",lastbln)
+			lastbln = vac
+
+			self.quer2.extend([vac])
 	q9  = 'select * from %s where profile_sk="%s" and date(modified_at)>= "2017-03-27"'%(table, sk)
 	self.cur.execute(q9)
 	countrec = self.cur.fetchall()
 	cntf_ = []
 	if countrec:
 		cntf = map(lambda x:(x[2:-3]), countrec)
-		for recv in cntf:
+		cntf_ = list(chain.from_iterable(cntf))
+		"""for recv in cntf:
 			inner_cntf = []
 			list_con = list(recv)
 			lis_key  = filter(None, map(lambda a,b: (a+':- '+b) if b else '', fil_list, recv))
-			cntf_.append(', '.join(lis_key))
-	if len(cntf_) != len(vatab):
-		lnewln = len(vatab) - len(cntf_)
+			cntf_.append(', '.join(lis_key))"""
+	if len(cntf_) != len(va):
+		lnewln = len(va) - len(cntf_)
 		cntf_.extend(['']*lnewln)
 	return cntf_, lastbln
 
@@ -192,9 +213,10 @@ class Lifilepde(object):
                 given_id = json_meta.get('id','')
                 given_firstname = json_meta.get('firstname','')
                 given_lastname = json_meta.get('lastname','')
+		given_email = json_meta.get('email_address','')
 		status_url, data_avai = ['']*2
 		genuni = 'GENUINE'
-		if rec[3] == 1:
+		if rec[3] == 1 or rec[3] == 9:
 			status_url = 'Valid'
 			data_avai = 'Available'
 		elif rec[3] == 6:
@@ -203,16 +225,16 @@ class Lifilepde(object):
 		elif rec[3] == 10 or rec[3] == 5:
 			status_url = 'Not Valid'
 			data_avai = 'Not Available'
-		values_final.extend([old_sk, given_url, given_id, status_url, data_avai])
+		values_final.extend([old_sk, given_url, given_id, status_url, data_avai, given_email])
 		callfun3 = self.metadesign('linkedin_meta', sk, inde)
 		values_final.extend(callfun3)
 		"""her_values = values_final
 		her_values.extend(her_values)
 		self.cur.execute(self.quer%tuple(her_values))"""
-		if values_final[6] == '':
-			values_final[6] = "%s%s%s"%(given_firstname, ' ', given_lastname)
-			values_final[7] = given_firstname
-			values_final[8] = given_lastname
+		if values_final[7] == '':
+			values_final[7] = "%s%s%s"%(given_firstname, ' ', given_lastname)
+			values_final[8] = given_firstname
+			values_final[9] = given_lastname
 		lasttablename = ''
 		for tabl in self.list_tables:
 			if inde == 0: lasttablename = 'interests'

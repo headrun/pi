@@ -56,7 +56,7 @@ class Linkedinparsing(object):
 		charset="utf8", host='localhost', use_unicode=True)
 		self.cur = self.con.cursor()
 		self.social_processing_path = '/root/Linkedin/Linkedin/spiders/excelfiles'
-		self.query = 'insert into linkedin_crawl30(sk, url, content_type ,crawl_status,flag, meta_data,created_at, modified_at) values(%s, %s, %s, %s, %s,%s,now(), now()) on duplicate key update modified_at=now(), content_type=%s, crawl_status=%s,meta_data=%s,sk =%s, flag=%s'
+		self.query = 'insert into linkedin_crawl30(sk, url, clean_url, content_type ,crawl_status,flag, meta_data,created_at, modified_at) values(%s, %s, %s, %s, %s,%s,now(), now()) on duplicate key update modified_at=now(), content_type=%s, crawl_status=%s,meta_data=%s,sk =%s, flag=%s'
 
 	def __del__(self):
 		self.cur.close()
@@ -78,7 +78,7 @@ class Linkedinparsing(object):
 				for xl_ in sheet_list:
 					sheet_ = ws_.get_sheet_by_name(name=xl_)
 					row_check = 0
-					email_address = linkedin_profile = 0
+					email_address = linkedin_profile = ida =  0
 					for row in sheet_.iter_rows():
 						if row_check > 0:
 							row_check += 1
@@ -117,24 +117,30 @@ class Linkedinparsing(object):
 						meta_date_from_browse.update({"id":idf})
 						meta_date_from_browse.update({"linkedin_url":linkedin_profilef})
 						crawl_status = 0
+						urlclear = linkedin_profilef
 						linkedin_profilef = urllib.quote(linkedin_profilef)
 						if 'linkedin.com' not in normalize(linkedin_profilef): crawl_status = 10
-						#sk = md5.md5("%s%s"%(idf, linkedin_profilef)).hexdigest()
-						##if 'http:' in linkedin_profilef: linkedin_profilef = linkedin_profilef.replace('http:','https:')
-						#if 'https:' not in linkedin_profilef: linkedin_profilef = "https://"+linkedin_profilef
-						##if 'id.www' in linkedin_profilef: linkedin_profilef = linkedin_profilef.replace('id.www','https://www')
-						##if 'www.linkedin.com' and 'https:' not in linkedin_profilef: linkedin_profilef = linkedin_profilef.replace('www.','https://www')
-						##if linkedin_profilef.startswith('linkedin.com'): linkedin_profilef = linkedin_profilef.replace('linkedin.com','https://www.linkedin.com')
-						##if 'https:' not in linkedin_profilef:
-							##linkedin_profilef = re.sub('(\D+)\.linkedin.com','https://www.linkedin.com',linkedin_profilef) 
-						##linkedin_profilef = re.sub('https://(.*?).linkedin.com/','https://www.linkedin.com/',linkedin_profilef)
-						##if not linkedin_profilef.startswith('https://www.linkedin.com') and crawl_status!=10:linkedin_profilef = ''.join(re.findall('.*(https://.*)',linkedin_profilef))
 						linkedin_profilef = "%s%s%s"%('https://www.linkedin.com/cws/member/public_profile?public_profile_url=',linkedin_profilef, "&ffalse&original_referer=https%3A%2F%2Fdeveloper.linkedin.com%2Fetc%2Fdesigns%2Flinkedin%2Fkaty%2Fglobal%2Fclientlibs%2Fhtml%2Fsands%3Dmiddle-center&token=&isFramed=true&lang=en_US&_ts=1490264453590.3835&xd_origin_host=https%3A%2F%2Fdeveloper.linkedin.com")
-						try: sk = md5("%s%s"%(normalize(idf),normalize( linkedin_profilef)))
-						except: import pdb;pdb.set_trace()
-						#if not linkedin_profilef.startswith('https://www.linkedin.com') and crawl_status!=10:linkedin_profilef = ''.join(re.findall('.*(https://.*)',linkedin_profilef))
+                                                if 'linkedin.com' not in normalize(urlclear): crawl_status = 10
+                                                if 'http:' in urlclear: urlclear = urlclear.replace('http:','https:')
+                                                if 'id.www' in urlclear: urlclear = urlclear.replace('id.www','https://www')
+                                                if 'www.linkedin.com' and 'https:' not in urlclear: urlclear = urlclear.replace('www.','https://www')
+                                                if urlclear.startswith('linkedin.com'): urlclear = urlclear.replace('linkedin.com','https://www.linkedin.com')
+                                                if 'https:' not in urlclear:
+                                                        urlclear = re.sub('(\D+)\.linkedin.com','https://www.linkedin.com',urlclear)
+                                                urlclear = re.sub('https://(.*?).linkedin.com/','https://www.linkedin.com/',urlclear)
+                                                if urlclear.endswith('/en') or urlclear.endswith('/fr'): urlclear = urlclear[:-3]
+                                                urlclear = urlclear.strip('"').strip().strip("'").strip().strip('/').strip()
+                                                if not urlclear.startswith('https://www.linkedin.com') and crawl_status!=10: urlclear = ''.join(re.findall('.*(https://.*)', urlclear))
+                                                if '/pub/' in urlclear:
+                                                        cv = ''.join(filter(None,re.split('https://www.linkedin.com/pub/.*?/(.*)',urlclear))).split('/')[::-1]
+                                                        cv[0] = cv[0].zfill(3)
+                                                        cv[1] = cv[1].zfill(3)
+                                                        if cv[-1] == '0': del cv[-1]
+                                                        urlclear = ( '%s%s%s%s'%('https://www.linkedin.com/in/',''.join(re.findall('https://www.linkedin.com/pub/(.*?)/.*',urlclear)),'-',''.join(cv)))
+						sk = md5("%s%s"%(normalize(idf),normalize( linkedin_profilef)))
 						print linkedin_profilef
-						values = (sk, linkedin_profilef, 'linkedin', crawl_status,'', json.dumps(meta_date_from_browse),'linkedin', crawl_status, json.dumps(meta_date_from_browse),sk , '')
+						values = (sk, linkedin_profilef, urlclear, 'linkedin', crawl_status,'', json.dumps(meta_date_from_browse),'linkedin', crawl_status, json.dumps(meta_date_from_browse),sk , '')
 						self.cur.execute(self.query, values)
 		else:
 		    for prof_url in open('linkedin_file.py'):
