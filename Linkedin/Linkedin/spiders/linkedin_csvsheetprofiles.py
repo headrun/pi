@@ -6,6 +6,8 @@ import md5
 from itertools import chain
 import re
 import csv
+import os
+import optparse
 
 class Licsvfilepremium(object):
 
@@ -14,14 +16,19 @@ class Licsvfilepremium(object):
         host = 'localhost', charset="utf8", use_unicode=True, \
         user = 'root', passwd ='root')
         self.cur = self.con.cursor()
-        self.row_count = 1
-        self.excel_file_name = 'linkedin_profiles_premium_%s.csv'%str(datetime.datetime.now().date())
+	self.modified_at     = options.modified_at
+	
+        self.excel_file_name = 'linkedin_profiles_enrich_%s.csv'%str(datetime.datetime.now().date())
+	if os.path.isfile(self.excel_file_name):
+		os.system('rm %s'%self.excel_file_name)
 	oupf = open(self.excel_file_name, 'ab+')
 	self.todays_excel_file  = csv.writer(oupf)
 	self.header_params =  []
-	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl"
+	patternk = '%keys%'
+	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at) >= '%s' and meta_data not like '%s'"%(self.modified_at, patternk)
 	self.list_tables = ['linkedin_certifications','linkedin_courserecommendations','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_skills','linkedin_volunteer_experiences']
 	self.list_tables1 = ['linkedin_educations','linkedin_experiences','linkedin_honors']
+	self.main()
 
     def restore(self, text):
         text = text.replace('<>#<>','"').replace("<>##<>","'").replace('###',',').replace('\\','')
@@ -79,7 +86,7 @@ class Licsvfilepremium(object):
 	fileds_list = list(fields)
 	fil_list = list(chain.from_iterable(fileds_list))[2:-3]
 	self.header_params.extend([tble])
-	q1 = 'select * from %s where profile_sk="%s"'%(tble, sk)
+	q1 = 'select * from %s where profile_sk="%s" and date(modified_at)>= "%s"'%(tble, sk, self.modified_at)
 	self.cur.execute(q1)
 	values = self.cur.fetchall()
 	final_to_update = []
@@ -95,7 +102,7 @@ class Licsvfilepremium(object):
 	fields = self.cur.fetchall()
 	fileds_list = list(fields)
 	fil_list = list(chain.from_iterable(fileds_list))[2:-3]
-	q6 = "select count(*)  from %s group by profile_sk order by count(*) desc limit 1"%table
+	q6 = "select count(*)  from %s where date(modified_at)>= '%s' group by profile_sk order by count(*) desc limit 1"%(table, self.modified_at)
 	self.cur.execute(q6)
 	large_count = self.cur.fetchall()
 	max_count = ''
@@ -107,7 +114,7 @@ class Licsvfilepremium(object):
 			for fl in fil_list:
 				va.append(fl+str(fi))
 	if inde == 0: self.header_params.extend(va)
-	q9  = 'select * from %s where profile_sk="%s"'%(table, sk)
+	q9  = 'select * from %s where profile_sk="%s" and date(modified_at)>= "%s"'%(table, sk, self.modified_at)
 	self.cur.execute(q9)
 	countrec = self.cur.fetchall()
 	cntf_ = []
@@ -126,7 +133,7 @@ class Licsvfilepremium(object):
         fileds_list = list(fields)
         fil_list = list(chain.from_iterable(fileds_list))[1:-3]
 	if inde == 0: self.header_params.extend(fil_list)
-	q8 = 'select * from %s where sk ="%s"'%(table, sk)
+	q8 = 'select * from %s where sk ="%s" and date(modified_at)>= "%s"'%(table, sk, self.modified_at)
         self.cur.execute(q8)
         values = self.cur.fetchall()
 	cntf_ = []
@@ -139,17 +146,22 @@ class Licsvfilepremium(object):
 	return cntf_
 
     def send_xls(self):
+	counter = 0
 	self.cur.execute(self.query2)
 	records = self.cur.fetchall()
 	for inde, rec in enumerate(records):
 		values_final = []
 		sk = list(rec)[0]
 		sk = sk[:-7]
+		url_re = rec[1]
                 json_meta = json.loads(rec[2])
                 given_url = json_meta.get('linkedin_url','')
                 given_id = json_meta.get('id','')
                 given_firstname = json_meta.get('firstname','')
                 given_lastname = json_meta.get('lastname','')
+		email_id = json_meta.get('email_address','')
+		keysf = json_meta.get('key','')
+		if not keysf: keysf = json_meta.get('keys','')
 		status_url, data_avai = ['']*2
 		genuni = 'GENUINE'
 		if rec[3] == 1:
@@ -158,18 +170,21 @@ class Licsvfilepremium(object):
 		elif rec[3] == 6:
 			status_url = 'Valid'
 			data_avai = 'Not Available'
-		elif rec[3] == 10:
+		elif rec[3] == 10 or rec[3] == 5:
 			status_url = 'Not Valid'
 			data_avai = 'Not Available'
-		if '/profile/view?id' in given_url: genuni = 'DOUBT'
-		if inde == 0: self.header_params.extend(['original_url','id', 'status of url','Data Available/UnAvailable','GENUINITY'])
-		values_final.extend([given_url, given_id, status_url, data_avai, genuni])
+		#if '/profile/view?id' in given_url: genuni = 'DOUBT'
+		#if inde == 0: self.header_params.extend(['original_url','id', 'status of url','Data Available/UnAvailable','GENUINITY'])
+		if inde == 0: self.header_params.extend(['original_url','id', 'status of url','Data Available/UnAvailable', 'email_id', 'key'])
+		#values_final.extend([given_url, given_id, status_url, data_avai, genuni])
+		values_final.extend([given_url, given_id, status_url, data_avai, email_id, keysf])
 		callfun3 = self.metadesign('linkedin_meta', sk, inde)
 		values_final.extend(callfun3)
-		if values_final[7] == '':
-			values_final[7] = "%s%s%s"%(given_firstname, ' ', given_lastname)
-			values_final[8] = given_firstname
-			values_final[9] = given_lastname
+		if values_final[8] == '':
+			values_final[8] = "%s%s%s"%(given_firstname, ' ', given_lastname)
+			values_final[9] = given_firstname
+			values_final[10] = given_lastname
+		if values_final[6] == '': values_final[6] = url_re
 		for tabl in self.list_tables:
 			callfun = self.querydesign(tabl, sk)
 			values_final.extend([callfun])
@@ -179,11 +194,17 @@ class Licsvfilepremium(object):
 		values_final =  [self.normalize(i) for i in values_final]
 		if inde == 0:
 			self.todays_excel_file.writerow(self.header_params)
+		print inde, sk
+		print counter
 		self.todays_excel_file.writerow(values_final)
+		counter+=1
+		
 
-def main():
-        obj = Licsvfilepremium()
-        obj.send_xls()
+    def main(self):
+        self.send_xls()
 if __name__ == '__main__':
-        main()
+	parser = optparse.OptionParser()
+	parser.add_option('-m', '--modified-at', default='', help = 'modified_at')
+	(options, args) = parser.parse_args()
+        Licsvfilepremium(options)
 
