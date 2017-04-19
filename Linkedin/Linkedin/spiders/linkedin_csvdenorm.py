@@ -6,10 +6,12 @@ import md5
 from itertools import chain
 import re
 import os
+import optparse
 
 class Lifilepde(object):
 
     def __init__(self, *args, **kwargs):
+	self.modified_at     = options.modified_at
         self.con = MySQLdb.connect(db   = 'FACEBOOK', \
         host = 'localhost', charset="utf8", use_unicode=True, \
         user = 'root', passwd ='root')
@@ -20,13 +22,24 @@ class Lifilepde(object):
         self.na = 'linkedin_newless'
         self.tables_file = self.get_tables_file()
 	#self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at)>= '2017-03-27' and date(modified_at) < '2017-04-07'"
-	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at) >= '2017-04-12'"
+	patternk = '%keys%'
+	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at) >= '%s' and meta_data not like '%s'"%(self.modified_at, patternk)
 	self.list_tables = ['linkedin_certifications','linkedin_courserecommendations','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_skills','linkedin_volunteer_experiences']
 	self.list_tables1 = ['linkedin_educations','linkedin_experiences','linkedin_honors']
 	self.altertable = 'alter table linkedin_newless add column %s %s COLLATE utf8_unicode_ci after %s'
 	self.altertable1 = 'alter table linkedin_newless add column %s %s after %s'
 	self.quer1 = 'INSERT INTO linkedin_newless ('
 	self.quer2 = ['sk', 'original_url', 'id', 'status_of_url', 'data_available_flag', 'email_id','profile_url', 'profileview_url', 'name', 'first_name', 'last_name', 'member_id', 'headline', 'no_of_followers', 'profile_post_url', 'summary', 'number_of_connections', 'industry', 'location', 'languages', 'emails', 'websites', 'addresses', 'message_handles', 'phone_numbers', 'birthday', 'birth_year', 'birth_month', 'twitter_accounts', 'profile_image', 'interests']
+	self.check()
+	self.main()
+
+    def check(self):
+	self.cur.execute('show tables like "%linkedin_newless%"')
+	table_check = self.cur.fetchall()
+	if table_check:
+		self.cur.execute('drop table linkedin_newless')
+	self.cur.execute("CREATE TABLE `linkedin_newless` (   `sk` varchar(300) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `original_url` text COLLATE utf8_unicode_ci,   `id` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `status_of_url` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `data_available_flag` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',  `email_id` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `profile_url` text COLLATE utf8_unicode_ci,   `profileview_url` text COLLATE utf8_unicode_ci,   `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `first_name` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `last_name` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `member_id` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `headline` text COLLATE utf8_unicode_ci,   `no_of_followers` varchar(20) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `profile_post_url` text COLLATE utf8_unicode_ci,   `summary` text COLLATE utf8_unicode_ci,   `number_of_connections` varchar(15) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `industry` text COLLATE utf8_unicode_ci,   `location` text COLLATE utf8_unicode_ci,   `languages` text COLLATE utf8_unicode_ci,   `emails` text COLLATE utf8_unicode_ci,   `websites` text COLLATE utf8_unicode_ci,   `addresses` text COLLATE utf8_unicode_ci,   `message_handles` text COLLATE utf8_unicode_ci,   `phone_numbers` text COLLATE utf8_unicode_ci,   `birthday` text COLLATE utf8_unicode_ci,   `birth_year` text COLLATE utf8_unicode_ci,   `birth_month` text COLLATE utf8_unicode_ci,   `twitter_accounts` text COLLATE utf8_unicode_ci,   `profile_image` text COLLATE utf8_unicode_ci,   `interests` text COLLATE utf8_unicode_ci,   `created_at` datetime NOT NULL,   `modified_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,   `last_seen` datetime NOT NULL,   PRIMARY KEY (`sk`) ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;")
+	
 
     def restore(self, text):
         text = text.replace('<>#<>','"').replace("<>##<>","'").replace('###',',').replace('\\','')
@@ -84,7 +97,7 @@ class Lifilepde(object):
 	fields = self.cur.fetchall()
 	fileds_list = list(fields)
 	fil_list = list(chain.from_iterable(fileds_list))[2:-3]
-	q1 = 'select * from %s where profile_sk="%s" and date(modified_at)>= "2017-03-27"'%(tble, sk)
+	q1 = 'select * from %s where profile_sk="%s" and date(modified_at)>= "%s"'%(tble, sk, self.modified_at)
 	self.cur.execute(q1)
 	values = self.cur.fetchall()
 	final_to_update = []
@@ -95,8 +108,7 @@ class Lifilepde(object):
 	if hindex == 0:
 		"""try: self.cur.execute(self.altertable%(tble, 'longtext',lasttbl))
 		except: pass"""
-		try: self.cur.execute(self.altertable%(tble, 'longtext',lasttbl))
-		except: import pdb;pdb.set_trace()
+		self.cur.execute(self.altertable%(tble, 'longtext',lasttbl))
 		
 		self.quer2.extend([tble])
 	return ' <> '.join(final_to_update)
@@ -107,7 +119,7 @@ class Lifilepde(object):
 	fields = self.cur.fetchall()
 	fileds_list = list(fields)
 	fil_list = list(chain.from_iterable(fileds_list))[2:-3]
-	q6 = "select count(*)  from %s where date(modified_at)>= '2017-04-12' group by profile_sk order by count(*) desc limit 1"%table
+	q6 = "select count(*)  from %s where date(modified_at)>= '%s' group by profile_sk order by count(*) desc limit 1"%(table, self.modified_at)
 	self.cur.execute(q6)
 	large_count = self.cur.fetchall()
 	max_count = ''
@@ -138,8 +150,8 @@ class Lifilepde(object):
 			self.cur.execute(self.altertable%(vac, "text",lastbln))
 			#print self.altertable%(vac, "text",lastbln)
 			lastbln = vac
-
 			self.quer2.extend([vac])
+
 	q9  = 'select * from %s where profile_sk="%s" and date(modified_at)>= "2017-03-27"'%(table, sk)
 	self.cur.execute(q9)
 	countrec = self.cur.fetchall()
@@ -208,12 +220,15 @@ class Lifilepde(object):
 		sk = list(rec)[0]
 		old_sk = sk
 		sk = sk[:-7]
+		url_re = rec[1]
                 json_meta = json.loads(rec[2])
                 given_url = json_meta.get('linkedin_url','')
                 given_id = json_meta.get('id','')
                 given_firstname = json_meta.get('firstname','')
                 given_lastname = json_meta.get('lastname','')
 		given_email = json_meta.get('email_address','')
+                keysf = json_meta.get('key','')
+                if not keysf: keysf = json_meta.get('keys','')
 		status_url, data_avai = ['']*2
 		genuni = 'GENUINE'
 		if rec[3] == 1 or rec[3] == 9:
@@ -225,16 +240,17 @@ class Lifilepde(object):
 		elif rec[3] == 10 or rec[3] == 5:
 			status_url = 'Not Valid'
 			data_avai = 'Not Available'
-		values_final.extend([old_sk, given_url, given_id, status_url, data_avai, given_email])
+		values_final.extend([old_sk, given_url, given_id, status_url, data_avai, given_email, keysf])
 		callfun3 = self.metadesign('linkedin_meta', sk, inde)
 		values_final.extend(callfun3)
 		"""her_values = values_final
 		her_values.extend(her_values)
 		self.cur.execute(self.quer%tuple(her_values))"""
-		if values_final[7] == '':
-			values_final[7] = "%s%s%s"%(given_firstname, ' ', given_lastname)
-			values_final[8] = given_firstname
-			values_final[9] = given_lastname
+		if values_final[8] == '':
+			values_final[8] = "%s%s%s"%(given_firstname, ' ', given_lastname)
+			values_final[9] = given_firstname
+			values_final[10] = given_lastname
+		if values_final[6] == '': values_final[5] = url_re
 		lasttablename = ''
 		for tabl in self.list_tables:
 			if inde == 0: lasttablename = 'interests'
@@ -255,9 +271,11 @@ class Lifilepde(object):
 		print counter
         self.close_all_opened_query_files()
 
-def main():
-        obj = Lifilepde()
-        obj.send_xls()
+    def main(self):
+        self.send_xls()
 if __name__ == '__main__':
-        main()
+	parser = optparse.OptionParser()
+	parser.add_option('-m', '--modified-at', default='', help = 'modified_at')
+	(options, args) = parser.parse_args()
+	Lifilepde(options)
 
