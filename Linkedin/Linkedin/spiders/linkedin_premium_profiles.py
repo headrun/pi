@@ -26,11 +26,14 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
         user = 'root', passwd = 'root')
 	self.cur = self.con.cursor()
 	get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 limit 15"
+	#get_query_param = "select sk, url, meta_data from linkedin_crawl where url = 'https://www.linkedin.com/in/adrianhepworth'"
 	self.cur.execute(get_query_param)
 	self.profiles_list = [i for i in self.cur.fetchall()]
+	#self.profiles_list = [('joaquin-crespo', 'https://www.linkedin.com/in/joaquin-crespo-45724a6/', '{}')]
 	dispatcher.connect(self.spider_closed, signals.spider_closed)
 	self.ajax1 = "https://www.linkedin.com/profile/mappers?x-a=profile_v2_megaphone_articles%2Cprofile_v2_discovery%2Cprofile_v2_browse_map%2Cprofile_v2_references%2Cprofile_v2_background%2Cprofile_v2_courses%2Cprofile_v2_test_scores%2Cprofile_v2_patents%2Cprofile_v2_badge%2Cprofile_v2_basic_info%2Cprofile_v2_publications%2Cprofile_v2_name_bi%2Cprofile_v2_additional_info%2Cprofile_v2_volunteering%2Cprofile_v2_location_bi%2Cprofile_v2_contact_info%2Cprofile_v2_groups%2Cprofile_v2_skills%2Cprofile_v2_connections%2Cprofile_v2_follow%2Cprofile_v2_educations%2Cprofile_v2_summary%2Cprofile_v2_positions%2Cprofile_v2_honors%2Cprofile_v2_certifications%2Cprofile_v2_languages%2Cprofile_v2_projects%2Cprofile_v2_organizations%2Cprofile_v2_course_recommendations%2Cprofile_v2_endorsements&x-p=profile_v2_connections.distance%3A1%2Ctop_card.profileContactsIntegrationStatus%3A0%2Cprofile_v2_right_fixed_discovery.records%3A12%2Cprofile_v2_right_fixed_discovery.offset%3A0%2Cprofile_v2_browse_map.pageKey%3Anprofile_view_nonself%2Cprofile_v2_discovery.offset%3A0%2Cprofile_v2_discovery.records%3A12%2Cprofile_v2_discovery.records%3A12%2Ctop_card.tc%3Atrue%2Cprofile_v2_discovery.offset%3A0%2Cprofile_v2_summary_upsell.summaryUpsell%3Atrue&x-oa=bottomAliases&id="
 	self.ajax2 = "&locale=en_US&snapshotID=&authToken="
+	#self.ajax2 = "&locale=en_US&snapshotID="
 	self.ajax3 = "&authType=name&invAcpt=&promoId=&notContactable=&primaryAction=&isPublic=false&sfd=true"
 	self.allcompanies_ajax = 'https://www.linkedin.com/profile/profile-v2-follow-companies?id="%s"&count=-1'
 	self.domain = "https://www.linkedin.com"
@@ -79,24 +82,39 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 	csrf_token = ''.join(sel.xpath('//input[@name="csrfToken"]/@value').extract())
 	source_alias = ''.join(sel.xpath('//input[@name="sourceAlias"]/@value').extract())
 	account_mail, account_password = '', ''
-	if self.login == 'ccv':
-		account_mail = 'ccvy1.pavani1886@gmail.com'
-		account_password = 'ccvy1.pavani@1886'
-	elif self.login=='meatproject':
-		account_mail = 'meatproject05@gmail.com'
-		account_password = 'ram123123'
-	elif self.login== 'ramanujan':
-		account_mail = 'srinivasaramanujan427@gmail.com'
-		account_password = 'dotoday1#'
-	elif self.login == 'raja':
-		account_mail = 'rajaqx@gmail.com'
-		account_password = 'linkedinpw'
+
+	if self.login=='kira2':
+		account_mail = 'kira2headrun@gmail.com'
+		account_password = 'kira^123'
+
+	elif self.login == 'smiley':
+		account_mail = 'smileykutie@gmail.com'
+		account_password = 'smileykutie$'
+
+        elif self.login == 'ccv':
+                account_mail = 'ccvy1.pavani1886@gmail.com'
+                account_password = 'ccvy1.pavani@1886'
+
+        elif self.login=='meatproject':
+                account_mail = 'meatproject05@gmail.com'
+                account_password = 'ram123123'
+
+        elif self.login== 'ramanujan':
+                account_mail = 'srinivasaramanujan427@gmail.com'
+                account_password = 'dotoday1#'
+
+        elif self.login == 'raja':
+                account_mail = 'rajaqx@gmail.com'
+                account_password = 'linkedinpw'
+
 	if account_mail:	
 	        return [FormRequest.from_response(response, formname = 'login_form',\
                     formdata={'session_key':account_mail,'session_password':account_password,'isJsEnabled':'','source_app':'','tryCount':'','clickedSuggestion':'','signin':'Sign In','session_redirect':'','trk':'hb_signin','loginCsrfParam':logincsrf,'fromEmail':'','csrfToken':csrf_token,'sourceAlias':source_alias},callback=self.parse_next)]
 
     def spider_closed(self, spider):
 	cv = requests.get('https://www.linkedin.com/logout/').text
+
+    
 	
     def parse_next(self, response):
 	sel = Selector(response)
@@ -104,7 +122,6 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
             meta_data = json.loads(li[2])
             email_address = meta_data.get('email_address','')
             sk = li[0]
-	    #sk = self.md5(li[1])
             vals = (sk, li[1], sk, li[1])
 	    self.cur.execute(update_get_params%(9,sk))
             #yield Request(li[1], callback=self.parse_again, headers=meat_headers,meta={"sk":sk, 'email_address':email_address})
@@ -126,7 +143,13 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 	except : linkedin_auth = ''"""
 	linke_a, linkd_javatex = {},''
 	try: linke_a = json.loads(sel.xpath('//code[contains(text(),"authToken")]/text()').extract()[0].replace('\\','').replace('\n','').strip()).get('included','')
-	except: linke_a = {}
+	except:
+		try:
+			cv = (sel.xpath('//code[contains(text(),"authToken")]/text()').extract()[0].replace('\\','').replace('\n','').replace(' "','').strip())
+			linke_a = re.findall('included":(\[.*\])',cv)
+			linke_a = json.loads(re.sub('pdfFileName=.*(").*&authType=name','',linke_a[0]))
+		except:
+			linke_a = {}
 	if linke_a:
 		enum_l = [i for i,j in enumerate(linke_a) if 'authToken' in j.get('requestUrl','')]
 		if enum_l:
@@ -141,6 +164,7 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 	if not memb_id: self.cur.execute(update_get_params%(6,sk))
 	if memb_id and linkedin_auth:
 	    req_url = "{}{}{}{}{}".format(self.ajax1, memb_id,self.ajax2, linkedin_auth, self.ajax3)
+	    #req_url = "{}{}{}{}".format(self.ajax1, memb_id,self.ajax2, self.ajax3)
 	    self.cur.execute(update_get_params%(1,sk))
 	    yield Request(req_url, callback=self.parse_ajax,meta={"sk":sk,"ref_url":response.url,"memb_id":memb_id,"linkedin_auth":linkedin_auth})
 
@@ -248,7 +272,6 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
                 first_name = discovery.get('viewee',{}).get('firstName','')
                 lastName = discovery.get('viewee',{}).get('lastName','')
 	    member_posts  = []
-
 	    if megaphone_articles:
 	    	if not name:name = megaphone_articles.get("formattedInfluencerFullName" ,'')
 		mega_basic = megaphone_articles.get('basic_info',{})
