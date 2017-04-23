@@ -1,80 +1,27 @@
-import scrapy
-import md5
-import json
-import re
-import requests
-import MySQLdb
-import hashlib
-import time
-from scrapy import signals
-from scrapy.spider import BaseSpider
-from scrapy.selector import Selector
-from scrapy.http import Request, FormRequest
-from scrapy.xlib.pydispatch import dispatcher
 from linkedin_queries import *
 from Linkedin.items import *
+from linkedin_functions import *
+
 class LinkedinpremiumprofilesBrowse(scrapy.Spider):
-    name = "linkedinpremiumprofiles_browse"
+    name = "linkedinpremiumprofilesibkup_browse"
     allowed_domains = ["linkedin.com"]
     start_urls = ('https://www.linkedin.com/uas/login?goback=&trk=hb_signin',)
 
     def __init__(self, *args, **kwargs):
 	super(LinkedinpremiumprofilesBrowse, self).__init__(*args, **kwargs)
         self.login = kwargs.get('login', 'ramanujan')
-        self.con = MySQLdb.connect(db   = 'FACEBOOK', \
-        host = 'localhost', charset="utf8", use_unicode=True, \
-        user = 'root', passwd = 'root')
-	self.cur = self.con.cursor()
+	self.con, self.cur = get_mysql_connection(DB_HOST, REQ_DB_NAME, '')
 	get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 limit 15"
-	#get_query_param = "select sk, url, meta_data from linkedin_crawl where url = 'https://www.linkedin.com/in/adrianhepworth'"
 	self.cur.execute(get_query_param)
 	self.profiles_list = [i for i in self.cur.fetchall()]
 	#self.profiles_list = [('joaquin-crespo', 'https://www.linkedin.com/in/joaquin-crespo-45724a6/', '{}')]
 	dispatcher.connect(self.spider_closed, signals.spider_closed)
-	self.ajax1 = "https://www.linkedin.com/profile/mappers?x-a=profile_v2_megaphone_articles%2Cprofile_v2_discovery%2Cprofile_v2_browse_map%2Cprofile_v2_references%2Cprofile_v2_background%2Cprofile_v2_courses%2Cprofile_v2_test_scores%2Cprofile_v2_patents%2Cprofile_v2_badge%2Cprofile_v2_basic_info%2Cprofile_v2_publications%2Cprofile_v2_name_bi%2Cprofile_v2_additional_info%2Cprofile_v2_volunteering%2Cprofile_v2_location_bi%2Cprofile_v2_contact_info%2Cprofile_v2_groups%2Cprofile_v2_skills%2Cprofile_v2_connections%2Cprofile_v2_follow%2Cprofile_v2_educations%2Cprofile_v2_summary%2Cprofile_v2_positions%2Cprofile_v2_honors%2Cprofile_v2_certifications%2Cprofile_v2_languages%2Cprofile_v2_projects%2Cprofile_v2_organizations%2Cprofile_v2_course_recommendations%2Cprofile_v2_endorsements&x-p=profile_v2_connections.distance%3A1%2Ctop_card.profileContactsIntegrationStatus%3A0%2Cprofile_v2_right_fixed_discovery.records%3A12%2Cprofile_v2_right_fixed_discovery.offset%3A0%2Cprofile_v2_browse_map.pageKey%3Anprofile_view_nonself%2Cprofile_v2_discovery.offset%3A0%2Cprofile_v2_discovery.records%3A12%2Cprofile_v2_discovery.records%3A12%2Ctop_card.tc%3Atrue%2Cprofile_v2_discovery.offset%3A0%2Cprofile_v2_summary_upsell.summaryUpsell%3Atrue&x-oa=bottomAliases&id="
-	self.ajax2 = "&locale=en_US&snapshotID=&authToken="
-	#self.ajax2 = "&locale=en_US&snapshotID="
-	self.ajax3 = "&authType=name&invAcpt=&promoId=&notContactable=&primaryAction=&isPublic=false&sfd=true"
-	self.allcompanies_ajax = 'https://www.linkedin.com/profile/profile-v2-follow-companies?id="%s"&count=-1'
-	self.domain = "https://www.linkedin.com"
+	self.ajax1 = ajax1_premium
+	self.ajax2 = ajax2_premium
+	self.ajax3 = ajax3_premium
+	self.allcompanies_ajax = allcompanies_ajax_premium
+	self.domain = domain_premium
 
-    def xcode(self, text, encoding='utf8', mode='strict'):
-        return text.encode(encoding, mode) if isinstance(text, unicode) else text
-
-    def md5(self, x):
-        return hashlib.md5(self.xcode(x)).hexdigest()
-
-    def replacefun(self, text):
-        text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###').replace(u'\u2013','').strip()
-        return text
-
-    def restore(self, text):
-        text = text.replace('<>#<>','"').replace("<>##<>","'").replace('###',',')
-        return text
-
-    def clean(self, text):
-        if not text: return text
-        value = text
-        value = re.sub("&amp;", "&", value)
-        value = re.sub("&lt;", "<", value)
-        value = re.sub("&gt;", ">", value)
-        value = re.sub("&quot;", '"', value)
-        value = re.sub("&apos;", "'", value)
-
-        return value
-
-    def normalize(self, text):
-        return self.clean(self.compact(self.xcode(text)))
-
-    def compact(self, text, level=0):
-    	if text is None: return ''
-	if level == 0:
-	    text = text.replace("\n", " ")
-	    text = text.replace("\r", " ")
-        compacted = re.sub("\s\s(?m)", " ", text)
-	if compacted != text:
-	    compacted = self.compact(compacted, level+1)
-        return compacted.strip()
 
     def parse(self, response):
 	sel = Selector(response)
@@ -124,7 +71,6 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
             sk = li[0]
             vals = (sk, li[1], sk, li[1])
 	    self.cur.execute(update_get_params%(9,sk))
-            #yield Request(li[1], callback=self.parse_again, headers=meat_headers,meta={"sk":sk, 'email_address':email_address})
 	    yield Request(li[1], callback=self.parse_correct, meta={"sk":sk, 'email_address':email_address})
 
     def parse_again(self, response):
@@ -306,32 +252,32 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 
 	    if name:
 		linkedin_meta = Linkedinmeta()
-		linkedin_meta['sk'] = self.normalize(sk)
-		linkedin_meta['profile_url'] = self.normalize(ref_url)
-		linkedin_meta['profileview_url'] = self.normalize(member_pview_url)
-		linkedin_meta['name'] = self.normalize(name)
-		linkedin_meta['first_name'] = self.normalize(first_name)
-		linkedin_meta['last_name'] = self.normalize(lastName)
-		linkedin_meta['member_id'] = self.normalize(str(member_id))
-		linkedin_meta['headline'] = self.normalize(member_headline)
-		linkedin_meta['no_of_followers'] = self.normalize(str(member_followers))
-		linkedin_meta['profile_post_url'] = self.normalize(member_post_url)
-		linkedin_meta['summary'] = self.normalize(summart_des.replace('<br>','').replace('</br>',''))
-		linkedin_meta['number_of_connections'] = self.normalize(str(number_of_connections))
-		linkedin_meta['industry'] = self.normalize(industry)
-		linkedin_meta['location'] = self.normalize(location)
-		linkedin_meta['languages'] = self.normalize(lang_list)
-		linkedin_meta['emails'] = self.normalize(emails_list)
-		linkedin_meta['websites'] = self.normalize(websites_list)
-		linkedin_meta['addresses'] = self.normalize(address_list)
-		linkedin_meta['message_handles'] = self.normalize(message_handles_list)
-		linkedin_meta['phone_numbers'] = self.normalize(phone_number_list)
-		linkedin_meta['birthday'] = self.normalize(str(birthday))
-		linkedin_meta['birth_year'] = self.normalize(str(birthyear))
-		linkedin_meta['birth_month'] = self.normalize(str(birthmonth))
-		linkedin_meta['twitter_accounts'] = self.normalize(twitters_list)
-		linkedin_meta['profile_image'] = self.normalize(endore_member_pic)
-		linkedin_meta['interests'] = self.normalize(memb_intere_lists)
+		linkedin_meta['sk'] = normalize(sk)
+		linkedin_meta['profile_url'] = normalize(ref_url)
+		linkedin_meta['profileview_url'] = normalize(member_pview_url)
+		linkedin_meta['name'] = normalize(name)
+		linkedin_meta['first_name'] = normalize(first_name)
+		linkedin_meta['last_name'] = normalize(lastName)
+		linkedin_meta['member_id'] = normalize(str(member_id))
+		linkedin_meta['headline'] = normalize(member_headline)
+		linkedin_meta['no_of_followers'] = normalize(str(member_followers))
+		linkedin_meta['profile_post_url'] = normalize(member_post_url)
+		linkedin_meta['summary'] = normalize(summart_des.replace('<br>','').replace('</br>',''))
+		linkedin_meta['number_of_connections'] = normalize(str(number_of_connections))
+		linkedin_meta['industry'] = normalize(industry)
+		linkedin_meta['location'] = normalize(location)
+		linkedin_meta['languages'] = normalize(lang_list)
+		linkedin_meta['emails'] = normalize(emails_list)
+		linkedin_meta['websites'] = normalize(websites_list)
+		linkedin_meta['addresses'] = normalize(address_list)
+		linkedin_meta['message_handles'] = normalize(message_handles_list)
+		linkedin_meta['phone_numbers'] = normalize(phone_number_list)
+		linkedin_meta['birthday'] = normalize(str(birthday))
+		linkedin_meta['birth_year'] = normalize(str(birthyear))
+		linkedin_meta['birth_month'] = normalize(str(birthmonth))
+		linkedin_meta['twitter_accounts'] = normalize(twitters_list)
+		linkedin_meta['profile_image'] = normalize(endore_member_pic)
+		linkedin_meta['interests'] = normalize(memb_intere_lists)
 		yield linkedin_meta
 
 		if member_posts:
@@ -349,24 +295,16 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 			if not post_date: post_date = str(mep.get('publishedDate',''))#1480081631000
 			if not post_date: post_date = str(mep.get('publishDate',''))#1480081631000
 			linkedin_posts_ = Linkedinposts()
-			linkedin_posts_['sk'] = self.normalize(self.md5("%s%s%s%s%s"%(sk_post, post_title, sk, post_date, post_state)))
-			linkedin_posts_['profile_sk'] = self.normalize(sk)
-			linkedin_posts_['post_url'] = self.normalize(post_url)
-			linkedin_posts_['post_image'] = self.normalize(post_image)
-			linkedin_posts_['post_title'] = self.normalize(post_title)
-			linkedin_posts_['post_author_id'] = self.normalize(post_author_id)
-			linkedin_posts_['post_state'] = self.normalize(post_state)
-			linkedin_posts_['post_date'] = self.normalize(post_date)
-			linkedin_posts_['post_article_id'] = self.normalize(sk_post)
+			linkedin_posts_['sk'] = normalize(md5("%s%s%s%s%s"%(sk_post, post_title, sk, post_date, post_state)))
+			linkedin_posts_['profile_sk'] = normalize(sk)
+			linkedin_posts_['post_url'] = normalize(post_url)
+			linkedin_posts_['post_image'] = normalize(post_image)
+			linkedin_posts_['post_title'] = normalize(post_title)
+			linkedin_posts_['post_author_id'] = normalize(post_author_id)
+			linkedin_posts_['post_state'] = normalize(post_state)
+			linkedin_posts_['post_date'] = normalize(post_date)
+			linkedin_posts_['post_article_id'] = normalize(sk_post)
 			yield linkedin_posts_
-
-
-	    """if education:
-		top_edu = education.get('educationsMpr',{}).get('topEducations',[])
-		if top_edu:
-		    top_edu_school = top_edu.get('schoolName','')
-		    top_edu_field = top_edu.get('fieldOfStudy','')
-		    top_edu_degree = top_edu.get('degree','')"""
 
 	    if course_recommendations:
 		course_inner = course_recommendations.get('courseRecommendations',[])
@@ -382,15 +320,15 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 		    cor_url = cor.get('courseUrl','')
 		    if 'http' not in cor_url and cor_url: cor_url = "%s%s"%(self.domain,cor_url)
 		    linkedin_cour_ = Linkedincourserecom()
-		    linkedin_cour_['sk'] = self.md5("%s%s%s%s%s"%(cor_title, sk, cor_viewers, cor_image_url, cor_url))
-		    linkedin_cour_['profile_sk'] = self.normalize(sk)
-		    linkedin_cour_['course_title'] = self.normalize(cor_title)
-		    linkedin_cour_['duration_seconds'] = self.normalize(cor_dur_sec)
-		    linkedin_cour_['duration_minutes'] = self.normalize(cor_dur_mins)
-		    linkedin_cour_['duration_hrs'] = self.normalize(cor_dur_hrs)
-		    linkedin_cour_['no_of_viewers'] = self.normalize(cor_viewers)
-		    linkedin_cour_['course_image'] = self.normalize(cor_image_url)
-		    linkedin_cour_['course_url'] = self.normalize(cor_url)
+		    linkedin_cour_['sk'] = md5("%s%s%s%s%s"%(cor_title, sk, cor_viewers, cor_image_url, cor_url))
+		    linkedin_cour_['profile_sk'] = normalize(sk)
+		    linkedin_cour_['course_title'] = normalize(cor_title)
+		    linkedin_cour_['duration_seconds'] = normalize(cor_dur_sec)
+		    linkedin_cour_['duration_minutes'] = normalize(cor_dur_mins)
+		    linkedin_cour_['duration_hrs'] = normalize(cor_dur_hrs)
+		    linkedin_cour_['no_of_viewers'] = normalize(cor_viewers)
+		    linkedin_cour_['course_image'] = normalize(cor_image_url)
+		    linkedin_cour_['course_url'] = normalize(cor_url)
 		    if linkedin_cour_['course_title']: yield linkedin_cour_
 
 
@@ -414,17 +352,17 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 			vol_company_id = str(volu.get('organization',{}).get('companyID',''))
 			vol_id = str(volu.get('id',''))
 			linkedin_volun_ = Linkedinvolunteerexp()
-			linkedin_volun_['sk'] = self.md5("%s%s%s%s%s"%(sk,volun_interests, vol_desc, vol_cause, vol_org_name))
-			linkedin_volun_['profile_sk'] = self.normalize(sk)
-			linkedin_volun_['volunteer_interests'] = self.normalize(volun_interests)
-			linkedin_volun_['volunteer_role'] = self.normalize(vol_role)
-			linkedin_volun_['volunteer_cause'] = self.normalize(vol_cause)
-			linkedin_volun_['organization_name'] = self.normalize(vol_org_name)
-			linkedin_volun_['organization_logo'] = self.normalize(vol_media_logo)
-			linkedin_volun_['description'] = self.normalize(vol_desc)
-			linkedin_volun_['start_date_year'] = self.normalize(vol_start_date_year)
-			linkedin_volun_['start_date_month'] = self.normalize(vol_start_date_month)
-			linkedin_volun_['volunteer_date'] = self.normalize(vol_single_date_iso)
+			linkedin_volun_['sk'] = md5("%s%s%s%s%s"%(sk,volun_interests, vol_desc, vol_cause, vol_org_name))
+			linkedin_volun_['profile_sk'] = normalize(sk)
+			linkedin_volun_['volunteer_interests'] = normalize(volun_interests)
+			linkedin_volun_['volunteer_role'] = normalize(vol_role)
+			linkedin_volun_['volunteer_cause'] = normalize(vol_cause)
+			linkedin_volun_['organization_name'] = normalize(vol_org_name)
+			linkedin_volun_['organization_logo'] = normalize(vol_media_logo)
+			linkedin_volun_['description'] = normalize(vol_desc)
+			linkedin_volun_['start_date_year'] = normalize(vol_start_date_year)
+			linkedin_volun_['start_date_month'] = normalize(vol_start_date_month)
+			linkedin_volun_['volunteer_date'] = normalize(vol_single_date_iso)
 			if linkedin_volun_['volunteer_role'] or linkedin_volun_['volunteer_cause'] or linkedin_volun_['organization_name']: yield linkedin_volun_
 
             if organizations:
@@ -443,17 +381,15 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
                         prg_name = org.get('fmt__keyword_highlight', '')
                     org_desc = org.get('desc', '')
 		    linkedin_org_ = Linkedinorganizations()
-		    linkedin_org_['sk'] = self.md5("%s%s%s%s%s"%(sk, org_name, org_position, org_st_dateiso, org_desc))
-		    linkedin_org_['profile_sk'] = self.normalize(sk)
-		    linkedin_org_['name'] = self.normalize(org_name)
-		    linkedin_org_['position'] = self.normalize(org_position)
-		    linkedin_org_['start_date'] = self.normalize(org_st_dateiso)
-		    linkedin_org_['end_date'] = self.normalize(org_ended_dateiso)
-		    linkedin_org_['description']  = self.normalize(org_desc)
-	 	    linkedin_org_['occupation_name'] = self.normalize(org_occupation_name)
+		    linkedin_org_['sk'] = md5("%s%s%s%s%s"%(sk, org_name, org_position, org_st_dateiso, org_desc))
+		    linkedin_org_['profile_sk'] = normalize(sk)
+		    linkedin_org_['name'] = normalize(org_name)
+		    linkedin_org_['position'] = normalize(org_position)
+		    linkedin_org_['start_date'] = normalize(org_st_dateiso)
+		    linkedin_org_['end_date'] = normalize(org_ended_dateiso)
+		    linkedin_org_['description']  = normalize(org_desc)
+	 	    linkedin_org_['occupation_name'] = normalize(org_occupation_name)
 		    if linkedin_org_['name'] or linkedin_org_['position']: yield linkedin_org_
-
-                    
                     
             if honors:
                 inn_honors = honors.get('honorsMpr', {}).get('honors', [])
@@ -471,12 +407,12 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
                     hon_occupathion = hon.get('occupationString', '')
 		    hon_on = hon.get('mdydate','')#March 2015
 		    linkedin_hon_ = Linkedinhonors()
-		    linkedin_hon_['sk']  = self.md5("%s%s%s%s%s%s"%(sk, hon_title, hon_issuer, hon_on, hon_desc, hon_id))
-		    linkedin_hon_['profile_sk'] = self.normalize(sk)
-		    linkedin_hon_['honor_on'] = self.normalize(hon_on)
-		    linkedin_hon_['honor_issuer'] = self.normalize(hon_issuer)
-		    linkedin_hon_['honor_summary'] = self.normalize(hon_desc)
-		    linkedin_hon_['occupation'] = self.normalize(hon_occupathion)
+		    linkedin_hon_['sk']  = md5("%s%s%s%s%s%s"%(sk, hon_title, hon_issuer, hon_on, hon_desc, hon_id))
+		    linkedin_hon_['profile_sk'] = normalize(sk)
+		    linkedin_hon_['honor_on'] = normalize(hon_on)
+		    linkedin_hon_['honor_issuer'] = normalize(hon_issuer)
+		    linkedin_hon_['honor_summary'] = normalize(hon_desc)
+		    linkedin_hon_['occupation'] = normalize(hon_occupathion)
 		    yield linkedin_hon_
 
                     
@@ -494,13 +430,13 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 		    cer_dataid = str(cer.get('certificationIdData',''))
                     cer_iso_stdate = cer.get('startdate_iso', '')
 		    linkedin_cer_ = Linkedincertifications()
-		    linkedin_cer_['sk'] = self.md5("%s%s%s%s%s"%(sk, cer_id, cer_name, cer_iso_stdate,au_com_name))
-		    linkedin_cer_['profile_sk'] = self.normalize(sk)
-		    linkedin_cer_['certification_id']= self.normalize(cer_id)
-		    linkedin_cer_['certification_date'] = self.normalize(cer_iso_stdate)
-		    linkedin_cer_['certification_title'] = self.normalize(cer_name)
-		    linkedin_cer_['certification_company_logo'] = self.normalize(au_media_logo)
-		    linkedin_cer_['certification_company_name'] = self.normalize(au_com_name)
+		    linkedin_cer_['sk'] = md5("%s%s%s%s%s"%(sk, cer_id, cer_name, cer_iso_stdate,au_com_name))
+		    linkedin_cer_['profile_sk'] = normalize(sk)
+		    linkedin_cer_['certification_id']= normalize(cer_id)
+		    linkedin_cer_['certification_date'] = normalize(cer_iso_stdate)
+		    linkedin_cer_['certification_title'] = normalize(cer_name)
+		    linkedin_cer_['certification_company_logo'] = normalize(au_media_logo)
+		    linkedin_cer_['certification_company_name'] = normalize(au_com_name)
 		    if cer_id or cer_name or au_media_logo: yield linkedin_cer_
 
 
@@ -525,18 +461,18 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
                             giv_first_name = giv_recom.get('firstName', '')
                             giv_created_at = str(giv_recom.get('createdDate', ''))#epoch
 			    linkedin_give_rec_ = Linkedingivenrecommendations()
-			    linkedin_give_rec_['sk'] = self.md5("%s%s%s%s%s%s%s"%(sk, giv_lastname, giv_fullname, giv_text, giv_title, giv_recom_id, giv_recom_id))
-			    linkedin_give_rec_['profile_sk'] = self.normalize(sk)
-		    	    linkedin_give_rec_['last_name'] = self.normalize(giv_lastname)
-			    linkedin_give_rec_['name'] = self.normalize(giv_fullname)
-			    linkedin_give_rec_['date_and_relationship'] = self.normalize(giv_date_relationship)
-			    linkedin_give_rec_['title'] = self.normalize(giv_title)
-			    linkedin_give_rec_['created_date'] = self.normalize(giv_created_date)
-			    linkedin_give_rec_['summary'] = self.normalize(giv_text)
-			    linkedin_give_rec_['profile_image'] =  self.normalize(giv_mem_pic)
-			    linkedin_give_rec_['profile_member_id'] = self.normalize(giv_mem_id)
-			    linkedin_give_rec_['profile_url'] = self.normalize(giv_profile_link)
-			    linkedin_give_rec_['recommendation_id'] = self.normalize(giv_recom_id)
+			    linkedin_give_rec_['sk'] = md5("%s%s%s%s%s%s%s"%(sk, giv_lastname, giv_fullname, giv_text, giv_title, giv_recom_id, giv_recom_id))
+			    linkedin_give_rec_['profile_sk'] = normalize(sk)
+		    	    linkedin_give_rec_['last_name'] = normalize(giv_lastname)
+			    linkedin_give_rec_['name'] = normalize(giv_fullname)
+			    linkedin_give_rec_['date_and_relationship'] = normalize(giv_date_relationship)
+			    linkedin_give_rec_['title'] = normalize(giv_title)
+			    linkedin_give_rec_['created_date'] = normalize(giv_created_date)
+			    linkedin_give_rec_['summary'] = normalize(giv_text)
+			    linkedin_give_rec_['profile_image'] =  normalize(giv_mem_pic)
+			    linkedin_give_rec_['profile_member_id'] = normalize(giv_mem_id)
+			    linkedin_give_rec_['profile_url'] = normalize(giv_profile_link)
+			    linkedin_give_rec_['recommendation_id'] = normalize(giv_recom_id)
 			    if giv_lastname or giv_fullname or giv_title or giv_mem_id or giv_recom_id: yield linkedin_give_rec_
 
 			    
@@ -560,20 +496,20 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
                                 rec_text = rein.get('text', '')
                                 rec_relationship = rein.get('relationship', '')
 				linkedin_rec_ = Linkedinrecrecommendations()
-				linkedin_rec_['sk'] = self.md5("%s%s%s%s%s%s%s"%(sk, rec_role, rec_id, rec_fmt_Datec, rec_date_rela, rec_profile_link, rec_mem_pic))
-				linkedin_rec_['profile_sk'] = self.normalize(sk)
-				linkedin_rec_['role'] = self.normalize(rec_role)
-				linkedin_rec_['profile_member_id'] = self.normalize(rec_memid)
-				linkedin_rec_['id'] = self.normalize(rec_id)
+				linkedin_rec_['sk'] = md5("%s%s%s%s%s%s%s"%(sk, rec_role, rec_id, rec_fmt_Datec, rec_date_rela, rec_profile_link, rec_mem_pic))
+				linkedin_rec_['profile_sk'] = normalize(sk)
+				linkedin_rec_['role'] = normalize(rec_role)
+				linkedin_rec_['profile_member_id'] = normalize(rec_memid)
+				linkedin_rec_['id'] = normalize(rec_id)
 				linkedin_rec_['edu_start_date'] = ''
-				linkedin_rec_['name'] = self.normalize(rec_name_full)
-				linkedin_rec_['organization'] = self.normalize(rec_organization)
-				linkedin_rec_['created_date'] = self.normalize(rec_fmt_Datec)
-				linkedin_rec_['date_and_relationship'] = self.normalize(rec_date_rela)
-				linkedin_rec_['headline'] = self.normalize(rec_headline)
-				linkedin_rec_['profile_url'] = self.normalize(rec_profile_link)
-				linkedin_rec_['profile_image'] = self.normalize(rec_mem_pic)
-				linkedin_rec_['summary'] = self.normalize(rec_text)
+				linkedin_rec_['name'] = normalize(rec_name_full)
+				linkedin_rec_['organization'] = normalize(rec_organization)
+				linkedin_rec_['created_date'] = normalize(rec_fmt_Datec)
+				linkedin_rec_['date_and_relationship'] = normalize(rec_date_rela)
+				linkedin_rec_['headline'] = normalize(rec_headline)
+				linkedin_rec_['profile_url'] = normalize(rec_profile_link)
+				linkedin_rec_['profile_image'] = normalize(rec_mem_pic)
+				linkedin_rec_['summary'] = normalize(rec_text)
 				if rec_id or rec_name_full or rec_headline or rec_mem_pic or rec_role:yield linkedin_rec_
 
 	    if groups:
@@ -588,13 +524,13 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 		    grp_logo = ing.get('link_media','')
 		    if grp_link and 'http' not in grp_link: grp_link = "%s%s"%(self.domain,grp_link)
 		    linkedin_groups_ = Linkedingroups()
-		    linkedin_groups_['sk'] = self.md5("%s%s%s%s%s"%(sk, grp_link, grp_name, grp_members, grp_id))
-		    linkedin_groups_['profile_sk'] = self.normalize(sk)
-		    linkedin_groups_['group_link'] = self.normalize(grp_link)
-		    linkedin_groups_['group_name'] = self.normalize(grp_name)
-		    linkedin_groups_['no_of_members'] = self.normalize(grp_members)
-		    linkedin_groups_['group_logo'] = self.normalize(grp_logo)
-		    linkedin_groups_['group_id'] = self.normalize(str(grp_id))
+		    linkedin_groups_['sk'] = md5("%s%s%s%s%s"%(sk, grp_link, grp_name, grp_members, grp_id))
+		    linkedin_groups_['profile_sk'] = normalize(sk)
+		    linkedin_groups_['group_link'] = normalize(grp_link)
+		    linkedin_groups_['group_name'] = normalize(grp_name)
+		    linkedin_groups_['no_of_members'] = normalize(grp_members)
+		    linkedin_groups_['group_logo'] = normalize(grp_logo)
+		    linkedin_groups_['group_id'] = normalize(str(grp_id))
 		    if grp_link or grp_name or grp_members or grp_id: yield linkedin_groups_
 
 
@@ -617,12 +553,12 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 			   foc_image = foc_channel_dic.get('link_channel_image','')
 			   foc_id = str(foc_channel_dic.get('id',''))
 			   linkedin_foc_ = Linkedinfollowchannels()
-			   linkedin_foc_['sk'] = self.md5("%s%s%s%s%s"%(sk, foc_followerscount, foc_name, foc_link_channel, foc_image))
-			   linkedin_foc_['profile_sk'] = self.normalize(sk)
-			   linkedin_foc_['channel_followers'] = self.normalize(foc_followerscount)
-			   linkedin_foc_['channel_title'] = self.normalize(foc_name)
-			   linkedin_foc_['channel_link'] =self.normalize(foc_link_channel)
-			   linkedin_foc_['channel_image'] = self.normalize(foc_image)
+			   linkedin_foc_['sk'] = md5("%s%s%s%s%s"%(sk, foc_followerscount, foc_name, foc_link_channel, foc_image))
+			   linkedin_foc_['profile_sk'] = normalize(sk)
+			   linkedin_foc_['channel_followers'] = normalize(foc_followerscount)
+			   linkedin_foc_['channel_title'] = normalize(foc_name)
+			   linkedin_foc_['channel_link'] =normalize(foc_link_channel)
+			   linkedin_foc_['channel_image'] = normalize(foc_image)
 			   if linkedin_foc_['channel_title']: yield linkedin_foc_
 			
 		if influencers:
@@ -636,14 +572,14 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 		   	inf_headline = inf.get('headline','')
 			inf_member_logo = inf.get('partial',{}).get('media_picture_link_400','')
 			linkedin_inf_ = Linkedinfollowinfluencers()
-			linkedin_inf_['sk'] = self.md5("%s%s%s%s%s"%(inf_titf, sk, inf_profile_url, inf_id, inf_headline))
-			linkedin_inf_['profile_sk'] = self.normalize(sk)
-			linkedin_inf_['inflencer_name'] = self.normalize(inf_titf)
-			linkedin_inf_['influencer_firstname'] = self.normalize(inf_first_name)
-			linkedin_inf_['influencer_lastname'] = self.normalize(inf_last_name)
-			linkedin_inf_['influencer_image'] = self.normalize(inf_member_logo)
-			linkedin_inf_['influencer_profile_url'] = self.normalize(inf_profile_url)
-			linkedin_inf_['influencer_headline'] = self.normalize(inf_headline)
+			linkedin_inf_['sk'] = md5("%s%s%s%s%s"%(inf_titf, sk, inf_profile_url, inf_id, inf_headline))
+			linkedin_inf_['profile_sk'] = normalize(sk)
+			linkedin_inf_['inflencer_name'] = normalize(inf_titf)
+			linkedin_inf_['influencer_firstname'] = normalize(inf_first_name)
+			linkedin_inf_['influencer_lastname'] = normalize(inf_last_name)
+			linkedin_inf_['influencer_image'] = normalize(inf_member_logo)
+			linkedin_inf_['influencer_profile_url'] = normalize(inf_profile_url)
+			linkedin_inf_['influencer_headline'] = normalize(inf_headline)
 			if linkedin_inf_['inflencer_name']: yield linkedin_inf_
 
 
@@ -658,13 +594,13 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 			if sch_link:
 			    if 'http' not in sch_link: sch_link = "%s%s"%(self.domain,sch_link)
 			linkedin_scho_ = Linkedinfollowschools()
-			linkedin_scho_['sk'] = self.md5("%s%s%s%s%s"%(sk, sch_image, sch_name, sch_id, sch_region))
-			linkedin_scho_['profile_sk'] = self.normalize(sk)
-			linkedin_scho_['school_name'] = self.normalize(sch_name)
-			linkedin_scho_['school_image'] = self.normalize(sch_image)
-			linkedin_scho_['school_region'] = self.normalize(sch_region)
-			linkedin_scho_['school_link'] = self.normalize(sch_link)
-			linkedin_scho_['total_followee_count'] = self.normalize(str(foll_schools_counts))	
+			linkedin_scho_['sk'] = md5("%s%s%s%s%s"%(sk, sch_image, sch_name, sch_id, sch_region))
+			linkedin_scho_['profile_sk'] = normalize(sk)
+			linkedin_scho_['school_name'] = normalize(sch_name)
+			linkedin_scho_['school_image'] = normalize(sch_image)
+			linkedin_scho_['school_region'] = normalize(sch_region)
+			linkedin_scho_['school_link'] = normalize(sch_link)
+			linkedin_scho_['total_followee_count'] = normalize(str(foll_schools_counts))	
 			if sch_name or sch_region : yield linkedin_scho_
 
 	
@@ -696,33 +632,27 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 		    pos_end_date = str(pos.get('endDate',{}).get('asDate',''))
 		    pos_end_year = str(pos.get('endDate',{}).get('year',''))
 		    pos_end_month = str(pos.get('endDate',{}).get('month',''))
-		    #formatend = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(pos_end_date)/1000))
 		    pos_start_date = str(pos.get('startDate',{}).get('asDate',''))
 		    pos_start_year = str(pos.get('startDate',{}).get('year',''))
 		    pos_start_month = str(pos.get('startDate',{}).get('month',''))
 		    pos_company_id = str(pos.get('companyId',''))
 		    pos_position_id = str(pos.get('positionId',''))
-		    #formatstart  = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(int(pos_start_date)/1000))
 		    linkedin_epx_ = Linkedinexperiences()
-		    linkedin_epx_['sk']= self.md5("%s%s%s%s%s%s"%(sk, pos_fmt_location, pos_position_id, pos_company_id, pos_startdate_iso, pos_summary))
-		    linkedin_epx_['profile_sk'] = self.normalize(sk)
-		    linkedin_epx_['exp_location'] = self.normalize(pos_fmt_location)
-		    linkedin_epx_['exp_company_name'] = self.normalize(pos_company_name)
-		    linkedin_epx_['exp_company_url'] = self.normalize(pos_cpny_url)
-		    linkedin_epx_['exp_title']  =self.normalize(pos_title)
-		    linkedin_epx_['start_date'] = self.normalize(pos_startdate_iso)
-		    linkedin_epx_['end_date'] = self.normalize(pos_enddate_iso)
-		    linkedin_epx_['exp_company_logo'] = self.normalize(pos_media_image)
-		    linkedin_epx_['exp_duration'] = self.normalize(pos_fmt_duration)
-		    linkedin_epx_['exp_company_id'] = self.normalize(pos_company_id)
-		    linkedin_epx_['exp_position_id'] = self.normalize(pos_position_id)
-		    linkedin_epx_['exp_summary'] = self.normalize(pos_summary)
+		    linkedin_epx_['sk']= md5("%s%s%s%s%s%s"%(sk, pos_fmt_location, pos_position_id, pos_company_id, pos_startdate_iso, pos_summary))
+		    linkedin_epx_['profile_sk'] = normalize(sk)
+		    linkedin_epx_['exp_location'] = normalize(pos_fmt_location)
+		    linkedin_epx_['exp_company_name'] = normalize(pos_company_name)
+		    linkedin_epx_['exp_company_url'] = normalize(pos_cpny_url)
+		    linkedin_epx_['exp_title']  =normalize(pos_title)
+		    linkedin_epx_['start_date'] = normalize(pos_startdate_iso)
+		    linkedin_epx_['end_date'] = normalize(pos_enddate_iso)
+		    linkedin_epx_['exp_company_logo'] = normalize(pos_media_image)
+		    linkedin_epx_['exp_duration'] = normalize(pos_fmt_duration)
+		    linkedin_epx_['exp_company_id'] = normalize(pos_company_id)
+		    linkedin_epx_['exp_position_id'] = normalize(pos_position_id)
+		    linkedin_epx_['exp_summary'] = normalize(pos_summary)
 		    if pos_title or pos_cpny_url or pos_fmt_location: yield linkedin_epx_
 
-		    """pos_associated_proj = pos.get('associatedWith',{}).get('projects',{}).get('items',[])
-		    for projp in pos_associated_proj:
-			pos_items_tit = projp.get('title','')
-			pos_items_desc = projp.get('desc','').replace('\n','')"""
 
 	    if education:
 		educations_inner = education.get('educationsMpr',{}).get('educations',[])
@@ -752,21 +682,21 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 		    edu_id = str(eduin.get('educationId',''))
 		    edu_scho_id = str(eduin.get('schoolId',''))
 		    linkedin_educations_ = Linkedineducations()
-		    linkedin_educations_['sk'] = self.md5("%s%s%s%s%s%s"%(sk, edu_degree, edu_field_ofstdy, edu_name, edu_id, edu_scho_id))
-		    linkedin_educations_['profile_sk'] = self.normalize(sk)
-		    linkedin_educations_['edu_start_year'] = self.normalize(edu_start_year)
-		    linkedin_educations_['edu_start_month'] = self.normalize(edu_start_month)
-		    linkedin_educations_['edu_start_date'] = self.normalize(formatedustart)
-		    linkedin_educations_['edu_end_year'] = self.normalize(edu_end_year)
-		    linkedin_educations_['edu_end_date'] = self.normalize(formatedusend)
-		    linkedin_educations_['edu_end_month'] = self.normalize(edu_end_month)
-		    linkedin_educations_['edu_degree'] = self.normalize(edu_degree)
-		    linkedin_educations_['edu_field_of_study'] = self.normalize(edu_field_ofstdy)
-		    linkedin_educations_['edu_school_name'] = self.normalize(edu_name.replace('&#39;',''))
-		    linkedin_educations_['school_logo'] = self.normalize(edu_schoologo)
+		    linkedin_educations_['sk'] = md5("%s%s%s%s%s%s"%(sk, edu_degree, edu_field_ofstdy, edu_name, edu_id, edu_scho_id))
+		    linkedin_educations_['profile_sk'] = normalize(sk)
+		    linkedin_educations_['edu_start_year'] = normalize(edu_start_year)
+		    linkedin_educations_['edu_start_month'] = normalize(edu_start_month)
+		    linkedin_educations_['edu_start_date'] = normalize(formatedustart)
+		    linkedin_educations_['edu_end_year'] = normalize(edu_end_year)
+		    linkedin_educations_['edu_end_date'] = normalize(formatedusend)
+		    linkedin_educations_['edu_end_month'] = normalize(edu_end_month)
+		    linkedin_educations_['edu_degree'] = normalize(edu_degree)
+		    linkedin_educations_['edu_field_of_study'] = normalize(edu_field_ofstdy)
+		    linkedin_educations_['edu_school_name'] = normalize(edu_name.replace('&#39;',''))
+		    linkedin_educations_['school_logo'] = normalize(edu_schoologo)
 		    linkedin_educations_['post_article_id'] = ''
-		    linkedin_educations_['education_id'] = self.normalize(edu_id)
-		    linkedin_educations_['school_id'] = self.normalize(edu_scho_id)
+		    linkedin_educations_['education_id'] = normalize(edu_id)
+		    linkedin_educations_['school_id'] = normalize(edu_scho_id)
 		    if edu_degree or edu_field_ofstdy or edu_name: yield linkedin_educations_
 
             if skills:
@@ -780,19 +710,13 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 	  	    member_topic_url = ski.get('url_userpMemberTopic','')	
 		    public_topic_url = ski.get('url_userpPublicTopic','')
 		    linkedin_ski_ = Linkedinskills()
-		    linkedin_ski_['sk'] = self.md5("%s%s%s%s"%(sk, ski_name, ski_endo_count, public_topic_url))
-		    linkedin_ski_['profile_sk']= self.normalize(sk)
-		    linkedin_ski_['skill_name'] = self.normalize(ski_name)
-		    linkedin_ski_['endoresement_count'] = self.normalize(ski_endo_count)
-		    linkedin_ski_['member_topic_skill_url'] = self.normalize(member_topic_url)
-		    linkedin_ski_['public_topic_skill_url'] = self.normalize(public_topic_url)
+		    linkedin_ski_['sk'] = md5("%s%s%s%s"%(sk, ski_name, ski_endo_count, public_topic_url))
+		    linkedin_ski_['profile_sk']= normalize(sk)
+		    linkedin_ski_['skill_name'] = normalize(ski_name)
+		    linkedin_ski_['endoresement_count'] = normalize(ski_endo_count)
+		    linkedin_ski_['member_topic_skill_url'] = normalize(member_topic_url)
+		    linkedin_ski_['public_topic_skill_url'] = normalize(public_topic_url)
 		    if ski_name: yield linkedin_ski_
-
-	
-
-
-		
-
             if projects:
 		projects_inner = projects.get('projectsMpr',{}).get('projects',[])
 		for proj in projects_inner:
@@ -823,17 +747,17 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 		    if team_mates_list: team_mates_list = ', '.join(team_mates_list)
 		    else: team_mates_list = ''
 		    linkedin_proj_ = Linkedinprojects()
-		    linkedin_proj_['sk'] = self.md5("%s%s%s%s%s"%(sk,pro_title, pro_url, pro_desc, pro_team_mates))
-		    linkedin_proj_['profile_sk'] = self.normalize(sk)
-		    linkedin_proj_['project_date'] = self.normalize(pro_single_date)
-		    linkedin_proj_['number_of_project_members'] = self.normalize(pro_team_mates)
-		    linkedin_proj_['project_member_names'] = self.normalize(team_mates_list)
-		    linkedin_proj_['project_occupation_name'] = self.normalize(pro_occp_name)
-		    linkedin_proj_['project_title'] = self.normalize(pro_title)
-		    linkedin_proj_['project_url']  = self.normalize(pro_url)
-		    linkedin_proj_['project_start_date'] = self.normalize(pro_startdate_iso)
-		    linkedin_proj_['project_end_date'] = self.normalize(pro_enddate_iso)
-		    linkedin_proj_['project_description'] = self.normalize(pro_desc)
+		    linkedin_proj_['sk'] = md5("%s%s%s%s%s"%(sk,pro_title, pro_url, pro_desc, pro_team_mates))
+		    linkedin_proj_['profile_sk'] = normalize(sk)
+		    linkedin_proj_['project_date'] = normalize(pro_single_date)
+		    linkedin_proj_['number_of_project_members'] = normalize(pro_team_mates)
+		    linkedin_proj_['project_member_names'] = normalize(team_mates_list)
+		    linkedin_proj_['project_occupation_name'] = normalize(pro_occp_name)
+		    linkedin_proj_['project_title'] = normalize(pro_title)
+		    linkedin_proj_['project_url']  = normalize(pro_url)
+		    linkedin_proj_['project_start_date'] = normalize(pro_startdate_iso)
+		    linkedin_proj_['project_end_date'] = normalize(pro_enddate_iso)
+		    linkedin_proj_['project_description'] = normalize(pro_desc)
 		    if linkedin_proj_['project_title'] or linkedin_proj_['project_description'] : yield linkedin_proj_
 
 		   
@@ -865,13 +789,13 @@ class LinkedinpremiumprofilesBrowse(scrapy.Spider):
 		if comp_link:
 		    if 'http' not in comp_link: comp_link = "%s%s"%(self.domain,comp_link)
 		linkedin_comp_ = Linkedinfollowcompanies()
-		linkedin_comp_['sk'] = self.md5("%s%s%s%s%s"%(sk, comp_canonicalname, comp_logo, comp_link, companies_count))
-		linkedin_comp_['profile_sk'] = self.normalize(sk)
-		linkedin_comp_['company_canonical_name'] =  self.normalize(comp_canonicalname)
-		linkedin_comp_['total_followee_count'] = self.normalize(str(companies_count))
-		linkedin_comp_['company_logo'] = self.normalize(comp_logo)
-		linkedin_comp_['company_universal_name'] = self.normalize(comp_universalname)
-		linkedin_comp_['company_url'] = self.normalize(comp_link)
+		linkedin_comp_['sk'] = md5("%s%s%s%s%s"%(sk, comp_canonicalname, comp_logo, comp_link, companies_count))
+		linkedin_comp_['profile_sk'] = normalize(sk)
+		linkedin_comp_['company_canonical_name'] =  normalize(comp_canonicalname)
+		linkedin_comp_['total_followee_count'] = normalize(str(companies_count))
+		linkedin_comp_['company_logo'] = normalize(comp_logo)
+		linkedin_comp_['company_universal_name'] = normalize(comp_universalname)
+		linkedin_comp_['company_url'] = normalize(comp_link)
 		if linkedin_comp_['company_canonical_name'] or linkedin_comp_['company_universal_name']: yield linkedin_comp_
 			
 					

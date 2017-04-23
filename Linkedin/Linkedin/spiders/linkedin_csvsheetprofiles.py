@@ -25,7 +25,7 @@ class Licsvfilepremium(object):
 	self.todays_excel_file  = csv.writer(oupf)
 	self.header_params =  []
 	patternk = '%keys%'
-	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at) >= '%s' and meta_data not like '%s'"%(self.modified_at, patternk)
+	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(created_at) >= '%s'"%(self.modified_at)
 	self.list_tables = ['linkedin_certifications','linkedin_courserecommendations','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_skills','linkedin_volunteer_experiences']
 	self.list_tables1 = ['linkedin_educations','linkedin_experiences','linkedin_honors']
 	self.main()

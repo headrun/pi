@@ -159,7 +159,21 @@ class Lixlsfilepremium(object):
     def send_xls(self):
 	self.cur.execute(self.query2)
 	records = self.cur.fetchall()
-	for inde, rec in enumerate(records):
+	q5 = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "%s" and table_name = "%s"'%('FACEBOOK', 'facebook_profiles')
+	self.cur.execute(q5)
+	reco5 = self.cur.fetchall()
+	for rec5 in reco5:
+		if 'aux' in rec5[0]:
+			self.cur.execute('select max(char_length(%s)) from facebook_profiles'%rec5[0])
+			recin = self.cur.fetchall()
+			if recin:
+				self.cur.execute('select %s from facebook_profiles where char_length(%s)="%s"'%(rec5[0], rec5[0],recin[0][0]))
+				recot = self.cur.fetchall()
+				if recot:
+					cvsd = recot[0][0].count('<>')
+					print cvsd, rec5[0]
+					print '*********************'
+	"""for inde, rec in enumerate(records):
 		values_final = []
 		sk = list(rec)[0]
 		sk = sk[:-7]
@@ -203,7 +217,7 @@ class Lixlsfilepremium(object):
 			#try: self.todays_excel_file.save(self.excel_file_name)
 			#except: print value	
 		self.row_count = self.row_count+1
-	self.todays_excel_file.save(self.excel_file_name)
+	self.todays_excel_file.save(self.excel_file_name)"""
 
 def main():
         obj = Lixlsfilepremium()

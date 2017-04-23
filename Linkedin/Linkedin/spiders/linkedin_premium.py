@@ -25,7 +25,6 @@ class LinkedinpremiumBrowse(scrapy.Spider):
 	self.conn_url = 'https://www.linkedin.com/mynetwork/invite-connect/connections/'
 	self.account_mail =  kwargs.get('mail', 'rajaqx@gmail.com')
 	self.account_password =  kwargs.get('password', 'linkedinpw')
-
 	dispatcher.connect(self.spider_closed, signals.spider_closed)
 
     def xcode(self, text, encoding='utf8', mode='strict'):
@@ -74,8 +73,11 @@ class LinkedinpremiumBrowse(scrapy.Spider):
         return [FormRequest.from_response(response, formname = 'login_form',\
                     formdata={'session_key':self.account_mail,'session_password':self.account_password,'isJsEnabled':'','source_app':'','tryCount':'','clickedSuggestion':'','signin':'Sign In','session_redirect':'','trk':'hb_signin','loginCsrfParam':logincsrf,'fromEmail':'','csrfToken':csrf_token,'sourceAlias':source_alias},callback=self.parse_next)]
 
+
+
     def spider_closed(self, spider):
 	cv = requests.get('https://www.linkedin.com/logout/').text
+
 	
     def parse_next(self, response):
 	sel = Selector(response)
@@ -97,6 +99,8 @@ class LinkedinpremiumBrowse(scrapy.Spider):
 	account_item['reference_url'] = self.normalize(self.conn_url)
 	if account_item['profile_sk']: yield account_item
 
+
+
     def parse_connectionscount(self, response):
 	sel = json.loads(response.body)
 	sk = response.meta['sk']
@@ -104,8 +108,10 @@ class LinkedinpremiumBrowse(scrapy.Spider):
 	all_keys = sel.get('content','')
 	if all_keys:
 		count_co = all_keys.get('connections','').get('i18n__All_numAll','')
+		count_co1 = all_keys.get('connections','').get('i18n__Shared_numShared','')
 		if count_co:
 			countc = int(''.join(re.findall('\((.*?)\)',count_co)).replace(',','').replace('.','').strip())
+			if countc == 0: countc = int(''.join(re.findall('\((.*?)\)',count_co1)).replace(',','').replace('.','').strip())
 			if countc:
 				for imi in range(0,countc,10):
 				    if imi>countc:

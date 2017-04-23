@@ -139,6 +139,7 @@ class Linkedinparsing(object):
                                                         if cv[-1] == '0': del cv[-1]
                                                         urlclear = ( '%s%s%s%s'%('https://www.linkedin.com/in/',''.join(re.findall('https://www.linkedin.com/pub/(.*?)/.*',urlclear)),'-',''.join(cv)))
 						sk = md5("%s%s"%(normalize(idf),normalize( linkedin_profilef)))
+						linkedin_profilef = linkedin_profilef.replace('pubwww.linkedin.comhttps:','').replace('"','')
 						print linkedin_profilef
 						values = (sk, linkedin_profilef, urlclear, 'linkedin', crawl_status,'', json.dumps(meta_date_from_browse),'linkedin', crawl_status, json.dumps(meta_date_from_browse),sk , '')
 						self.cur.execute(self.query, values)

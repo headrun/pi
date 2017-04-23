@@ -26,6 +26,7 @@ class LinkedinBrowse(scrapy.Spider):
 
     def __init__(self, *args, **kwargs):
         super(LinkedinBrowse, self).__init__(*args, **kwargs)
+	self.login = kwargs.get('login', 'ramanujan')
         self.con = MySQLdb.connect(db   = 'FACEBOOK', \
         host = 'localhost', charset="utf8", use_unicode=True, \
         user = 'root', passwd = 'root')
@@ -67,9 +68,14 @@ class LinkedinBrowse(scrapy.Spider):
         sel = Selector(response)
         logincsrf = ''.join(sel.xpath('//input[@name="loginCsrfParam"]/@value').extract())
         csrf_token = ''.join(sel.xpath('//input[@name="csrfToken"]/@value').extract())
-        source_alias = ''.join(sel.xpath('//input[@name="sourceAlias"]/@value').extract())        
-        return [FormRequest.from_response(response, formname = 'login_form',\
-            formdata={'session_key':'meatproject05@gmail.com','session_password':'ram123123','isJsEnabled':'','source_app':'','tryCount':'','clickedSuggestion':'','signin':'Sign In','session_redirect':'','trk':'hb_signin','loginCsrfParam':logincsrf,'fromEmail':'','csrfToken':csrf_token,'sourceAlias':source_alias},callback=self.parse_next)]
+        source_alias = ''.join(sel.xpath('//input[@name="sourceAlias"]/@value').extract())       
+	if self.login=='meatproject':
+	        return [FormRequest.from_response(response, formname = 'login_form',\
+        	    formdata={'session_key':'meatproject05@gmail.com','session_password':'ram123123','isJsEnabled':'','source_app':'','tryCount':'','clickedSuggestion':'','signin':'Sign In','session_redirect':'','trk':'hb_signin','loginCsrfParam':logincsrf,'fromEmail':'','csrfToken':csrf_token,'sourceAlias':source_alias},callback=self.parse_next)]
+
+	elif self.login=='ramanujan':
+		return [FormRequest.from_response(response, formname = 'login_form',\
+		    formdata={'session_key':'srinivasaramanujan427@gmail.com','session_password':'dotoday1#','isJsEnabled':'','source_app':'','tryCount':'','clickedSuggestion':'','signin':'Sign In','session_redirect':'','trk':'hb_signin','loginCsrfParam':logincsrf,'fromEmail':'','csrfToken':csrf_token,'sourceAlias':source_alias},callback=self.parse_next)]
 
     def parse_next(self, response):
         sel = Selector(response)
@@ -85,6 +91,12 @@ class LinkedinBrowse(scrapy.Spider):
 
     def parse_again(self, response):
         sel = Selector(response)
+	if 'unsupported-browser.html' in response.url:
+		anywa = ''.join(sel.xpath('//a[contains(text(),"anyway")]/@href').extract())
+		if anywa: yield Request(anywa, callback=self.parse_correct, dont_filter=True, meta={"sk":response.meta['sk']})
+	else: yield Request(response.url, callback=self.parse_correct, dont_filter=True, meta={"sk":response.meta['sk']})
+    def parse_correct(self, response):
+	sel = Selector(response)
         sk = response.meta['sk']
 	if response.status == 200: self.res_afterlogin = sel
 	if response.status != 200: self.cur.execute(update_get_params%(2,sk))

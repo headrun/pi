@@ -7,6 +7,8 @@ selectaux_params = 'select aux_info from linkedin_profiles where sk = "%s"'
 selectconn_params = 'select connections from linkedin_profiles where sk = "%s"'
 updateqry_params = "update linkedin_profiles set %s = '%s' where sk = '%s'"
 update_getc_params = "update linkedin_crawl set content_type='%s' where sk ='%s'"
+selectmailparams = "select sk, email, pass from linkedin_mails where crawl_status = 0 limit 1"
+update_based_table = "update %s set crawl_status=%s where sk = '%s'"
 header1_params = ['Phone Number', 'Email','Skills', 'Groups', 'Recommendations' , 'Following News', 'Following Companies', 'Following Influencers', 'Following Schools', 'Connections', 'ResponseAvailable','OriginalUrl','EmailAddress']
 header2_params = ['Linkedin', 'linkedin_firstName', 'linkedin_middleName', 'linkedin_lastName',\
             'linkedin_jobTitle', 'linkedin_company', 'linkedin_location', 'linkedin_industry',\
@@ -82,7 +84,7 @@ header2_params = ['Linkedin', 'linkedin_firstName', 'linkedin_middleName', 'link
             'linkedin_language2', 'linkedin_language3', 'linkedin_additionalInfo_interests',\
             'linkedin_additionalInfo_maritalStatus']
 original_url_list_params = {"https://www.linkedin.com/pub/hanafiah-hasni/5b/590/a75":"https://www.linkedin.com/in/hanafiah-hasni-a755905b","https://www.linkedin.com/pub/aaron-chong/3a/7a2/12":"https://www.linkedin.com/in/aaron-chong-0127a23a","https://www.linkedin.com/pub/alex-arroza-cpa-cisa-crisc/3/451/75b":"https://www.linkedin.com/in/alex-arroza-75b4513","https://www.linkedin.com/pub/japrin-thomas/3a/952/79a":"https://www.linkedin.com/in/japrin-thomas-79a9523a","https://www.linkedin.com/pub/ilyani-zahari/16/293/276":"https://www.linkedin.com/in/ilyanizahari","https://www.linkedin.com/pub/anwar-pazikadin/44/889/941":"https://www.linkedin.com/in/anwar-pazikadin-94188944","https://www.linkedin.com/pub/karthikeyan-vasudevan/23/39/5a0":"https://www.linkedin.com/in/karthikeyan-vasudevan-5a003923","https://www.linkedin.com/in/aajay-girit-b858154b":"https://www.linkedin.com/in/dr-aajay-girit-b858154b"}
-update_get_params = "update linkedin_crawl set crawl_status=%s where sk ='%s'"
+update_get_params = "update linkedin_crawl set crawl_status=%s where sk ='%s' and date(created_at) >= '2017-04-21'"
 get_qry_params = "select sk, url,meta_data from linkedin_crawl where crawl_status=0 limit 1"#need to keep 30
 meat_headers = {
         'Accept-Encoding': 'gzip, deflate, sdch',
@@ -92,4 +94,13 @@ meat_headers = {
         'X-Requested-With': 'XMLHttpRequest',
         'Connection': 'keep-alive',
         }
+
+
+
+ajax1_premium = "https://www.linkedin.com/profile/mappers?x-a=profile_v2_megaphone_articles%2Cprofile_v2_discovery%2Cprofile_v2_browse_map%2Cprofile_v2_references%2Cprofile_v2_background%2Cprofile_v2_courses%2Cprofile_v2_test_scores%2Cprofile_v2_patents%2Cprofile_v2_badge%2Cprofile_v2_basic_info%2Cprofile_v2_publications%2Cprofile_v2_name_bi%2Cprofile_v2_additional_info%2Cprofile_v2_volunteering%2Cprofile_v2_location_bi%2Cprofile_v2_contact_info%2Cprofile_v2_groups%2Cprofile_v2_skills%2Cprofile_v2_connections%2Cprofile_v2_follow%2Cprofile_v2_educations%2Cprofile_v2_summary%2Cprofile_v2_positions%2Cprofile_v2_honors%2Cprofile_v2_certifications%2Cprofile_v2_languages%2Cprofile_v2_projects%2Cprofile_v2_organizations%2Cprofile_v2_course_recommendations%2Cprofile_v2_endorsements&x-p=profile_v2_connections.distance%3A1%2Ctop_card.profileContactsIntegrationStatus%3A0%2Cprofile_v2_right_fixed_discovery.records%3A12%2Cprofile_v2_right_fixed_discovery.offset%3A0%2Cprofile_v2_browse_map.pageKey%3Anprofile_view_nonself%2Cprofile_v2_discovery.offset%3A0%2Cprofile_v2_discovery.records%3A12%2Cprofile_v2_discovery.records%3A12%2Ctop_card.tc%3Atrue%2Cprofile_v2_discovery.offset%3A0%2Cprofile_v2_summary_upsell.summaryUpsell%3Atrue&x-oa=bottomAliases&id="
+ajax2_premium = "&locale=en_US&snapshotID=&authToken="
+ajax3_premium = "&authType=name&invAcpt=&promoId=&notContactable=&primaryAction=&isPublic=false&sfd=true"
+allcompanies_ajax_premium = 'https://www.linkedin.com/profile/profile-v2-follow-companies?id="%s"&count=-1'
+domain_premium = "https://www.linkedin.com"
+
 

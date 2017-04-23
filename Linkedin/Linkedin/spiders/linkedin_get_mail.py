@@ -22,7 +22,7 @@ class Fbmail(object):
 			if 'kiranmayi@headrun.net' in mail['From'] or 'facebookdummyfb01@gmail.com' in mail['From']:
 				subject = mail['Subject']
 				date_time =  mail['Date']
-				if 'social media' in subject.lower():
+				if 'social' in subject.lower():
 				    processing_path = self.social_processing_path
 				    for part in mail.walk():
 					    if part.get_content_maintype() == 'multipart':

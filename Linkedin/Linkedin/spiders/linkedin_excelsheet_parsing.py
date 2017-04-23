@@ -77,7 +77,7 @@ class Linkedinparsing(object):
 				for xl_ in sheet_list:
 					sheet_ = ws_.get_sheet_by_name(name=xl_)
 					row_check = 0
-					email_address = linkedin_profile = ida = firstname = lastname = 0
+					email_address = linkedin_profile = ida = firstname = lastname = key_ = 0
 					for row in sheet_.iter_rows():
 						if row_check > 0:
 							row_check += 1
@@ -90,14 +90,8 @@ class Linkedinparsing(object):
 								email_address = counter
 							elif ('linkedin' in lower_head) or ('linkdin' in lower_head):
 								linkedin_profile = counter"""
-							if 'id' in lower_head:
-								ida = counter
-							elif 'firstname' in lower_head:
-								firstname = counter
-							elif 'lastname' in lower_head:
-								lastname = counter
-							elif 'linkdin_url' in lower_head:
-								linkedin_profile = counter
+							if 'key' in lower_head:
+								key_ = counter
 							elif 'linkedin'  in lower_head:
 								linkedin_profile = counter
 							elif 'email' in lower_head:
@@ -113,16 +107,16 @@ class Linkedinparsing(object):
 							temp_rows.append(i.value)
 						final_indents.append(temp_rows)
 					empty_dic = {}
-					counter_ = 0
+					counter_ = 70
 					for row in final_indents:
-						idf = self.rep_spl(row[ida])
+						#keyf = self.rep_spl(row[key_])
 						"""try: firstnamef = normalize(row[firstname])
 						except: pass 
 						try:
 							lastnamef = row[lastname]
 							if lastnamef: lastnamef= normalize(lastnamef.replace(u'\xc3\u0192\xc2\xb1',''))
 						except: pass"""
-						#email_addressf = normalize(row[email_address])
+						email_addressf = normalize(row[email_address])
 						linkedin_profilef = ''
 						try: linkedin_profilef = normalize(row[linkedin_profile])
 						except: pass
@@ -130,18 +124,18 @@ class Linkedinparsing(object):
 						#if lastnamef == 'lastname': continue
 						if linkedin_profilef.strip() == 'linkedin': continue
 						meta_date_from_browse = {}
-						meta_date_from_browse.update({"id":idf})
+						#meta_date_from_browse.update({"keys":keyf})
 						#meta_date_from_browse.update({"firstname":firstnamef})
 						#meta_date_from_browse.update({"lastname":lastnamef})
 						meta_date_from_browse.update({"linkedin_url":linkedin_profilef})
-						#meta_date_from_browse.update({"email_address":email_addressf})
+						meta_date_from_browse.update({"email_address":email_addressf})
 						crawl_status = 0
 						rows_ = []
 						if linkedin_profilef.count('http') > 1: 
 							inner_results = [i.replace('s://','https://').replace(', ht','').replace('LI Inmail Sent','').strip().strip(',') for i in filter(None,re.split('http*',linkedin_profilef))]
 							for inr in inner_results:
 								if (inr != 'https://de.linkedin.com/pub') and ('philippe-nieuwjaer') not in inr: rows_.append(inr)
-						#else: rows_.append(linkedin_profilef)
+						else: rows_.append(linkedin_profilef)
 						for rs in rows_:
 							linkedin_profilef = rs
 							if 'linkedin.com' not in normalize(linkedin_profilef): crawl_status = 10
@@ -163,13 +157,15 @@ class Linkedinparsing(object):
 								linkedin_profilef = ( '%s%s%s%s'%('https://www.linkedin.com/in/',''.join(re.findall('https://www.linkedin.com/pub/(.*?)/.*',linkedin_profilef)),'-',''.join(cv)))
 							if 'linkedin.com' not in linkedin_profilef: continue
 							counter_ += 1
-							sk = md5("%s%s%s"%(normalize(idf),normalize( linkedin_profilef), str(counter_)))
+							sk = md5("%s%s%s"%(normalize(email_addressf),normalize( linkedin_profilef), str(counter_)))
+							linkedin_profilef = linkedin_profilef.replace('pubwww.linkedin.comhttps:','').replace('"','')
 							values = (sk, linkedin_profilef, 'linkedin', crawl_status, json.dumps(meta_date_from_browse),'linkedin', json.dumps(meta_date_from_browse))
 							#print linkedin_profilef
 							#print meta_date_from_browse
 							#print '****************'
 							self.cur.execute(self.query, values)
-							print self.query%values
+							#print self.query%values
+							print values
 							print '*************************'
 		else:
 		    for prof_url in open('linkedin_file.py'):
