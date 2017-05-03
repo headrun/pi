@@ -1,0 +1,13 @@
+city_lks = '//div[@class="top-cities"]//a/@href'
+city_lks1 = '//span[@class="city-wrapper"]/a/@href'
+doc_nodes = '//div[@data-ana="ListingPageView:doctors"]/div[@class="listing-row-wrapper"]'
+details_block = './/div[@class="doc-details-block"]'
+name_xpath = './/h2[@itemprop="name"]//text()'
+qual_ = './/p[@class="doc-qualifications"]/span//text()'
+exp_ = './/p[@class="doc-exp-years"]/text()'
+specialities_ = './/p[@class="doc-specialties "]//span[@itemprop]//text()'
+clinic_name = './/p[@class="doc-clinic-name"]//span[@itemprop="name"]//text()'
+url_xpath = './a[@itemprop="url"][@data-doctor-id]/@href'
+id_xpath = './a[@itemprop="url"][@data-doctor-id]/@data-doctor-id'
+clinic_photos = './/a[img][not(@style)][@data-doctorid]/@href'
+
