@@ -372,8 +372,12 @@ def main():
 
     ret_user = '<>'.join(ret_user)
     sk = md5.md5(screen_url).hexdigest()
-    vals = (sk,args.name,name,normalize(description),location,tweets,following,followers,likes,image,listed_count,timezone,lang,verified,screen_url,args.email,'',detected_has,mentioned_user_name,no_of_RTs,ret_user,detected_domain,detected_sou,detected_las,avg_tweets_per_day)
+    vals = (sk,args.name,name,normalize(description),location,tweets,following,followers,\
+           likes,image,listed_count,timezone,lang,verified,screen_url,args.email,'',\
+           detected_has,mentioned_user_name,no_of_RTs,ret_user,detected_domain,\
+           detected_sou,detected_las,avg_tweets_per_day)
     cur.execute(qry,vals)
+    cur.execute(update_qry % screen_name)
 
 if __name__ == '__main__':
     try:
