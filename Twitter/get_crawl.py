@@ -25,8 +25,8 @@ class Login(object):
             os.system(cmd)
 
     def __del__(self):
-        self._db_connection.close()
-        self._db_cur.close()
+        self.con.close()
+        self.cur.close()
 
 
 if __name__ == '__main__':
