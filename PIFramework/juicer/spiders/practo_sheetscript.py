@@ -28,7 +28,7 @@ class Practocsv(object):
         self.doct_hospitals = list(chain.from_iterable(doct_hospitals))[2:-4]
         feedback_columns = fetchall(self.cur, self.columns_query%('DoctorFeedback'))
         feed_col = list(feedback_columns)
-        self.feedback_col = list(chain.from_iterable(feed_col))[2:-3]
+        self.feedback_col = list(chain.from_iterable(feed_col))[2:-4]
         self.headerlisting = []
         self.headerprofiles = []
         self.main()
@@ -53,14 +53,35 @@ class Practocsv(object):
             doct_hospitals = self.values_for(inde, doctor_meta_id)
             values_final.extend(doct_hospitals)
             callfun = self.querydesign(doctor_meta_id, inde)
-            values_final.extend([callfun])
+            if inde == 0: self.todays_excel_file1.writerow(self.headerprofiles)
+            orig_vals = values_final
+            countr=0
+            for cf in callfun:
+                countr+=1
+                uptovalues_here = orig_vals
+                uptovalues_here.extend(cf)
+                uptovalues_here =  [normalize(i) for i in uptovalues_here]
+                if len(self.headerprofiles) != len(uptovalues_here): import pdb;pdb.set_trace()
+                self.todays_excel_file1.writerow(uptovalues_here)
+                del orig_vals[-13:]
+
+            """values_final.extend([callfun])
             if inde == 0: self.todays_excel_file1.writerow(self.headerprofiles)
             values_final =  [normalize(i) for i in values_final]
-            self.todays_excel_file1.writerow(values_final)
+            self.todays_excel_file1.writerow(values_final)"""
 
 
     def querydesign(self, doctor_meta_id, hindex):
-        if hindex == 0:  self.headerprofiles.extend(['Feedback'])
+        if hindex == 0: self.headerprofiles.extend(self.feedback_col)
+        final_to_update = []
+        values = fetchall(self.cur, self.query2%("DoctorFeedback", 'doctor_id', doctor_meta_id))
+        for ind, val in enumerate(values):
+            vals_ = list(val)[2:-4]
+            final_to_update.append(vals_)
+        if not final_to_update:
+            final_to_update.append(['' for i in self.feedback_col])
+        return final_to_update
+        """if hindex == 0:  self.headerprofiles.extend(['Feedback'])
         values = fetchall(self.cur, self.query2%("DoctorFeedback", 'doctor_id', doctor_meta_id))
         final_to_update = []
         for ind, val in enumerate(values):
@@ -70,7 +91,7 @@ class Practocsv(object):
                 feedb_= map(lambda x:x+indes, feed_)
                 valf = filter(None, map(lambda a,b: (a+':-'+b) if b else '', feedb_,vals_))
                 final_to_update.append(', '.join(valf))
-        return ' <> '.join(final_to_update)
+        return ' <> '.join(final_to_update) """
 
 
 
@@ -88,7 +109,7 @@ class Practocsv(object):
         countrec = fetchall(self.cur, self.query2%("DoctorHospital", 'doctor_id', doctor_meta_id))
         cntf_ = []
         if countrec:
-                cntf = map(lambda x:(x[2:-3]), countrec)
+                cntf = map(lambda x:(x[2:-4]), countrec)
                 cntf_ = list(chain.from_iterable(cntf))
         if len(cntf_) != len(va):
                 lnewln = len(va) - len(cntf_)
