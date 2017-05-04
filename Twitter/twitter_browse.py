@@ -20,6 +20,10 @@ class TwitterBrowse(object):
                         vals = (str(name),str(screen_url),'keepup','Twitter','related_type',0,str(email_id))
                         self.cur.execute(self.insert_query,vals)
                         self.con.commit()
+                        
+    def __del__(self):
+        self.con.close()
+        self.cur.close()
 
 
 if __name__ == '__main__':
