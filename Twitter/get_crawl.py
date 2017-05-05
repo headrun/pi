@@ -1,5 +1,4 @@
 import os
-import MySQLdb
 from twitter_constants import *
 
 
