@@ -1,18 +1,15 @@
 import os
 import MySQLdb
+from twitter_constants import *
+
 
 class Login(object):
 
     def __init__(self):
-        self.con = MySQLdb.connect(db='TWITTER',
-                              user='root',
-                              passwd='hdrn59!',
-                              charset="utf8",
-                              host='localhost',
-                              use_unicode=True)
+        self.con = con
         self.cur = self.con.cursor()
-        self.select_qry = 'select  sk,url,meta_data from twitter_crawl where crawl_status = 0 limit 1'
-        self.update_qry = 'update twitter_crawl set crawl_status=9 where sk= "%s"'
+        self.select_qry = select_qry
+        self.update_qry = upd_qry
 
     def main(self):
         self.cur.execute(self.select_qry)
