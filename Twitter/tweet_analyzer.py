@@ -17,7 +17,7 @@ import collections
 import datetime
 import MySQLdb
 import time
-from db_input import *
+from twitter_constants import *
 from  linkedin_functions import *
 
 
@@ -378,6 +378,7 @@ def main():
            detected_sou,detected_las,avg_tweets_per_day)
     cur.execute(qry,vals)
     cur.execute(update_qry % screen_name)
+    con.close()
 
 if __name__ == '__main__':
     try:
