@@ -1,4 +1,3 @@
-import MySQLdb
 from twitter_constants import *
 
 class TwitterBrowse(object):
