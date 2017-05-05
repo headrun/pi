@@ -3,7 +3,7 @@
 db_user   = 'root'
 db_passwd = 'hdrn59!'
 db_host   = 'localhost'
-db_name   = 'Twitter'
+db_name   = 'TWITTER'
 
 #Access and Consumer Tokens
 #Aruna
