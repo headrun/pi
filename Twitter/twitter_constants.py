@@ -2,7 +2,7 @@
 
 db_user = 'root'
 db_passwd = 'hdrn59!'
-db_host = 'host'
+db_host = 'localhost'
 db_name = 'Twitter'
 
 #Access and Consumer Tokens
