@@ -1,3 +1,5 @@
+import MySQLdb
+
 #db details
 
 db_user   = 'root'
