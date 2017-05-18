@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Profile Example</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
+  <style>
+  body {
+      position: relative;
+  }
+  #section1 {padding-top:50px;height:1000px;color: black; background-color: #b7acac;}
+  #section2 {padding-top:50px;height:100px;color: black; background-color: #673ab7;}
+ <!-- <!--  #section3 {padding-top:50px;height:500px;color: #fff; background-color: #ff9800;}
+  #section41 {padding-top:50px;height:500px;color: #fff; background-color: #00bcd4;}
+  #section42 {padding-top:50px;height:500px;color: #fff; background-color: #009688;} -->
+  </style>
+  <script>
+  var slideIndex = 0;
+  slideIndex=1;
+        showDivs(slideIndex);
+
+function plusDivs(n) {
+  showDivs(slideIndex += n);
+}
+
+function showDivs(n) {
+  var i;
+  var x = document.getElementsByClassName("mySlides");
+  if (n > x.length) {slideIndex = 1}
+  if (n < 1) {slideIndex = x.length}
+  for (i = 0; i < x.length; i++) {
+     x[i].style.display = "none";
+  }
+  x[slideIndex-1].style.display = "block";
+}
+    /*var slider = $('.bxslider').bxSlider({
+      mode: 'fade'
+      });
+
+      $('#slider-next').click(function(){
+        slider.goToNextSlide();
+          return false;
+          });
+
+          $('#slider-count').click(function(){
+            var count = slider.getSlideCount();
+              alert('Slide count: ' + count);
+                return false;
+                });*/
+  </script>
+</head>
+<body data-spy="scroll" data-target=".navbar" data-offset="50">
+
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container-fluid">
+    <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">HeadRun</a>
+    </div>
+    <div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav">
+          <li><a href="#section1">Profile Details</a></li>
+          <li><a href="#section2">Social Profiles</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+<div id="section1" class="container-fluid">
+
+  <div class="container">
+      <div class="row">
+        <div class="" >
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <h3 class="panel-title">Profile Details({{data_dic.get('likelihood','-')}})</h3>
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-md-8">
+                  <table class="table table-user-information">
+                    <tbody>
+                      <tr>
+                        <th>Name:</th>
+                        <td>{{data_dic.get('name','-')}}</td>
+                      </tr>
+                      <tr>
+                        <th>Family Name:</th>
+                        <td>{{data_dic.get('family_name','-')}}</td>
+                      </tr>
+                      <tr>
+                        <th>Websites:</th>
+                        <td>
+                        {% for web in data_dic.get('websites','-')%}
+                            <a href={{web}}>{{web}}</a>
+                            {% if not loop.last %}
+                                ,
+                                {% endif %}
+                        {% endfor %}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th>Age:</th>
+                        <td>{{data_dic.get('age','-')}}</td>
+                      </tr>
+                      <tr>
+                        <th>Gender:</th>
+                        <td>{{data_dic.get('gender','-')}}</td>
+                      </tr>
+                      <tr>
+                        <th>Country :</th>
+                        <td>{{data_dic.get('country','-')}}</td>
+                      </tr>
+                      <tr>
+                        <th>State :</th>
+                        <td>{{data_dic.get('state','-')}}</td>
+                      </tr>
+                      <tr>
+                        <th>City:</th>
+                        <td>{{data_dic.get('city','-')}}</td>
+                      </tr>
+                      <tr>
+                        <th>Continent:</th>
+                        <td>{{data_dic.get('continent','-')}}</td>
+                      </tr>
+                      <tr>
+                        <th>Location:</th>
+                        <td>{{data_dic.get('location','-')}}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="col-md-4 w3-content w3-display-container" align="center">
+                {% if data_dic.get('richmedia','') %}
+                    {% for rm in data_dic.get('richmedia','') %}
+                        {% if rm.get('image_url','')%}
+                            {% if loop.index == 1 %}
+                                <img alt="User Pic" src={{rm.get('image_url')}} id="img1" width="204" height="236" class="img-circle img-responsive mySlides" >
+                            {% else %}
+                                <img alt="User Pic" src={{rm.get('image_url')}} id="img1" width="204" height="236" class="img-circle img-responsive mySlides" style="display: none;">
+                            {% endif %}
+                    <button class="w3-button w3-black w3-display-left" onclick="plusDivs(-1)">&#10094;</button>
+                    <button class="w3-button w3-black w3-display-right" onclick="plusDivs(1)">&#10095;</button>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+           </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+    {% if data_dic.get('organizations',[]) %}
+        <table class="table table-condensed">
+            <thead>
+                <tr>
+                    <th>Organization</th>
+                    <th>Headline</th>
+                    <th>Is current</th>
+                    <th>Start date</th>
+                    <th>End date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for rec in data_dic.get('organizations',[])%}
+                <tr>
+                    <td>{{rec.get('organization','--')}}</td>
+                    <td>{{rec.get('headline','--')}}</td>
+                    <td>{{rec.get('is_current','--')}}</td>
+                    <td>{{rec.get('start_date','--')}}</td>
+                    <td>{{rec.get('end_date','--')}}</td>
+                </tr>
+                {% endfor%}
+            </tbody>
+        </table>
+    {% endif%}
+
+<div id="section2" class="container-fluid">
+  <div class="row">
+        <div class="" >
+          <div class="panel panel-info">
+            <div class="panel-heading">
+              <h3 class="panel-title">Social Profiles</h3>
+            </div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="col-md-4">
+                            <div class="panel panel-info">
+              <div class="panel-heading">Twitter fields</div>
+              <div class="panel-body">
+                <tr>
+                    <th>Profile url: </th>
+                    <td> {{data_dic.get('twitter_field',{}).get('profile_url','--')}}</br></td>
+                </tr>
+                <tr>
+                    <th>Name: </th>
+                    <td> {{data_dic.get('twitter_field',{}).get('name','--')}}</br></td>
+                </tr>
+
+                <tr>
+                    <th>Number of followers: </th>
+                    <td> {{data_dic.get('twitter_field',{}).get('followers','--')}}</br></td>
+                </tr>
+                <tr>
+                    <th>Biography: </th>
+                    <td> {{data_dic.get('twitter_field',{}).get('biography','--')}}</br></td>
+                </tr>
+              </div>
+    </div>
+                </div>
+                 <div class="col-md-4">
+                            <div class="panel panel-info">
+              <div class="panel-heading">Linked In Fields</div>
+              <div class="panel-body">
+                <tr>
+                    <th>Profile url: </th>
+                    <td> {{data_dic.get('linkedin_field',{}).get('profile_url','--')}}</br></td>
+                </tr>
+                <tr>
+                    <th>Name: </th>
+                    <td> {{data_dic.get('linkedin_field',{}).get('name','--')}}</br></td>
+                </tr>
+
+                <tr>
+                    <th>Number of followers: </th>
+                    <td> {{data_dic.get('linkedin_field',{}).get('followers','--')}}</br></td>
+                </tr>
+                <tr>
+                    <th>Biography: </th>
+                    <td> {{data_dic.get('linkedin_field',{}).get('biography','--')}}</br></td>
+                </tr>
+
+
+              </div>
+    </div>
+                </div>
+                 <div class="col-md-4">
+                  <div class="panel panel-info">
+              <div class="panel-heading">FaceBook  Fields</div>
+              <div class="panel-body">
+                <tr>
+                    <th>Profile url: </th>
+                    <td> {{data_dic.get('facebook_field',{}).get('profile_url','--')}}</br></td>
+                </tr>
+                <tr>
+                    <th>Name: </th>
+                    <td> {{data_dic.get('facebook_field',{}).get('name','--')}}</br></td>
+                </tr>
+                <tr>
+                    <th>Number of followers: </th>
+                    <td> {{data_dic.get('facebook_field',{}).get('followers','--')}}</br></td>
+                </tr>
+                <tr>
+                    <th>Biography: </th>
+                    <td> {{data_dic.get('facebook_field',{}).get('biography','--')}}</br></td>
+                </tr>
+              </div>
+    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+</div>
+
+
+</body>
+</html>

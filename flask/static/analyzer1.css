@@ -1,0 +1,14 @@
+.one-third{
+    width: 31.333%;
+    float: left;
+}
+.photos{
+    max-width: 400px;
+    margin: 0 auto 20px;
+    float:right;
+}
+.image-container2 {
+    background-size:55px 500px;
+    height:500px;
+    width:55px;    float:middle;
+}
