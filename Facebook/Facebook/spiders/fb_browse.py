@@ -6,6 +6,7 @@ import MySQLdb
 import xlwt
 import os
 import md5
+import string
 import traceback
 import logging
 import logging.handlers
@@ -15,6 +16,7 @@ from scrapy.spider import BaseSpider
 from scrapy.selector import Selector
 from scrapy.http import Request, FormRequest
 from fb_browse_queries import *
+from fb_constants import *
 
 class FacebookBrowse(BaseSpider):
     name = "facebook_browse"
@@ -23,7 +25,9 @@ class FacebookBrowse(BaseSpider):
 
     def __init__(self, *args, **kwargs):
         super(FacebookBrowse, self).__init__(*args, **kwargs)
-	self.login = kwargs.get('login', 'sindu')
+	#self.login = kwargs.get('login', 'ch')
+        #self.login = kwargs.get('login', 'anusha1903')
+        self.login = kwargs.get('login','anucherry1903')
 	self.domain = "https://mbasic.facebook.com"
         self.con = MySQLdb.connect(db   = 'FACEBOOK', \
         host = 'localhost', charset="utf8", use_unicode=True, \
@@ -31,7 +35,7 @@ class FacebookBrowse(BaseSpider):
         self.cur = self.con.cursor()
         self.about = '/about'
         self.likes = '?v=likes'
-        self.friends = '/friends'
+        #self.friends = '/friends'
         self.following = '?v=following'
 	self.cur.execute(get_qry_params)
 	self.profiles_list = [i for i in self.cur.fetchall()]
@@ -41,7 +45,7 @@ class FacebookBrowse(BaseSpider):
         self.log_dir = os.path.join(os.getcwd(), 'logs')
         self.init_logger("%s_%s.log" %(self.myname,self.cur_date))
 	dispatcher.connect(self.spider_closed, signals.spider_closed)
-
+        
     def spider_closed(self, spider):
 	if self.res_afterlogin:
 		login_url = self.res_afterlogin.xpath('//a[contains(@href,"/logout.php")]/@href').extract()
@@ -68,38 +72,23 @@ class FacebookBrowse(BaseSpider):
 
     def parse(self, response):
         sel = Selector(response)
-        lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
-        lgnrnd = ''.join(sel.xpath('//input[@name="lgnrnd"]/@value').extract())
-	if self.login=='sindu':
-        	return [FormRequest.from_response(response, formname = 'login_form',\
-                	formdata={'email':'sindhu4a1@gmail.com','pass':'9989365570','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
-	elif self.login == 'niki':
-        	return [FormRequest.from_response(response, formname = 'login_form',\
-            		formdata={'email':'nikitha.ccvy.513@gmail.com','pass':'dingdongbell@123','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
-	elif self.login=='bala':
-	        return [FormRequest.from_response(response, formname = 'login_form',\
-        	        formdata={'email':'balakumaridevara@gmail.com','pass':'bala123123','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
-	elif self.login == 'dummy':
+        #login = ''
+        if self.profiles_list  :
+		login  = constants_dict[self.login] 
+		lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
+		lgnrnd = ''.join(sel.xpath('//input[@name="lgnrnd"]/@value').extract())
+	      
 		return [FormRequest.from_response(response, formname = 'login_form',\
-                        formdata={'email':'imfacebookdummy01@gmail.com','pass':'ram123123','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
-	elif self.login == 'fbdummy':
-		return [FormRequest.from_response(response, formname = 'login_form',\
-			formdata={'email':'facebookdummyfb01@gmail.com','pass':'01123123','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
-	elif self.login == 'kolla':
-		return [FormRequest.from_response(response, formname = 'login_form',\
-			formdata={'email':'kollaprasanthi1997@gmail.com','pass':'515515515','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
-	
-        elif self.login == 'pavani':
-                return [FormRequest.from_response(response, formname = 'login_form',\
-                        formdata={'email':'ccvy1.pavani1886@gmail.com','pass':'ccvy1.pavani@1886','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
-        elif self.login == 'rama':
-                return [FormRequest.from_response(response, formname = 'login_form',\
-                        formdata={'email':'srinivasaramanujan427@gmail.com','pass':'dotoday1#','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
-        elif self.login == 'ch':
-                return [FormRequest.from_response(response, formname = 'login_form',\
-                        formdata={'email':'cheedellach@gmail.com','pass':'cheedellach427','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
+				formdata={'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
+		#return [FormRequest.from_response(response, formname = 'login_form',\
+				#formdata={'email':'anusha1903','pass':'1903@1733','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
+
+    def parse_close(self, response):
+	sel = Selector(response)
+	self.res_afterlogin = sel
 
     def parse_next(self, response):
+	yield Request('https://mbasic.facebook.com/', callback=self.parse_close)
         sel = Selector(response)
         for profilei in self.profiles_list:
             sk = profilei[0]
@@ -113,13 +102,15 @@ class FacebookBrowse(BaseSpider):
             url_about = "%s%s"%(profile,self.about)
             url_following = "%s%s"%(profile,self.following)
             url1_about = "%s%s"%(profile,self.likes)
-            url_friends = "%s%s"%(profile, self.friends)
-            list_of_pa = [(url_about,'about'), (url_following,''), (url1_about,''), (url_friends,''), (profile,'about')]
+            #url_friends = "%s%s"%(profile, self.friends)
+            #list_of_pa = [(url_about,'about'), (url_following,''), (url1_about,''), (url_friends,''), (profile,'about')]
+            list_of_pa = [(url_about,'about'), (url_following,''), (url1_about,''), (profile,'about')]
             for urls in list_of_pa:
                 yield Request(urls[0], callback=self.parse_profile, meta={'sk':sk,"al":'',"see_more":'','profile':profile,"check_list":'','not_found':urls[1], 'email_address':email_address},dont_filter=True)
 
     def parse_profile(self, response):
         sel = Selector(response)
+        #self.res_afterlogin = sel
         sk = response.meta['sk']
 	if response.status != 200: self.cur.execute(update_get_params%(2,sk))
         not_found = ''.join(sel.xpath('//title/text()').extract())
@@ -166,8 +157,10 @@ class FacebookBrowse(BaseSpider):
                 other_names = ''.join(sel.xpath('//div[contains(@title,"Other")]//td[@class]//text()').extract())
                 messenger = ''.join(sel.xpath('//div[contains(@title,"Messenger")]//td[@class]//text()').extract())
                 home_phone = ''.join(sel.xpath('//div[@title="Home"]//td[@class]//text()').extract())
+                no_of_friends = ''.join(sel.xpath('//a[contains(text(),"See all friends")]//text()').extract())
+                if no_of_friends : no_of_friends = "".join(re.findall('(\d+)',no_of_friends))
                 if name:
-		    self.res_afterlogin = sel
+		    #self.res_afterlogin = sel
                     name_vals = ('name', self.replacefun(name), sk)
                     self.cur.execute(updateqry_params% name_vals)
                     if owner_id:
@@ -182,12 +175,18 @@ class FacebookBrowse(BaseSpider):
                         up_aux3.update({"current_city":self.replacefun(current_city)})
                     if howe_town:
                         up_aux3.update({"home_town":self.replacefun(howe_town)})
+
+               
+
+                    if no_of_friends :
+                        up_aux3.update({"no_of_friends":self.replacefun(no_of_friends)})
                     if facebook_cont:
                         up_aux3.update({"facebook":self.replacefun(facebook_cont)})
                     if birthday:
                         up_aux3.update({"birthday":self.replacefun(birthday)})
                     if gender: up_aux3.update({"gender":self.replacefun(gender)})
                     if professional_skills: up_aux3.update({"professional_skills":self.replacefun(professional_skills)})
+                    if no_of_friends : up_aux3.update({"no_of_friends":self.replacefun(no_of_friends)})
                     if mobile: up_aux3.update({"mobile":self.replacefun(mobile)})
                     if instagram: up_aux3.update({"instagram":self.replacefun(instagram)})
                     if websites: up_aux3.update({"websites":self.replacefun(websites)})
@@ -209,14 +208,14 @@ class FacebookBrowse(BaseSpider):
         others_list,clothing_list,activities_list, interests_list, music_list, books_list, movies_list, tvshow_list, favteams_list, favathe_list, friends_list, games_list, restaurants_list, websites_list, work_list, education_list, family_list,sports_list, inspirationalpeople_list, following_list = [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
         ab_list = []
         seetv_likes_list, seetv_watched_list, seemv_likes_list, seemv_watched_list, seebk_likes_list,television_list, reads_list = [],[],[],[],[],[],[]
-        dic_keys = {"Other":others_list,"Clothing":clothing_list,"Activities":activities_list,'Interests':interests_list,"Music":music_list, "Books":books_list,"Movies":movies_list,"TV Shows":tvshow_list, "Favorite Teams":favteams_list, "Favorite Athletes":favathe_list,"Games":games_list, "Restaurants":restaurants_list, "Websites":websites_list, "work":work_list, "education":education_list, "family":family_list,"Favorite Sports":sports_list, "Friends":friends_list,"Films":movies_list,"TV Programmes":tvshow_list,"Inspirational People":inspirationalpeople_list,'Television':television_list,"Favourite teams":favteams_list,"Favourite athletes":favathe_list,"following":following_list}
+        dic_keys = {"Other":others_list,"Clothing":clothing_list,"Activities":activities_list,'Interests':interests_list,"Music":music_list, "Books":books_list,"Movies":movies_list,"TV Shows":tvshow_list, "Favorite Teams":favteams_list, "Favorite Athletes":favathe_list,"Games":games_list, "Restaurants":restaurants_list, "Websites":websites_list, "work":work_list, "education":education_list, "family":family_list,"Favorite Sports":sports_list, "Friends":friends_list,"Films":movies_list,"TV Programmes":tvshow_list,"Inspirational People":inspirationalpeople_list,'Television':television_list,"Favourite teams":favteams_list,"Favourite athletes":favathe_list,"following":following_list,"Inspirational people":inspirationalpeople_list}
         dic_keys_movie ={'Likes':seemv_likes_list,'Watched': seemv_watched_list,"Movies":seemv_likes_list,"Films":seemv_likes_list}
         dic_keys_tvshow = {'Likes':seetv_likes_list,'Watched': seetv_watched_list,'Television':television_list,'TV Shows':seetv_likes_list,"TV Programmes":seetv_likes_list}
         dic_keys_books = {'Likes':seebk_likes_list, 'Read': reads_list,'Books':seebk_likes_list}
         check, check_list = '',''
         if not response.meta['see_more']:
             if 'likes' in response.url:
-                ab_list = ["Other","Clothing","Activities",'Interests',"Music","Books","Movies","TV Shows","Favorite Teams","Favorite Athletes","Games","Restaurants","Websites","Favorite Sports","Films","TV Programmes","Inspirational People","Favourite teams","Favourite athletes"]
+                ab_list = ["Other","Clothing","Activities",'Interests',"Music","Books","Movies","TV Shows","Favorite Teams","Favorite Athletes","Games","Restaurants","Websites","Favorite Sports","Films","TV Programmes","Inspirational People","Favourite teams","Favourite athletes", 'Inspirational people']
             elif 'friends' in response.url:
                 ab_list = ["Friends"]
             elif 'followers' in response.url or 'following' in response.url:
@@ -291,7 +290,15 @@ class FacebookBrowse(BaseSpider):
                         inner_node = node.xpath('.//td[not(img)]')
                         childs = inner_node.xpath('./child::*')
                     else:
-                        inner_node = node.xpath('.//div[@class="clear"]/parent::div')
+			allphabets_string =  list(string.ascii_lowercase)
+			inner_node = node.xpath('.//div[@class="clear"]/parent::div')
+			if not inner_node:
+				for alp in allphabets_string:
+					inner_node = node.xpath('.//div[@class="b%s"]/parent::div'%alp)
+					if inner_node: break
+			
+			
+                        """inner_node = node.xpath('.//div[@class="clear"]/parent::div')
                         if not inner_node: inner_node = node.xpath('.//div[@class="bt"]/parent::div')
                         if not inner_node: inner_node = node.xpath('.//div[@class="bv"]/parent::div')
                         if not inner_node: inner_node = node.xpath('.//div[@class="br"]/parent::div')
@@ -300,6 +307,8 @@ class FacebookBrowse(BaseSpider):
                         if not inner_node: inner_node = node.xpath('.//div[@class="bs"]/parent::div')
 			if not inner_node: inner_node = node.xpath('.//div[@class="bj"]/parent::div')
 			if not inner_node: inner_node = node.xpath('.//div[@class="bi"]/parent::div')
+			if not inner_node: inner_node = node.xpath('.//div[@class="bq"]/parent::div')
+			if not inner_node: inner_node = node.xpath('.//div[@class="br"]/parent::div')"""
                         childs = inner_node.xpath('./div/child::*[local-name()!="br"]')
                     above, below = ['']*2
                     if len(childs)>1:
@@ -348,9 +357,11 @@ class FacebookBrowse(BaseSpider):
 				see_more = ''.join(node.xpath('//a[span[contains(text(),"See more")]]/@href').extract())
 				if not see_more: ''.join(node.xpath('//a[span[contains(text(),"see more")]]/@href').extract()) 
 			    if not see_more:
-                                see_more = ''.join(sel.xpath('//div[h3[contains(text(),"%s")]]/following-sibling::div[2]/a[contains(text(),"more")]/@href'%al).extract())
+                                try: see_more = ''.join(sel.xpath('//div[h3[contains(text(),"%s")]]/following-sibling::div[2]/a[contains(text(),"more")]/@href'%al).extract()[0])
+				except: see_more = ''
                                 if not see_more:
-                                    see_more = ''.join(sel.xpath('//div[h3[contains(text(),"%s")]]/following-sibling::div[2]/a[contains(text(),"See more")]/@href'%al).extract())
+                                    try: see_more = ''.join(sel.xpath('//div[h3[contains(text(),"%s")]]/following-sibling::div[2]/a[contains(text(),"See more")]/@href'%al).extract()[0])
+				    except: see_more = ''
                         if see_more:
                             if 'following' in al:
                                 for i_ in see_more:
@@ -361,7 +372,8 @@ class FacebookBrowse(BaseSpider):
                                     url_again = "%s%s"%("https://mbasic.facebook.com",see_more)
                                     yield Request(url_again, callback= self.parse_profile,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':''})
                         if not see_more:
-                            see_more = ''.join(sel.xpath('//a[span[contains(text(),"See more")]]/@href').extract())
+                            try: see_more = ''.join(sel.xpath('//a[span[contains(text(),"See more")]]/@href').extract()[0])
+			    except: see_more = ''
                             url_again = "%s%s"%("https://mbasic.facebook.com",see_more)
                             if see_more: yield Request(url_again, callback= self.parse_profile,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':''})
                 if 'Friends' in al:
@@ -373,6 +385,7 @@ class FacebookBrowse(BaseSpider):
                         if 'mbasic' not in see_more:
                             url_again = "%s%s"%("https://mbasic.facebook.com",see_more)
                             yield Request(url_again, callback= self.parse_profile,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':''})
+        
 
         all_lists = [(others_list,'fb_others','others'),(clothing_list,'fb_clothing','clothing'), (activities_list,'fb_activities','activities'), (interests_list,'fb_interests', 'interests'), (music_list,'fb_music','music'), (books_list,'fb_books','book'), (movies_list,'fb_movies','movies'), (tvshow_list, 'fb_tvshows','tvshows'), (favteams_list,'fb_favaourite_athelets','atheletes'), (favathe_list,'fb_favourite_teams','teams'), (games_list,'fb_games','games'), (restaurants_list,'fb_restaurants','restaurants'), (websites_list,'fb_websites','websites'), (work_list,'fb_works','work'), (education_list,'fb_education','education'), (family_list,'fb_family','family'),(sports_list, 'fb_favourite_sports','sports'),(friends_list,'fb_friends','friends'),(inspirationalpeople_list,'fb_inspirational_people','inspirational_people'),(seetv_likes_list,'fb_tvshow_likes','tvshow_likes'), (seetv_watched_list,'fb_tvshows_watched','tvshow_watched'), (seemv_likes_list,'fb_movies_likes','movie_likes'), (seemv_watched_list,'fb_movies_watched','movie_watched'),(seebk_likes_list,'fb_book_likes','books_likes'), (reads_list,'fb_read_books','read_books'),(following_list,'fb_following','read_followers')]
         for alk in all_lists:
@@ -386,11 +399,13 @@ class FacebookBrowse(BaseSpider):
                     if up_aux1.get(alk[1],''):
                         fromothe = up_aux1.get(alk[1],'').split('<>')
                         fromothe.extend(set(alk[0]))
-                        up_aux1.update({alk[1]:self.replacefun('<>'.join(fromothe))})
+                        up_aux1.update({alk[1]:self.replacefun('<>'.join(list(set(fromothe))))})
                     else:
                         up_aux1.update({alk[1]:self.replacefun('<>'.join(set(alk[0])))}) 
                     self.cur.execute(updateqry_params%(keyf, json.dumps(up_aux1,ensure_ascii=False, encoding="utf-8"),sk))
-                except Exception,e: self.log.error("Error: %s", traceback.format_exc())
+                except Exception,e:
+			self.log.error("Error: %s", traceback.format_exc())
+			self.log.info("Message - %s" %(response.url))
 
     def replacefun(self, text):
         text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###')
