@@ -1,183 +1,94 @@
-import xlwt
-import MySQLdb
-import json
-import datetime
-import md5
-from itertools import chain
-import re
-import os
-import optparse
+from linkedin_functions import *
+from linkedin_queries import *
 
 class Lifilepde(object):
 
     def __init__(self, *args, **kwargs):
 	self.modified_at     = options.modified_at
-        self.con = MySQLdb.connect(db   = 'FACEBOOK', \
-        host = 'localhost', charset="utf8", use_unicode=True, \
-        user = 'root', passwd ='root')
-        self.cur = self.con.cursor()
+	self.table_flag = options.table_creation_needed
+	self.limit = options.limit
+	self.con, self.cur = get_mysql_connection(DB_HOST, 'FACEBOOK', '')
         self.file_dirs = os.path.join(os.getcwd(),'OUTPUT')
         self.QUERY_FILES_DIR = os.path.join(self.file_dirs, 'processing')
         self.QUERY_FILES_CRAWLOUT_DIR = os.path.join(self.file_dirs, 'crawl_out')
-        self.na = 'linkedin_newless'
         self.tables_file = self.get_tables_file()
-	#self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at)>= '2017-03-27' and date(modified_at) < '2017-04-07'"
-	patternk = '%keys%'
-	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(modified_at) >= '%s' and meta_data not like '%s'"%(self.modified_at, patternk)
-	self.list_tables = ['linkedin_certifications','linkedin_courserecommendations','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_skills','linkedin_volunteer_experiences']
-	self.list_tables1 = ['linkedin_educations','linkedin_experiences','linkedin_honors']
-	self.altertable = 'alter table linkedin_newless add column %s %s COLLATE utf8_unicode_ci after %s'
-	self.altertable1 = 'alter table linkedin_newless add column %s %s after %s'
-	self.quer1 = 'INSERT INTO linkedin_newless ('
-	self.quer2 = ['sk', 'original_url', 'id', 'status_of_url', 'data_available_flag', 'email_id','profile_url', 'profileview_url', 'name', 'first_name', 'last_name', 'member_id', 'headline', 'no_of_followers', 'profile_post_url', 'summary', 'number_of_connections', 'industry', 'location', 'languages', 'emails', 'websites', 'addresses', 'message_handles', 'phone_numbers', 'birthday', 'birth_year', 'birth_month', 'twitter_accounts', 'profile_image', 'interests']
-	self.check()
-	self.main()
+	self.query2 = "select sk, url, meta_data, crawl_status from LINKEDIN_NEW.linkedin_crawl where date(created_at) >= '%s' limit %s"%(self.modified_at, self.limit)
+	self.quer1 = 'INSERT INTO %s ('%table_name_denor
+	self.quer2 = quer2_denor
+	if self.table_flag:
+		self.check()
+	if self.limit:
+		self.main()
 
     def check(self):
-	self.cur.execute('show tables like "%linkedin_newless%"')
-	table_check = self.cur.fetchall()
+	pattern_toc = "%s%s%s"%("%",table_name_denor,"%")
+	table_check = fetchmany(self.cur, 'show tables like "%s"'%pattern_toc)
 	if table_check:
-		self.cur.execute('drop table linkedin_newless')
-	self.cur.execute("CREATE TABLE `linkedin_newless` (   `sk` varchar(300) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `original_url` text COLLATE utf8_unicode_ci,   `id` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `status_of_url` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `data_available_flag` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',  `email_id` varchar(200) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `profile_url` text COLLATE utf8_unicode_ci,   `profileview_url` text COLLATE utf8_unicode_ci,   `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `first_name` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `last_name` varchar(255) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `member_id` varchar(25) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `headline` text COLLATE utf8_unicode_ci,   `no_of_followers` varchar(20) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `profile_post_url` text COLLATE utf8_unicode_ci,   `summary` text COLLATE utf8_unicode_ci,   `number_of_connections` varchar(15) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',   `industry` text COLLATE utf8_unicode_ci,   `location` text COLLATE utf8_unicode_ci,   `languages` text COLLATE utf8_unicode_ci,   `emails` text COLLATE utf8_unicode_ci,   `websites` text COLLATE utf8_unicode_ci,   `addresses` text COLLATE utf8_unicode_ci,   `message_handles` text COLLATE utf8_unicode_ci,   `phone_numbers` text COLLATE utf8_unicode_ci,   `birthday` text COLLATE utf8_unicode_ci,   `birth_year` text COLLATE utf8_unicode_ci,   `birth_month` text COLLATE utf8_unicode_ci,   `twitter_accounts` text COLLATE utf8_unicode_ci,   `profile_image` text COLLATE utf8_unicode_ci,   `interests` text COLLATE utf8_unicode_ci,   `created_at` datetime NOT NULL,   `modified_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,   `last_seen` datetime NOT NULL,   PRIMARY KEY (`sk`) ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;")
+		execute_query(self.cur, 'drop table %s'%table_name_denor)
+	execute_query(self.cur, create_table_denor%table_name_denor)
 	
-
-    def restore(self, text):
-        text = text.replace('<>#<>','"').replace("<>##<>","'").replace('###',',').replace('\\','')
-        if '<>' in text:
-            text = set(text.split('<>'))
-            text = '<>'.join(text)
-        return text
-
-    def xcode(self, text, encoding='utf8', mode='strict'):
-        return text.encode(encoding, mode) if isinstance(text, unicode) else text
-
-    def md5(self, x):
-        return hashlib.md5(self.xcode(x)).hexdigest()
-
-    def replacefun(self, text):
-        text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###').replace(u'\u2013','').strip()
-        return text
-
-    def restore(self, text):
-        text = text.replace('<>#<>','"').replace("<>##<>","'").replace('###',',')
-        return text
-
-    def clean(self, text):
-        if not text: return text
-        value = text
-        value = re.sub("&amp;", "&", value)
-        value = re.sub("&lt;", "<", value)
-        value = re.sub("&gt;", ">", value)
-        value = re.sub("&quot;", '"', value)
-        value = re.sub("&apos;", "'", value)
-
-        return value
-
-    def normalize(self, text):
-        return self.clean(self.compact(self.xcode(text)))
-
-    def compact(self, text, level=0):
-        if text is None: return ''
-        if level == 0:
-            text = text.replace("\n", " ")
-            text = text.replace("\r", " ")
-        compacted = re.sub("\s\s(?m)", " ", text)
-        if compacted != text:
-            compacted = self.compact(compacted, level+1)
-	return compacted.strip()
-
-
-    def replacefun(self, text):
-        text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###')
-        return text
-
     def querydesign(self,tble, sk, lasttbl, hindex):
-	q2 = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "%s" and table_name = "%s"'%('FACEBOOK', tble)
-	self.cur.execute(q2)
-	fields = self.cur.fetchall()
+	q2 = q0_denor%('FACEBOOK', tble)
+	fields = fetchmany(self.cur, q2)
 	fileds_list = list(fields)
 	fil_list = list(chain.from_iterable(fileds_list))[2:-3]
-	q1 = 'select * from %s where profile_sk="%s" and date(modified_at)>= "%s"'%(tble, sk, self.modified_at)
-	self.cur.execute(q1)
-	values = self.cur.fetchall()
+	q1 = q9_denor%(tble, sk, self.modified_at)
+	values =  fetchmany(self.cur, q1)
 	final_to_update = []
 	for val in values:
 		vals_ = list(val)[2:-3]
 		valf = filter(None, map(lambda a,b: (a+':-'+b) if b else '', fil_list,vals_))
 		final_to_update.append(', '.join(valf))
 	if hindex == 0:
-		"""try: self.cur.execute(self.altertable%(tble, 'longtext',lasttbl))
-		except: pass"""
-		self.cur.execute(self.altertable%(tble, 'longtext',lasttbl))
-		
+		if self.table_flag:
+			execute_query(self.cur, altertable_denor%(table_name_denor, tble, 'longtext',lasttbl))
 		self.quer2.extend([tble])
 	return ' <> '.join(final_to_update)
 
     def colum (self, table, sk, inde, lastbln):
-	q5 = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "%s" and table_name = "%s"'%('FACEBOOK', table)
-	self.cur.execute(q5)
-	fields = self.cur.fetchall()
+	q5 = q0_denor%('FACEBOOK', table)
+	fields = fetchmany(self.cur, q5)
 	fileds_list = list(fields)
 	fil_list = list(chain.from_iterable(fileds_list))[2:-3]
-	q6 = "select count(*)  from %s where date(modified_at)>= '%s' group by profile_sk order by count(*) desc limit 1"%(table, self.modified_at)
-	self.cur.execute(q6)
-	large_count = self.cur.fetchall()
+	if 'linkedin_educations' in table:
+		fil_list = list(chain.from_iterable(fileds_list))[2:-5]
+	q6 = q6_denor%(table, self.modified_at)
+	large_count = fetchmany(self.cur, q6)
 	max_count = ''
 	try: max_count = int(large_count[0][0])
 	except: max_count = ''
-	"""vatab = []
-	if max_count:
-		for fi in range(1,max_count+1):
-			vatab.append(table+str(fi))"""
 	va = []
         if max_count:
                 for fi in range(1,max_count+1):
                         for fl in fil_list:
                                 va.append(fl+str(fi))
-	#if vatab: lastbln = vatab[-1]	
 	if inde == 0 and va:
 		for vac in va:
-			"""try:
-				if 'summary' in vac or 'logo' in vac:
- 					self.cur.execute(self.altertable%(vac, "text",lastbln))
-					print self.altertable%(vac, "text",lastbln)
-				else:
-					self.cur.execute(self.altertable1%(vac, "varchar(255) NOT NULL DEFAULT ''",lastbln))
-					print self.altertable1%(vac, "varchar(255) NOT NULL DEFAULT ''",lastbln)
-				lastbln = vac
-			except: pass"""
-
-			self.cur.execute(self.altertable%(vac, "text",lastbln))
-			#print self.altertable%(vac, "text",lastbln)
+			try: 
+				if self.table_flag: execute_query(self.cur, altertable_denor%(table_name_denor, vac, "text",lastbln))
+			except: import pdb;pdb.set_trace()
 			lastbln = vac
 			self.quer2.extend([vac])
-
-	q9  = 'select * from %s where profile_sk="%s" and date(modified_at)>= "2017-03-27"'%(table, sk)
-	self.cur.execute(q9)
-	countrec = self.cur.fetchall()
+	q9  = q9_denor%(table, sk, self.modified_at)
+	countrec =  fetchmany(self.cur, q9)
 	cntf_ = []
 	if countrec:
 		cntf = map(lambda x:(x[2:-3]), countrec)
+		if  'linkedin_educations' in table:
+			cntf = map(lambda x:(x[2:-5]), countrec)
 		cntf_ = list(chain.from_iterable(cntf))
-		"""for recv in cntf:
-			inner_cntf = []
-			list_con = list(recv)
-			lis_key  = filter(None, map(lambda a,b: (a+':- '+b) if b else '', fil_list, recv))
-			cntf_.append(', '.join(lis_key))"""
 	if len(cntf_) != len(va):
 		lnewln = len(va) - len(cntf_)
 		cntf_.extend(['']*lnewln)
 	return cntf_, lastbln
 
     def metadesign(self, table, sk, inde):
-	q0 = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "%s" and table_name = "%s"'%('FACEBOOK', table)
-        self.cur.execute(q0)
-        fields = self.cur.fetchall()
+	q0 = q0_denor%('FACEBOOK', table)
+	fields = fetchmany(self.cur, q0)
         fileds_list = list(fields)
         fil_list = list(chain.from_iterable(fileds_list))[1:-3]
-	q8 = 'select * from %s where sk ="%s" and date(modified_at)>= "2017-03-27"'%(table, sk)
-        self.cur.execute(q8)
-        values = self.cur.fetchall()
+	q8 = q8_denor%(table, sk, self.modified_at)
+	values = fetchmany(self.cur, q8)
 	cntf_ = []
 	if values:
         	vals_ = map(lambda x:(x[1:-3]), values)
@@ -191,7 +102,7 @@ class Lifilepde(object):
         dt = datetime.datetime.now().strftime("%Y%m%dT%H%M%S%f")
         return dt
     def get_tables_file(self):
-        tables_queries_filename = os.path.join(self.QUERY_FILES_CRAWLOUT_DIR, "%s_%s.queries" % (self.na, self.get_current_ts_with_ms()))
+        tables_queries_filename = os.path.join(self.QUERY_FILES_CRAWLOUT_DIR, "%s_%s_%s.queries" % (table_name_denor, self.limit,self.get_current_ts_with_ms()))
         self.tables_file = open(tables_queries_filename, 'w')
         return self.tables_file
 
@@ -208,8 +119,6 @@ class Lifilepde(object):
             f.flush()
             f.close()
             self.move_file(f.name, self.QUERY_FILES_DIR)
-
-
 
     def send_xls(self):
 	counter = 0
@@ -243,32 +152,30 @@ class Lifilepde(object):
 		values_final.extend([old_sk, given_url, given_id, status_url, data_avai, given_email, keysf])
 		callfun3 = self.metadesign('linkedin_meta', sk, inde)
 		values_final.extend(callfun3)
-		"""her_values = values_final
-		her_values.extend(her_values)
-		self.cur.execute(self.quer%tuple(her_values))"""
 		if values_final[8] == '':
 			values_final[8] = "%s%s%s"%(given_firstname, ' ', given_lastname)
 			values_final[9] = given_firstname
 			values_final[10] = given_lastname
 		if values_final[6] == '': values_final[5] = url_re
 		lasttablename = ''
-		for tabl in self.list_tables:
-			if inde == 0: lasttablename = 'interests'
+		for indes, tabl in enumerate(list_tables_denor):
+			if indes == 0: lasttablename = 'interests'
 			callfun = self.querydesign(tabl, sk, lasttablename, inde)
 			lasttablename = tabl
 			values_final.extend([callfun])
-		for tabl in self.list_tables1:
-			if inde == 0: lasttablenames = lasttablename
+		
+		for indesm, tabl in enumerate(list_tables1_denor):
+			if indesm == 0: lasttablenames = lasttablename
 			calfun2, lastin = self.colum(tabl, sk, inde, lasttablenames)
-			lasttablenames = tabl
+			lasttablenames = lastin
 			values_final.extend(calfun2)
-		values_final =  [self.normalize(i) for i in values_final]
+
+		values_final =  [normalize(i) for i in values_final]
 		final_qryto = "%s%s%s%s%s%s"%(self.quer1,', '.join(self.quer2), ', created_at, modified_at, last_seen) values (' , ', '.join(['%s' for i in range(len(self.quer2))]), ', now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), ', ', '.join([str(i)+'=%s' for i in self.quer2]))
 		values_final.extend(values_final)
                 self.tables_file.write('%s\n%s\n' %(final_qryto, tuple(values_final)))
                 self.tables_file.flush()
 		print inde, sk
-		print counter
         self.close_all_opened_query_files()
 
     def main(self):
@@ -276,6 +183,8 @@ class Lifilepde(object):
 if __name__ == '__main__':
 	parser = optparse.OptionParser()
 	parser.add_option('-m', '--modified-at', default='', help = 'modified_at')
+	parser.add_option('-t','--table-creation-needed', default = '', help = 'table_creation_needed')
+	parser.add_option('-l','--limit', default = '', help = 'limit')
 	(options, args) = parser.parse_args()
 	Lifilepde(options)
 

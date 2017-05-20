@@ -16,7 +16,11 @@ import random
 import codecs
 import logging.handlers
 import commands
+import optparse
+import datetime
+import csv
 
+from itertools import chain
 from scrapy.spider import BaseSpider
 from scrapy.selector import Selector
 from scrapy.http import Request, FormRequest
@@ -32,6 +36,7 @@ DB_HOST = 'localhost'
 REQ_DB_NAME = 'FACEBOOK'
 DB_USERNAME = 'root'
 MYSQL_CONNECT_TIMEOUT_VALUE = 30
+BATCH_SIZE = 2000
 
 def get_mysql_connection(server, db_name, cursorclass=""):
     try:
@@ -88,6 +93,12 @@ def fetchone(cursor, query):
     recs = cursor.fetchone()
 
     return recs[0]
+
+def fetchmany(cursor,query):
+    execute_query(cursor, query)
+    recs = cursor.fetchmany(BATCH_SIZE)
+    return recs
+
 
 def fetchall(cursor, query):
     execute_query(cursor, query)

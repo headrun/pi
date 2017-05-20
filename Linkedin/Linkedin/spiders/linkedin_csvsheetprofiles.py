@@ -1,84 +1,36 @@
-import xlwt
-import MySQLdb
-import json
-import datetime
-import md5
-from itertools import chain
-import re
-import csv
-import os
-import optparse
+from linkedin_functions import *
+import cProfile
 
 class Licsvfilepremium(object):
 
     def __init__(self, *args, **kwargs):
-        self.con = MySQLdb.connect(db   = 'FACEBOOK', \
-        host = 'localhost', charset="utf8", use_unicode=True, \
-        user = 'root', passwd ='root')
-        self.cur = self.con.cursor()
+	self.con, self.cur = get_mysql_connection(DB_HOST, REQ_DB_NAME, '')
 	self.modified_at     = options.modified_at
-	
-        self.excel_file_name = 'linkedin_profiles_enrich_%s.csv'%str(datetime.datetime.now().date())
+        self.excel_file_name = 'linkedin_profiles58501_2500_%s.csv'%str(datetime.datetime.now().date())
 	if os.path.isfile(self.excel_file_name):
 		os.system('rm %s'%self.excel_file_name)
 	oupf = open(self.excel_file_name, 'ab+')
 	self.todays_excel_file  = csv.writer(oupf)
 	self.header_params =  []
+	self.size = 1000
 	patternk = '%keys%'
-	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(created_at) >= '%s'"%(self.modified_at)
+	self.query2 = "select sk, url, meta_data, crawl_status from LINKEDIN_NEW.linkedin_crawl where date(created_at) >= '%s' limit 58501, 2500"%(self.modified_at)
+	#self.query2 = "select sk, url, meta_data, crawl_status from FACEBOOK.linkedin_crawl where date(modified_at) >= '%s'"%(self.modified_at)
 	self.list_tables = ['linkedin_certifications','linkedin_courserecommendations','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_skills','linkedin_volunteer_experiences']
 	self.list_tables1 = ['linkedin_educations','linkedin_experiences','linkedin_honors']
+
+        q0 = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "%s" and table_name = "%s"'%('FACEBOOK', 'linkedin_meta')
+        self.cur.execute(q0)
+        fields = self.cur.fetchall()
+        fileds_list = list(fields)
+        self.fil_list = list(chain.from_iterable(fileds_list))[1:-3]
+
 	self.main()
 
-    def restore(self, text):
-        text = text.replace('<>#<>','"').replace("<>##<>","'").replace('###',',').replace('\\','')
-        if '<>' in text:
-            text = set(text.split('<>'))
-            text = '<>'.join(text)
-        return text
+    def __del__(self):
+        self.con.close()
+        self.cur.close()
 
-    def xcode(self, text, encoding='utf8', mode='strict'):
-        return text.encode(encoding, mode) if isinstance(text, unicode) else text
-
-    def md5(self, x):
-        return hashlib.md5(self.xcode(x)).hexdigest()
-
-    def replacefun(self, text):
-        text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###').replace(u'\u2013','').strip()
-        return text
-
-    def restore(self, text):
-        text = text.replace('<>#<>','"').replace("<>##<>","'").replace('###',',')
-        return text
-
-    def clean(self, text):
-        if not text: return text
-        value = text
-        value = re.sub("&amp;", "&", value)
-        value = re.sub("&lt;", "<", value)
-        value = re.sub("&gt;", ">", value)
-        value = re.sub("&quot;", '"', value)
-        value = re.sub("&apos;", "'", value)
-
-        return value
-
-    def normalize(self, text):
-        return self.clean(self.compact(self.xcode(text)))
-
-    def compact(self, text, level=0):
-        if text is None: return ''
-        if level == 0:
-            text = text.replace("\n", " ")
-            text = text.replace("\r", " ")
-        compacted = re.sub("\s\s(?m)", " ", text)
-        if compacted != text:
-            compacted = self.compact(compacted, level+1)
-	return compacted.strip()
-
-
-    def replacefun(self, text):
-        text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###')
-        return text
     def querydesign(self,tble, sk):
 	q2 = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "%s" and table_name = "%s"'%('FACEBOOK', tble)
 	self.cur.execute(q2)
@@ -127,12 +79,7 @@ class Licsvfilepremium(object):
 	return cntf_
 
     def metadesign(self, table, sk, inde):
-	q0 = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "%s" and table_name = "%s"'%('FACEBOOK', table)
-        self.cur.execute(q0)
-        fields = self.cur.fetchall()
-        fileds_list = list(fields)
-        fil_list = list(chain.from_iterable(fileds_list))[1:-3]
-	if inde == 0: self.header_params.extend(fil_list)
+	if inde == 0: self.header_params.extend(self.fil_list)
 	q8 = 'select * from %s where sk ="%s" and date(modified_at)>= "%s"'%(table, sk, self.modified_at)
         self.cur.execute(q8)
         values = self.cur.fetchall()
@@ -140,13 +87,12 @@ class Licsvfilepremium(object):
 	if values:
         	vals_ = map(lambda x:(x[1:-3]), values)
 		cntf_ = list(chain.from_iterable(vals_))
-	if len(cntf_) != len(fil_list):
-		lnewln = len(fil_list) - len(cntf_)
+	if len(cntf_) != len(self.fil_list):
+		lnewln = len(self.fil_list) - len(cntf_)
 		cntf_.extend(['']*lnewln)
 	return cntf_
 
     def send_xls(self):
-	counter = 0
 	self.cur.execute(self.query2)
 	records = self.cur.fetchall()
 	for inde, rec in enumerate(records):
@@ -173,13 +119,11 @@ class Licsvfilepremium(object):
 		elif rec[3] == 10 or rec[3] == 5:
 			status_url = 'Not Valid'
 			data_avai = 'Not Available'
-		#if '/profile/view?id' in given_url: genuni = 'DOUBT'
-		#if inde == 0: self.header_params.extend(['original_url','id', 'status of url','Data Available/UnAvailable','GENUINITY'])
 		if inde == 0: self.header_params.extend(['original_url','id', 'status of url','Data Available/UnAvailable', 'email_id', 'key'])
-		#values_final.extend([given_url, given_id, status_url, data_avai, genuni])
 		values_final.extend([given_url, given_id, status_url, data_avai, email_id, keysf])
 		callfun3 = self.metadesign('linkedin_meta', sk, inde)
 		values_final.extend(callfun3)
+					
 		if values_final[8] == '':
 			values_final[8] = "%s%s%s"%(given_firstname, ' ', given_lastname)
 			values_final[9] = given_firstname
@@ -191,13 +135,11 @@ class Licsvfilepremium(object):
 		for tabl in self.list_tables1:
 			calfun2 = self.colum(tabl, sk, inde)
 			values_final.extend(calfun2)
-		values_final =  [self.normalize(i) for i in values_final]
+		values_final =  [normalize(i) for i in values_final]
 		if inde == 0:
 			self.todays_excel_file.writerow(self.header_params)
 		print inde, sk
-		print counter
 		self.todays_excel_file.writerow(values_final)
-		counter+=1
 		
 
     def main(self):
