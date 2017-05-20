@@ -1,0 +1,137 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "source_id",
+        "source_program_id_space",
+        "source_program_id",
+        "source_availabilities"
+    ],
+    "properties": {
+        "source_id": {"$ref": "#/definitions/source_id"},
+        "source_program_id": {"$ref": "#/definitions/nonEmptyString"},
+        "source_program_id_space": {"type": "string"},
+        "source_availabilities": {"$ref": "#/definitions/source_availabilities"}
+    },
+    "definitions": {
+        "nonEmptyString": {
+            "type": "string",
+            "minLength": 1 
+        },
+        "timestamp": {
+            "type": "string",
+            "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
+        },
+        "source_id": {
+            "type": "string",
+            "enum": ["netflix", "amazon", "hulu", "youtube", "itunes", "xbox", "cbs", "vudu", "abcgo", "nbc", "fox", "hbogo", "maxgo", "crackle", "mgo", "showtime", "encore", "movieplex", "starz", "xfinity", "verizon", "timewarner", "directv", "fxnetwork", "epix", "cwtv", "pbs", "comedycentral", "tnt", "tbs", "usanetwork", "targetticket", "aetv", "amctv", "foodnetwork", "discovery", "cinemanow", "nationalgeographic", "netflixusa", "ifc", "wetv", "diynetwork", "sundancetv", "hgtv", "cookingchanneltv", "travelchannel", "sonynetwork", "snagfilms", "animalplanet", "investigationdiscovery", "mylifetime", "tlc", "history", "fyi", "warnerarchive", "ahctv", "popcornflix", "fandor", "velocity", "discoverylife", "sciencechannel", "destinationamerica", "abcfamily", "disneyjunior", "disneymoviesanywhere", "disneyxd", "disneychannel", "cravetv", "nfb", "cinemanowca", "tmngo", "amazonuk", "itunesuk", "youtubeuk", "crunchyroll", "nick", "cartoonnetwork", "sundancenow", "tvland"]
+        },
+        "platform_id": {
+            "type": "string",
+            "enum": ["android", "ios", "pc", "stb_vod"]
+        },
+        "medium_type": {
+            "type": "string",
+            "enum": ["streaming", "download", "dvd", "bluray", "multiformat"]
+        },
+        "content_form": {
+            "type": "string",
+            "enum": ["full", "trailer", "short", "other"]
+        },
+        "price_type": {
+            "type": "string",
+            "enum": ["known", "unknown", "free"]
+        },
+        "purchase_type": {
+            "type": "string",
+            "enum": ["buy", "rent", "preorder"]
+        },
+        "subscription_type": {
+            "type": "string",
+            "enum": ["prime", "tvpass", "seasononly", "streaming", "dvd", "hulu_plus", "cable", "paid_channel", "allaccess", "premium_cable"]
+        },
+        "content_runtime_s": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "quality": {
+            "type": "string",
+            "enum": ["sd", "hd", "hdx"]
+        },
+        "audio_language": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "language"
+            ],
+            "properties": {
+                "language": {"$ref": "#/definitions/nonEmptyString"},
+                "has_closed_caption": {"type": "boolean"}
+            }
+        },
+        "audio_languages": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+               "$ref": "#/definitions/audio_language"
+            }
+        },
+        "subtitle_languages": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+               "$ref": "#/definitions/nonEmptyString"
+            }
+        },
+        "source_availability": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "platform_id",
+                "country_code",
+                "reference_url",
+                "title",
+                "template_id",
+                "template_values",
+                "last_refreshed_timestamp",
+                "content_form",
+                "medium_type",
+                "with_subscription",
+                "price_type",
+                "price",
+                "price_currency",
+                "scraper_args"
+            ],
+            "properties": {
+                "platform_id": {"$ref": "#/definitions/platform_id"},
+                "country_code": {"$ref": "#/definitions/nonEmptyString"},
+                "reference_url": {"$ref": "#/definitions/nonEmptyString"},
+                "title": {"type": "string"},
+                "template_id": {"$ref": "#/definitions/nonEmptyString"},
+                "template_values": {"type": "object"},
+                "last_refreshed_timestamp": {"$ref": "#/definitions/timestamp"},
+                "content_form": {"$ref": "#/definitions/content_form"},
+                "medium_type": {"$ref": "#/definitions/medium_type"},
+                "with_subscription": {"type": "boolean"},
+                "subscription_type": {"$ref": "#/definitions/subscription_type"},
+                "price_type": {"$ref": "#/definitions/price_type"},
+                "price": {"type": "string"},
+                "price_currency": {"type": "string"},
+                "scraper_args": {"type": "object"},
+                "purchase_type": {"$ref": "#/definitions/purchase_type"},
+                "content_expiry_timestamp": {"$ref": "#/definitions/timestamp"},
+                "content_runtime_s": {"$ref": "#/definitions/content_runtime_s"},
+                "quality": {"$ref": "#/definitions/quality"},
+                "is_3d": {"type": "boolean"},
+                "audio_languages": {"$ref": "#/definitions/audio_languages"},
+                "subtitle_languages": {"$ref": "#/definitions/subtitle_languages"}
+            }
+        },
+        "source_availabilities": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"$ref": "#/definitions/source_availability"}
+        }
+    }
+}
