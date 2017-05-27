@@ -1,0 +1,1 @@
+mails_dict = {'1':['meatproject05@gmail.com','ram123123'], '2':['ccvy1.pavani1886@gmail.com','ccvy1.pavani@1886'], '3':['smileykutie@gmail.com','smileykutie$'], '4':['srinivasaramanujan427@gmail.com','dotoday1#']}
