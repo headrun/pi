@@ -1,6 +1,5 @@
 from juicer.utils import *
 from juicer.items import *
-from selenium import webdriver
 import MySQLdb
 import time
 import scrapy
@@ -14,7 +13,7 @@ class FlipkartBestsellersbrowse(JuicerSpider):
     def __init__(self, *args, **kwargs):
         super(FlipkartBestsellersbrowse, self).__init__(*args, **kwargs)
         self.URL = "https://www.flipkart.com/"
-        self.driver = webdriver.PhantomJS("/root/pi_crawling/test/phantomjs-2.1.1-linux-x86_64/bin/phantomjs")
+        
 
     def parse(self, response):
         sel = Selector(response)
