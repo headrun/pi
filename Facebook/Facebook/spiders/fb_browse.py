@@ -1,52 +1,30 @@
-import re
-import datetime
-import requests
-import json
-import MySQLdb
-import xlwt
-import os
-import md5
-import string
-import traceback
-import logging
-import logging.handlers
-from scrapy import signals
-from scrapy.xlib.pydispatch import dispatcher
-from scrapy.spider import BaseSpider
-from scrapy.selector import Selector
-from scrapy.http import Request, FormRequest
-from fb_browse_queries import *
+from generic_functions import *
 from fb_constants import *
+from fb_browse_queries import *
 
-class FacebookBrowse(BaseSpider):
-    name = "facebook_browse"
+class Facebookbrowse(BaseSpider):
+    name = "facebook_crawler"
     start_urls = ['https://www.facebook.com/login']
     handle_httpstatus_list = [404, 302, 303, 403, 500]
 
     def __init__(self, *args, **kwargs):
-        super(FacebookBrowse, self).__init__(*args, **kwargs)
-	#self.login = kwargs.get('login', 'ch')
-        #self.login = kwargs.get('login', 'anusha1903')
+        super(Facebookbrowse, self).__init__(*args, **kwargs)
         self.login = kwargs.get('login','anucherry1903')
 	self.domain = "https://mbasic.facebook.com"
-        self.con = MySQLdb.connect(db   = 'FACEBOOK', \
-        host = 'localhost', charset="utf8", use_unicode=True, \
-        user = 'root', passwd='root')
-        self.cur = self.con.cursor()
+	self.con, self.cur = get_mysql_connection(DB_HOST, REQ_DB_NAME, '')
         self.about = '/about'
         self.likes = '?v=likes'
-        #self.friends = '/friends'
         self.following = '?v=following'
 	self.cur.execute(get_qry_params)
 	self.profiles_list = [i for i in self.cur.fetchall()]
 	self.res_afterlogin = ''
 	self.cur_date = str(datetime.datetime.now().date())
         self.myname = os.path.basename(__file__).replace(".py", '')
-        self.log_dir = os.path.join(os.getcwd(), 'logs')
-        self.init_logger("%s_%s.log" %(self.myname,self.cur_date))
+        self.log = init_logger("%s_%s.log" %(self.myname,self.cur_date))
 	dispatcher.connect(self.spider_closed, signals.spider_closed)
         
     def spider_closed(self, spider):
+	close_mysql_connection(self.con, self.cur)
 	if self.res_afterlogin:
 		login_url = self.res_afterlogin.xpath('//a[contains(@href,"/logout.php")]/@href').extract()
 		if login_url:
@@ -56,61 +34,63 @@ class FacebookBrowse(BaseSpider):
 			login_xpat = data.xpath('//a[contains(@href,"/login.php")]/@href')
 			if  login_xpat: self.log.info("Message - %s" %("Logout Successfully"))
 
-    def init_logger(self, filename, level=''):
-        if not os.path.isdir(self.log_dir):
-            os.mkdir(self.log_dir)
-        file_name = os.path.join(self.log_dir, filename)
-        self.log = logging.getLogger(file_name)
-        handler = logging.handlers.RotatingFileHandler(
-        file_name, maxBytes=524288000, backupCount=5)
-        formatter = logging.Formatter(
-        '%(asctime)s.%(msecs)d: %(filename)s: %(lineno)d: \
-        %(funcName)s: %(levelname)s: %(message)s', "%Y%m%dT%H%M%S")
-        handler.setFormatter(formatter)
-        self.log.addHandler(handler)
-        self.log.setLevel(logging.DEBUG)
-
     def parse(self, response):
         sel = Selector(response)
-        #login = ''
         if self.profiles_list  :
 		login  = constants_dict[self.login] 
 		lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
 		lgnrnd = ''.join(sel.xpath('//input[@name="lgnrnd"]/@value').extract())
 	      
 		return [FormRequest.from_response(response, formname = 'login_form',\
-				formdata={'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
-		#return [FormRequest.from_response(response, formname = 'login_form',\
-				#formdata={'email':'anusha1903','pass':'1903@1733','lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_next)]
+				formdata={'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_redirect)]
 
     def parse_close(self, response):
 	sel = Selector(response)
 	self.res_afterlogin = sel
 
-    def parse_next(self, response):
-	yield Request('https://mbasic.facebook.com/', callback=self.parse_close)
+
+    def parse_redirect(self,response):
         sel = Selector(response)
+        if 'Your account has been disabled' in response.body :
+            noti_xpath = 'Your account has been disabled'
+            user = constants_dict[self.login][0]
+            pwd = constants_dict[self.login][1]
+            self.send_mail(noti_xpath,user,pwd)
+        yield Request('https://mbasic.facebook.com/support/?notif_t=feature_limits',callback=self.parse_next)
+
+    def parse_next(self, response):
+	yield Request(self.domain, callback=self.parse_close)
+        sel = Selector(response)
+        noti_xpath = "".join(sel.xpath('//div//span[contains(text(),"temporarily")]//text()').extract())
+        if noti_xpath :
+                    user = constants_dict[self.login][0]
+                    pwd = constants_dict[self.login][1]
+                    self.profiles_list = []
+                    self.send_mail(noti_xpath,user,pwd)
+
         for profilei in self.profiles_list:
             sk = profilei[0]
             meta_data = json.loads(profilei[2])
 	    profile = meta_data.get('mbasic_url','')
 	    email_address = meta_data.get('email_address','')
-	    if not profile: continue
+	    if not profile:
+		continue
 	    vals = (sk, profilei[1], sk, profilei[1])
 	    self.cur.execute(qry_params, vals)
 	    self.cur.execute(update_get_params%(9,sk))
             url_about = "%s%s"%(profile,self.about)
             url_following = "%s%s"%(profile,self.following)
-            url1_about = "%s%s"%(profile,self.likes)
-            #url_friends = "%s%s"%(profile, self.friends)
-            #list_of_pa = [(url_about,'about'), (url_following,''), (url1_about,''), (url_friends,''), (profile,'about')]
-            list_of_pa = [(url_about,'about'), (url_following,''), (url1_about,''), (profile,'about')]
+            url1_aboutlikes = "%s%s"%(profile,self.likes)
+            list_of_pa = [(url_about,'about'),(profile,'about')]
+	    list_of_paothers = [(url_following,''), (url1_aboutlikes,'')]
             for urls in list_of_pa:
                 yield Request(urls[0], callback=self.parse_profile, meta={'sk':sk,"al":'',"see_more":'','profile':profile,"check_list":'','not_found':urls[1], 'email_address':email_address},dont_filter=True)
 
+	    for urls_ in list_of_paothers:
+		yield Request(urls_[0], callback=self.parse_likesdata, meta={'sk':sk,"al":'',"see_more":'','profile':profile,"checklist":'','not_found':urls[1], 'email_address':email_address},dont_filter=True)
+
     def parse_profile(self, response):
         sel = Selector(response)
-        #self.res_afterlogin = sel
         sk = response.meta['sk']
 	if response.status != 200: self.cur.execute(update_get_params%(2,sk))
         not_found = ''.join(sel.xpath('//title/text()').extract())
@@ -175,9 +155,6 @@ class FacebookBrowse(BaseSpider):
                         up_aux3.update({"current_city":self.replacefun(current_city)})
                     if howe_town:
                         up_aux3.update({"home_town":self.replacefun(howe_town)})
-
-               
-
                     if no_of_friends :
                         up_aux3.update({"no_of_friends":self.replacefun(no_of_friends)})
                     if facebook_cont:
@@ -204,7 +181,14 @@ class FacebookBrowse(BaseSpider):
                     if other_names: up_aux3.update({"other_names":self.replacefun(other_names)})
                     self.cur.execute(updateqry_params%('aux_info', json.dumps(up_aux3,ensure_ascii=False, encoding="utf-8"),sk))
 		else: self.cur.execute(update_get_params%(2,sk))
+
+    def parse_likesdata(self, response):
+	sel = Selector(response)
+	sk = response.meta['sk']
         profile = response.meta['profile']
+	dic_to_limit = response.meta.get('dic_to_limit',{})
+
+	if response.status == 302: self.cur.execute(update_get_params%(2,sk))
         others_list,clothing_list,activities_list, interests_list, music_list, books_list, movies_list, tvshow_list, favteams_list, favathe_list, friends_list, games_list, restaurants_list, websites_list, work_list, education_list, family_list,sports_list, inspirationalpeople_list, following_list = [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
         ab_list = []
         seetv_likes_list, seetv_watched_list, seemv_likes_list, seemv_watched_list, seebk_likes_list,television_list, reads_list = [],[],[],[],[],[],[]
@@ -216,8 +200,6 @@ class FacebookBrowse(BaseSpider):
         if not response.meta['see_more']:
             if 'likes' in response.url:
                 ab_list = ["Other","Clothing","Activities",'Interests',"Music","Books","Movies","TV Shows","Favorite Teams","Favorite Athletes","Games","Restaurants","Websites","Favorite Sports","Films","TV Programmes","Inspirational People","Favourite teams","Favourite athletes", 'Inspirational people']
-            elif 'friends' in response.url:
-                ab_list = ["Friends"]
             elif 'followers' in response.url or 'following' in response.url:
                 ab_list = ["following"]
             else:
@@ -225,191 +207,207 @@ class FacebookBrowse(BaseSpider):
         else:
             ab_list = [response.meta['al']]
             check_list = response.meta['al']
-            if "Watched" in check_list or "Likes" in check_list or "Book" in check_list or 'Read' in check_list:
-                check_list = ''.join(sel.xpath('//h2/text()').extract())
-                check = 'yes'
-                if 'movie' in response.url:
-                    check = 'movie'
-                elif 'tvshow' in response.url:
-                    check = 'tvshow'
-                else:
-                    if 'books' in response.url:
-                        check = 'read'
-                ab_list = [''.join(sel.xpath('//h4/text()').extract()).strip()]
-                if not ab_list or ab_list == ['']:
-                    ab_list = [response.meta['al']]
-                if 'movie' in ab_list[0].lower() or 'film' in ab_list[0].lower():
-                    check = 'movie'
-                elif 'tv' in ab_list[0].lower():
-                    check = 'tvshow'
-                else:
-                    if 'read' in ab_list[0].lower() or 'book' in ab_list[0].lower():
-                        check = 'read'
-            if sel.xpath('//h4[contains(text(),"Likes")]/text()').extract():
-                text_to = ''.join(sel.xpath('//h2/text()').extract())
-                if sel.xpath('//div[contains(text(),"Watched")]/text()').extract():
-                    if 'Movies' in check_list or 'Films' in check_list:
-                        check = 'movie'
-                    if 'tv' in check_list.lower():
-                        check = 'tvshow'
-                    ab_list = ["Watched","Likes"]
-                elif 'movie' in text_to.lower() or 'film' in text_to.lower():
-                    check = 'movie'
-                    ab_list = ["Watched","Likes"]
-                elif 'tv' in text_to.lower():
-                    check = 'tvshow'
-                    ab_list = ["Watched","Likes"]
-                else:
-                    if sel.xpath('//div[contains(text(),"Read")]/text()').extract():
-                        check = 'read'
-                    ab_list = ["Read","Likes"]
-        for al in ab_list:
-            if al:
-                nodes, nodes_xpath = [],''
-                if 'Friends' in al:
-                    nodes = sel.xpath('//div[@class="timeline"][h3[@class][contains(text(),"%s")]]/div[div[not(contains(@class,"basicNavItems"))]]/div'%al)
-                    if not nodes: nodes = sel.xpath('//div[h3[@class][contains(text(),"%s")]]/div[div[not(contains(@class,"basicNavItems"))]]/div'%al)
-                elif 'following' in response.url or 'following' in al:
-                    nodes = sel.xpath('//div[@id="root"]/div[not(@class)]/div')
-                    if not nodes: nodes = sel.xpath('//div[@id="root"]/div/div/div/div[@class]')
-                else:
-                    nodes = sel.xpath('//div[@id="%s"]/div/div[not(table)]/div'%al)
-                    if not nodes:
-                        nodes = sel.xpath('//div[h4[contains(text(),"%s")]]/div'%al)
-                    if not nodes:
-                        nodes = sel.xpath('//div[h3[contains(text(),"%s")]]/following-sibling::div[1]/div/div'%al)
-                    if not nodes:
-                        nodes_xpath = '//div[div[contains(text(),"%s")]]/table'
-                        nodes = sel.xpath('//div[div[contains(text(),"%s")]]/table'%al)
-                for node in nodes:
-                    inner_node, childs = [], []
-                    if 'Friends' in al:
-                        inner_node = node.xpath('.//table//td[not(img)]')
-                        childs = inner_node.xpath('./child::*')
-                    elif  nodes_xpath == '//div[div[contains(text(),"%s")]]/table':
-                        inner_node = node.xpath('.//td[not(img)]')
-                        childs = inner_node.xpath('./child::*')
-                    else:
+	    if check_list not in dic_to_limit.keys():
+		    dic_to_limit.update({check_list:1})
+	    else:
+		dic_to_limit[check_list]= dic_to_limit[check_list]+1
+	    if dic_to_limit[check_list]<= 20:
+		    if "Watched" in check_list or "Likes" in check_list or "Book" in check_list or 'Read' in check_list:
+			check_list = ''.join(sel.xpath('//h2/text()').extract())
+			check = 'yes'
+			if 'movie' in response.url:
+			    check = 'movie'
+			elif 'tvshow' in response.url:
+			    check = 'tvshow'
+			else:
+			    if 'books' in response.url:
+				check = 'read'
+			ab_list = [''.join(sel.xpath('//h4/text()').extract()).strip()]
+			if not ab_list or ab_list == ['']:
+			    ab_list = [response.meta['al']]
+			if 'movie' in ab_list[0].lower() or 'film' in ab_list[0].lower():
+			    check = 'movie'
+			elif 'tv' in ab_list[0].lower():
+			    check = 'tvshow'
+			else:
+			    if 'read' in ab_list[0].lower() or 'book' in ab_list[0].lower():
+				check = 'read'
+		    if sel.xpath('//h4[contains(text(),"Likes")]/text()').extract():
+			text_to = ''.join(sel.xpath('//h2/text()').extract())
+			if sel.xpath('//div[contains(text(),"Watched")]/text()').extract():
+			    if 'Movies' in check_list or 'Films' in check_list:
+				check = 'movie'
+			    if 'tv' in check_list.lower():
+				check = 'tvshow'
+			    ab_list = ["Watched","Likes"]
+			elif 'movie' in text_to.lower() or 'film' in text_to.lower():
+			    check = 'movie'
+			    ab_list = ["Watched","Likes"]
+			elif 'tv' in text_to.lower():
+			    check = 'tvshow'
+			    ab_list = ["Watched","Likes"]
+			else:
+			    if sel.xpath('//div[contains(text(),"Read")]/text()').extract():
+				check = 'read'
+			    ab_list = ["Read","Likes"]
+	for al in ab_list:
+	
+	    if not dic_to_limit.has_key(al):
+		dic_to_limit.update({al:1})
+	    if al and dic_to_limit[al]<= 20:
+		nodes, nodes_xpath = [],''
+		if 'following' in response.url or 'following' in al:
+		    nodes = sel.xpath('//div[@id="root"]/div[not(@class)]/div')
+		    if not nodes: nodes = sel.xpath('//div[@id="root"]/div/div/div/div[@class]')
+		else:
+		    nodes = sel.xpath('//div[@id="%s"]/div/div[not(table)]/div'%al)
+		    if not nodes:
+			nodes = sel.xpath('//div[h4[contains(text(),"%s")]]/div'%al)
+		    if not nodes:
+			nodes = sel.xpath('//div[h3[contains(text(),"%s")]]/following-sibling::div[1]/div/div'%al)
+		    if not nodes:
+			nodes_xpath = '//div[div[contains(text(),"%s")]]/table'
+			nodes = sel.xpath('//div[div[contains(text(),"%s")]]/table'%al)
+		for node in nodes:
+		    inner_node, childs = [], []
+		    if 'Friends' in al:
+			inner_node = node.xpath('.//table//td[not(img)]')
+			childs = inner_node.xpath('./child::*')
+		    elif  nodes_xpath == '//div[div[contains(text(),"%s")]]/table':
+			inner_node = node.xpath('.//td[not(img)]')
+			childs = inner_node.xpath('./child::*')
+		    else:
 			allphabets_string =  list(string.ascii_lowercase)
 			inner_node = node.xpath('.//div[@class="clear"]/parent::div')
 			if not inner_node:
 				for alp in allphabets_string:
 					inner_node = node.xpath('.//div[@class="b%s"]/parent::div'%alp)
 					if inner_node: break
-			
-			
-                        """inner_node = node.xpath('.//div[@class="clear"]/parent::div')
-                        if not inner_node: inner_node = node.xpath('.//div[@class="bt"]/parent::div')
-                        if not inner_node: inner_node = node.xpath('.//div[@class="bv"]/parent::div')
-                        if not inner_node: inner_node = node.xpath('.//div[@class="br"]/parent::div')
-                        if not inner_node: inner_node = node.xpath('.//div[@class="bu"]/parent::div')
-                        if not inner_node: inner_node = node.xpath('.//div[@class="bw"]/parent::div')
-                        if not inner_node: inner_node = node.xpath('.//div[@class="bs"]/parent::div')
-			if not inner_node: inner_node = node.xpath('.//div[@class="bj"]/parent::div')
-			if not inner_node: inner_node = node.xpath('.//div[@class="bi"]/parent::div')
-			if not inner_node: inner_node = node.xpath('.//div[@class="bq"]/parent::div')
-			if not inner_node: inner_node = node.xpath('.//div[@class="br"]/parent::div')"""
-                        childs = inner_node.xpath('./div/child::*[local-name()!="br"]')
-                    above, below = ['']*2
-                    if len(childs)>1:
-                        above =  childs[0].xpath('.//text()').extract()
-                        below =  childs[1].xpath('.//text()').extract()
+
+			childs = inner_node.xpath('./div/child::*[local-name()!="br"]')
+		    above, below = ['']*2
+		    if len(childs)>1:
+			above =  childs[0].xpath('.//text()').extract()
+			below =  childs[1].xpath('.//text()').extract()
 			if not above and len(below) ==2:
 				above = [below[0]]
 				below = [below[1]]
-                    if len(childs) == 1:
-                        above =  childs[0].xpath('.//text()').extract()
-                    above = ''.join(above)
-                    if 'follow' in al and 'follow' in above: above = ''
-                    below = ''.join(below).strip()
-                    if below == 'Like' or 'mutual friend' in below.lower() or 'friends' in al.lower():
-                        below = ''
-                    if 'add friend' in above.lower() or 'message' in above.lower():
-                        above = ''
-                    if above:
-                        tolist = ''
-                        if below: tolist = "%s%s%s"%(above,':-',below)
-                        else:tolist = above
-                        try: 
-                            if not check:
-                                dic_keys[al].append(tolist)
-                            else:
-                                if 'Movies' in check_list or 'Films' in check_list or 'movie' in check:
-                                    dic_keys_movie[al].append(tolist)
-                                elif 'tv' in check_list.lower() or 'tvshow' in check:
-                                    dic_keys_tvshow[al].append(tolist)
-                                else:
-                                    if 'Book' in check_list or 'read' in check:
-                                        dic_keys_books[al].append(tolist)
-                        except: pass 
-                    if 'Friends' not in al:
-                        see_more = ''
-                        if nodes_xpath == '//div[div[contains(text(),"%s")]]/table':
-                            see_more = ''.join(sel.xpath('//div[div[contains(text(),"%s")]]/a[contains(text(),"more")]/@href'%al).extract())
-                        elif 'following' in al:
-                            see_more =  sel.xpath('//a[span[contains(text(),"See More")]]/@href').extract()
-                            if not see_more:
-                                see_more = sel.xpath('//a[span[contains(text(),"See more")]]/@href').extract()
-                        else:
-                            see_more = ''.join(node.xpath('./self::div[contains(@class,"seeMore")]/a/@href').extract())
-                            if not see_more: see_more = node.xpath('./self::div/a[span[contains(text(),"See More")]]/@href').extract()
-                            if not see_more:
-				see_more = ''.join(node.xpath('//a[span[contains(text(),"See more")]]/@href').extract())
-				if not see_more: ''.join(node.xpath('//a[span[contains(text(),"see more")]]/@href').extract()) 
+		    if len(childs) == 1:
+			above =  childs[0].xpath('.//text()').extract()
+		    above = ''.join(above)
+		    if 'follow' in al and 'follow' in above: above = ''
+		    below = ''.join(below).strip()
+		    if below == 'Like' or 'mutual friend' in below.lower() or 'friends' in al.lower():
+			below = ''
+		    if 'add friend' in above.lower() or 'message' in above.lower():
+			above = ''
+		    if above:
+			tolist = ''
+			if below: tolist = "%s%s%s"%(above,':-',below)
+			else:tolist = above
+			try: 
+			    if not check:
+				dic_keys[al].append(tolist)
+			    else:
+				if 'Movies' in check_list or 'Films' in check_list or 'movie' in check:
+				    dic_keys_movie[al].append(tolist)
+				elif 'tv' in check_list.lower() or 'tvshow' in check:
+				    dic_keys_tvshow[al].append(tolist)
+				else:
+				    if 'Book' in check_list or 'read' in check:
+					dic_keys_books[al].append(tolist)
+			except: pass 
+		    if 'Friends' not in al:
+			see_more = ''
+			if nodes_xpath == '//div[div[contains(text(),"%s")]]/table':
+			    see_more = ''.join(sel.xpath('//div[div[contains(text(),"%s")]]/a[contains(text(),"more")]/@href'%al).extract())
+			elif 'following' in al:
+			    see_more =  sel.xpath('//a[span[contains(text(),"See More")]]/@href').extract()
 			    if not see_more:
-                                try: see_more = ''.join(sel.xpath('//div[h3[contains(text(),"%s")]]/following-sibling::div[2]/a[contains(text(),"more")]/@href'%al).extract()[0])
+				see_more = sel.xpath('//a[span[contains(text(),"See more")]]/@href').extract()
+			else:
+			    see_more = ''.join(node.xpath('./self::div[contains(@class,"seeMore")]/a/@href').extract())
+			    if not see_more: see_more = node.xpath('./self::div/a[span[contains(text(),"See More")]]/@href').extract()
+			    if not see_more:
+				set_l = node.xpath('.//a[span[contains(text(),"See more")]]/@href').extract()
+				if len(set_l)>1:
+					see_more = ''.join(set_l[-1])
+				else: see_more = ''.join(set_l)
+				if not see_more: ''.join(node.xpath('.//a[span[contains(text(),"see more")]]/@href').extract()) 
+			    if not see_more:
+				try: see_more = ''.join(sel.xpath('//div[h3[contains(text(),"%s")]]/following-sibling::div[2]/a[contains(text(),"more")]/@href'%al).extract()[0])
 				except: see_more = ''
-                                if not see_more:
-                                    try: see_more = ''.join(sel.xpath('//div[h3[contains(text(),"%s")]]/following-sibling::div[2]/a[contains(text(),"See more")]/@href'%al).extract()[0])
+				if not see_more:
+				    try: see_more = ''.join(sel.xpath('//div[h3[contains(text(),"%s")]]/following-sibling::div[2]/a[contains(text(),"See more")]/@href'%al).extract()[0])
 				    except: see_more = ''
-                        if see_more:
-                            if 'following' in al:
-                                for i_ in see_more:
-                                    url_again = "%s%s"%("https://mbasic.facebook.com",i_)
-                                    yield Request(url_again, callback= self.parse_profile,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':''})
-                            else:
-                                if 'mbasic' not in see_more:
-                                    url_again = "%s%s"%("https://mbasic.facebook.com",see_more)
-                                    yield Request(url_again, callback= self.parse_profile,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':''})
-                        if not see_more:
-                            try: see_more = ''.join(sel.xpath('//a[span[contains(text(),"See more")]]/@href').extract()[0])
+			if see_more:
+			    if 'following' in al:
+				for i_ in see_more:
+				    url_again = "%s%s"%("https://mbasic.facebook.com",i_)
+				    yield Request(url_again, callback= self.parse_likesdata,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':'','dic_to_limit':dic_to_limit})
+			    else:
+				if 'mbasic' not in see_more:
+				    url_again = "%s%s"%("https://mbasic.facebook.com",see_more)
+				    yield Request(url_again, callback= self.parse_likesdata,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':'', 'dic_to_limit':dic_to_limit})
+			if not see_more:
+			    try: see_more = ''.join(sel.xpath('//a[span[contains(text(),"See more")]]/@href').extract()[0])
 			    except: see_more = ''
-                            url_again = "%s%s"%("https://mbasic.facebook.com",see_more)
-                            if see_more: yield Request(url_again, callback= self.parse_profile,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':''})
-                if 'Friends' in al:
-                    see_more = ''.join(sel.xpath('//div[@class="timeline"]/div[contains(@class,"seeMoreFriends")]/a/@href').extract())
-                    if not see_more: see_more  = ''.join(sel.xpath('//a[span[contains(text(),"See More Friends")]]/@href').extract())
-                    if not see_more: see_more = ''.join(sel.xpath('//a[span[contains(text(),"See more friends")]]/@href').extract())
-                    if not see_more: see_more = ''.join(sel.xpath('//a[span[contains(text(),"ee ")]]/@href').extract())
-                    if see_more:
-                        if 'mbasic' not in see_more:
-                            url_again = "%s%s"%("https://mbasic.facebook.com",see_more)
-                            yield Request(url_again, callback= self.parse_profile,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':''})
-        
+			    url_again = "%s%s"%("https://mbasic.facebook.com",see_more)
+			    if see_more: yield Request(url_again, callback= self.parse_likesdata,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':'', 'dic_to_limit':dic_to_limit})
+	
 
-        all_lists = [(others_list,'fb_others','others'),(clothing_list,'fb_clothing','clothing'), (activities_list,'fb_activities','activities'), (interests_list,'fb_interests', 'interests'), (music_list,'fb_music','music'), (books_list,'fb_books','book'), (movies_list,'fb_movies','movies'), (tvshow_list, 'fb_tvshows','tvshows'), (favteams_list,'fb_favaourite_athelets','atheletes'), (favathe_list,'fb_favourite_teams','teams'), (games_list,'fb_games','games'), (restaurants_list,'fb_restaurants','restaurants'), (websites_list,'fb_websites','websites'), (work_list,'fb_works','work'), (education_list,'fb_education','education'), (family_list,'fb_family','family'),(sports_list, 'fb_favourite_sports','sports'),(friends_list,'fb_friends','friends'),(inspirationalpeople_list,'fb_inspirational_people','inspirational_people'),(seetv_likes_list,'fb_tvshow_likes','tvshow_likes'), (seetv_watched_list,'fb_tvshows_watched','tvshow_watched'), (seemv_likes_list,'fb_movies_likes','movie_likes'), (seemv_watched_list,'fb_movies_watched','movie_watched'),(seebk_likes_list,'fb_book_likes','books_likes'), (reads_list,'fb_read_books','read_books'),(following_list,'fb_following','read_followers')]
-        for alk in all_lists:
-            if alk[0]:
-                keyf = "%s%s"%('aux_info_',alk[2])
-                self.cur.execute(selectauxkeys_params%(keyf,sk))
-                aux_cu = self.cur.fetchall()
-                try: 
-                    up_aux1 = json.loads(aux_cu[0][0].replace('\\',''))
-                
-                    if up_aux1.get(alk[1],''):
-                        fromothe = up_aux1.get(alk[1],'').split('<>')
-                        fromothe.extend(set(alk[0]))
-                        up_aux1.update({alk[1]:self.replacefun('<>'.join(list(set(fromothe))))})
-                    else:
-                        up_aux1.update({alk[1]:self.replacefun('<>'.join(set(alk[0])))}) 
-                    self.cur.execute(updateqry_params%(keyf, json.dumps(up_aux1,ensure_ascii=False, encoding="utf-8"),sk))
-                except Exception,e:
+	all_lists = [(others_list,'fb_others','others'),(clothing_list,'fb_clothing','clothing'), (activities_list,'fb_activities','activities'), (interests_list,'fb_interests', 'interests'), (music_list,'fb_music','music'), (books_list,'fb_books','book'), (movies_list,'fb_movies','movies'), (tvshow_list, 'fb_tvshows','tvshows'), (favteams_list,'fb_favaourite_athelets','atheletes'), (favathe_list,'fb_favourite_teams','teams'), (games_list,'fb_games','games'), (restaurants_list,'fb_restaurants','restaurants'), (websites_list,'fb_websites','websites'), (work_list,'fb_works','work'), (education_list,'fb_education','education'), (family_list,'fb_family','family'),(sports_list, 'fb_favourite_sports','sports'),(friends_list,'fb_friends','friends'),(inspirationalpeople_list,'fb_inspirational_people','inspirational_people'),(seetv_likes_list,'fb_tvshow_likes','tvshow_likes'), (seetv_watched_list,'fb_tvshows_watched','tvshow_watched'), (seemv_likes_list,'fb_movies_likes','movie_likes'), (seemv_watched_list,'fb_movies_watched','movie_watched'),(seebk_likes_list,'fb_book_likes','books_likes'), (reads_list,'fb_read_books','read_books'),(following_list,'fb_following','read_followers')]
+	for alk in all_lists:
+	    if alk[0]:
+		keyf = "%s%s"%('aux_info_',alk[2])
+		self.cur.execute(selectauxkeys_params%(keyf,sk))
+		aux_cu = self.cur.fetchall()
+		try: 
+		    up_aux1 = json.loads(aux_cu[0][0].replace('\\',''))
+		
+		    if up_aux1.get(alk[1],''):
+			fromothe = up_aux1.get(alk[1],'').split('<>')
+			fromothe.extend(set(alk[0]))
+			up_aux1.update({alk[1]:self.replacefun('<>'.join(list(set(fromothe))))})
+		    else:
+			up_aux1.update({alk[1]:self.replacefun('<>'.join(set(alk[0])))}) 
+		    self.cur.execute(updateqry_params%(keyf, json.dumps(up_aux1,ensure_ascii=False, encoding="utf-8"),sk))
+		except Exception,e:
 			self.log.error("Error: %s", traceback.format_exc())
 			self.log.info("Message - %s" %(response.url))
 
     def replacefun(self, text):
         text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###')
         return text
+ 
+    def send_mail(self,noti_xpath,user,pwd) :
+        from email.mime.multipart import MIMEMultipart
+        from email.mime.text import MIMEText
+        from email.mime.base import MIMEBase
+        from email import encoders
+        import smtplib,ssl
+        sender  = 'facebookdummyfb01@gmail.com'
+        receivers_mail_list = ['kiranmayi@notemonk.com','anushab@notemonk.com','aravind@headrun.com']
+        sender, receivers = sender, ','.join(receivers_mail_list)
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "Security elert mail for facebook on %s"%str(datetime.datetime.now().date())
+        msg['From'] = sender
+        msg['To'] = receivers
+        html = '<html><head></head><body>'
+        html += '<h2>Facing issues while crawling with this account </h2>'
+        html += '<table border="1">'
+        html += '<tr><th>S.No</th><th>username</th><th>Password</th><th>Reason</th><th>Proxy</th></tr>'
+        html += '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>'%('1',user,pwd,noti_xpath,'176.9.181.34')
+
+        tem = MIMEText(html, 'html')
+        msg.attach(tem)
+        s = smtplib.SMTP('smtp.gmail.com:587')
+        s.ehlo()
+        s.starttls()
+        s.ehlo()
+        s.login(sender, '01123123')
+        s.sendmail(sender, receivers_mail_list, msg.as_string())
+
         
         
 
