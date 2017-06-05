@@ -20,6 +20,19 @@ class LinkedinItem(Item):
 	image_path 	= Field()
 	aux_info    = Field()
 	reference_url = Field()
+class Linkedincourse(Item):
+        sk = Field()
+        profile_sk = Field()
+        course_name = Field()
+        course_number = Field()
+class Linkedinpublications(Item):
+        sk = Field()
+        profile_sk = Field()
+	publication_title = Field()
+	publication_url = Field()
+	publisher = Field()
+	publication_description = Field()
+	publication_date = Field()
 class Linkedinaccounts(Item):
 	profile_sk 	= Field()
 	status	= Field()
@@ -57,6 +70,9 @@ class Linkedinmeta(Item):
 	twitter_accounts  = Field()
 	profile_image  = Field()
 	interests  = Field()
+	location_postal_code = Field()
+	location_country_code = Field()
+	background_image = Field()
 
 class Linkedinposts(Item):
 	sk  = Field()
@@ -76,6 +92,7 @@ class Linkedingroups(Item):
 	no_of_members  = Field()
 	group_logo  = Field()
 	group_id  = Field()
+	group_description = Field()
 class Linkedineducations(Item):
 	sk  = Field()
 	profile_sk  = Field()
@@ -89,6 +106,8 @@ class Linkedineducations(Item):
 	edu_field_of_study  = Field()
 	edu_school_name  = Field()
 	school_logo  = Field()
+	edu_grade = Field()
+	edu_activities = Field()
 	post_article_id  = Field()
 	education_id  = Field()
 	school_id  = Field()
@@ -142,6 +161,7 @@ class Linkedincertifications(Item):
 	certification_title  = Field()
 	certification_company_logo  = Field()
 	certification_company_name = Field()
+	certification_licence = Field()
 class Linkedinprojects(Item):
 	sk  = Field()
 	profile_sk  = Field()
@@ -160,7 +180,7 @@ class Linkedinhonors(Item):
 	honor_on  = Field()
 	honor_issuer  = Field()
 	honor_summary  = Field()
-	occupation  = Field()
+	honor_title  = Field()
 class Linkedincourserecom(Item):
 	sk  = Field()
 	profile_sk  = Field()
@@ -195,6 +215,8 @@ class Linkedinfollowinfluencers(Item):
 	influencer_image  = Field()
 	influencer_profile_url  = Field()
 	influencer_headline  = Field()
+	influencer_followers_count = Field()
+		
 class Linkedinfollowschools(Item):
 	sk  = Field()
 	profile_sk  = Field()
@@ -222,6 +244,9 @@ class Linkedinvolunteerexp(Item):
 	start_date_year  = Field()
 	start_date_month  = Field()
 	volunteer_date  = Field()
+	end_date_year	= Field()
+	end_date_month	= Field()
+	organization_id	= Field()
 class Linkedinorganizations(Item):
 	sk  = Field()
 	profile_sk  = Field()
