@@ -36,7 +36,7 @@ DB_HOST = 'localhost'
 DB_NAME_REQ = 'FACEBOOK'
 DB_USERNAME = 'root'
 MYSQL_CONNECT_TIMEOUT_VALUE = 30
-BATCH_SIZE = 2000
+BATCH_SIZE = 2500
 
 def get_mysql_connection(server, db_name, cursorclass=""):
     try:
