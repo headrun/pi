@@ -13,7 +13,7 @@ import datetime
 #from scrapy.pipelines.images import ImagesPipeline
 from scrapy.contrib.pipeline.images import ImagesPipeline
 
-DB_NAME = 'LINKEDIN_VOYAGER'
+DB_NAME = 'FACEBOOK'
 DB_HOST = 'localhost'
  
 class LinkedinPipeline(object):
@@ -43,6 +43,11 @@ class LinkedinPipeline(object):
                 values = (item['sk'], item.get('profile_sk',''), item.get('course_name',''), item.get('course_number',''), item['sk'], item.get('profile_sk',''), item.get('course_name',''), item.get('course_number',''))
                 self.cursor.execute(query, values)
                 self.conn.commit()
+	if isinstance(item, Linkedintrack):
+		query = 'INSERT INTO linkedin_track(sk, member_id, login_mail_id, machine_ip, crawl_status,created_at, modified_at, last_seen) values(%s, %s, %s, %s, %s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk=%s, member_id=%s, login_mail_id=%s, machine_ip=%s, crawl_status=%s'
+		values = (item['sk'], item.get('member_id',''), item.get('login_mail_id',''), item.get('machine_ip',''), item.get('crawl_status', ''),item['sk'], item.get('member_id',''), item.get('login_mail_id',''), item.get('machine_ip',''), item.get('crawl_status',''))
+		self.cursor.execute(query, values)
+		self.conn.commit()
 
 	if isinstance(item, Linkedinpublications):
 		query = 'INSERT INTO linkedin_publications(sk, profile_sk, publication_title, publication_url, publisher, publication_description, publication_date,   created_at, modified_at, last_seen) values(%s, %s, %s, %s, %s, %s, %s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk=%s, profile_sk=%s, publication_title=%s, publication_url=%s, publisher=%s, publication_description=%s, publication_date=%s'
@@ -107,8 +112,8 @@ class LinkedinPipeline(object):
                 self.conn.commit()
 
 	if isinstance(item, Linkedinhonors):
-		query = 'INSERT INTO linkedin_honors(sk, profile_sk, honor_on, honor_issuer, honor_summary, honor_title, created_at, modified_at, last_seen) values (%s,%s,%s,%s,%s,%s,now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(),sk=%s, profile_sk=%s, honor_on=%s, honor_issuer=%s, honor_summary=%s, honor_title=%s'
-                values = (item.get('sk',''), item.get('profile_sk',''), item.get('honor_on',''), item.get('honor_issuer',''), item.get('honor_summary',''), item.get('honor_title',''), item.get('sk',''), item.get('profile_sk',''), item.get('honor_on',''), item.get('honor_issuer',''), item.get('honor_summary',''), item.get('honor_title',''))
+		query = 'INSERT INTO linkedin_honors(sk, profile_sk, honor_on, honor_issuer, honor_summary, honor_title, occupation, created_at, modified_at, last_seen) values (%s, %s,%s,%s,%s,%s,%s,now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(),sk=%s, profile_sk=%s, honor_on=%s, honor_issuer=%s, honor_summary=%s, honor_title=%s, occupation=%s'
+                values = (item.get('sk',''), item.get('profile_sk',''), item.get('honor_on',''), item.get('honor_issuer',''), item.get('honor_summary',''), item.get('honor_title',''), item.get('occupation',''), item.get('sk',''), item.get('profile_sk',''), item.get('honor_on',''), item.get('honor_issuer',''), item.get('honor_summary',''), item.get('honor_title',''), item.get('occupation',''))
                 self.cursor.execute(query, values)
                 self.conn.commit()
 

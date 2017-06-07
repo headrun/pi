@@ -20,6 +20,12 @@ class LinkedinItem(Item):
 	image_path 	= Field()
 	aux_info    = Field()
 	reference_url = Field()
+class Linkedintrack(Item):
+	sk	= Field()
+	member_id = Field()
+	login_mail_id	= Field()
+	machine_ip = Field()
+	crawl_status = Field()
 class Linkedincourse(Item):
         sk = Field()
         profile_sk = Field()
@@ -181,6 +187,7 @@ class Linkedinhonors(Item):
 	honor_issuer  = Field()
 	honor_summary  = Field()
 	honor_title  = Field()
+	occupation = Field()
 class Linkedincourserecom(Item):
 	sk  = Field()
 	profile_sk  = Field()
