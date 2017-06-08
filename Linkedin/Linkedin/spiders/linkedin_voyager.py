@@ -11,9 +11,8 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 		super(Linkedinpremiumapivoyager, self).__init__(*args, **kwargs)
                 self.login = kwargs.get('login', 'ramanujan')
                 self.con, self.cur = get_mysql_connection(DB_HOST, DB_NAME_REQ, '')
-                #get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 limit 15"
-		get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 and url like '%linkedin.com%' order by rand() limit 1"
-		import pdb;pdb.set_trace()
+                get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 limit 15"
+		#get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 and url like '%linkedin.com%' order by rand() limit 1"
                 self.cur.execute(get_query_param)
                 self.profiles_list = [i
                     for i in self.cur.fetchall()
