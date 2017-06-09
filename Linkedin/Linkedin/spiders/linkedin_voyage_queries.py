@@ -1,20 +1,22 @@
 domain_premium = "https://www.linkedin.com"
 update_get_params = "update linkedin_crawl set crawl_status=%s where sk ='%s'"
 main_profile_api = "https://www.linkedin.com/voyager/api/identity/profiles/%s"
-positions_api = "%s%s" %(main_profile_api, "/positions")
-feature_skills_api = "%s%s" %(main_profile_api, "/featuredSkills?includeHiddenEndorsers=true&count=50")
-volunteer_exp_api = "%s%s" %(main_profile_api, "/volunteerExperiences")
-recommendation_rec_api = "%s%s" %(main_profile_api, "/recommendations?q=received")
-recommendation_giv_api = "%s%s" %(main_profile_api, "/recommendations?q=given")
-projects_api = "%s%s" %(main_profile_api, "/projects")
-posts_api = "%s%s" %(main_profile_api, "/posts")
-organizations_api = "%s%s" %(main_profile_api, "/organizations")
-honors_api = "%s%s" %(main_profile_api, "/honors")
-publications_api = "%s%s" %(main_profile_api, "/publications")
-courses_api = "%s%s" %(main_profile_api, "/courses")
-certifications_api = "%s%s" %(main_profile_api, "/certifications")
-educations_api = "%s%s" %(main_profile_api, "/educations")
-entity_api = "/following?entityType=%s&q=followedEntities"
+start_end_count = '?start=0&count=100'
+start_end_an = '&start=0&count=100'
+positions_api = "%s%s%s" %(main_profile_api, "/positions", start_end_count)
+feature_skills_api = "%s%s%s" %(main_profile_api, "/featuredSkills?includeHiddenEndorsers=true", start_end_an)
+volunteer_exp_api = "%s%s%s" %(main_profile_api, "/volunteerExperiences", start_end_count)
+recommendation_rec_api = "%s%s%s" %(main_profile_api, "/recommendations?q=received", start_end_an)
+recommendation_giv_api = "%s%s%s" %(main_profile_api, "/recommendations?q=given", start_end_an)
+projects_api = "%s%s%s" %(main_profile_api, "/projects", start_end_count)
+posts_api = "%s%s%s" %(main_profile_api, "/posts", start_end_count)
+organizations_api = "%s%s%s" %(main_profile_api, "/organizations", start_end_count)
+honors_api = "%s%s%s" %(main_profile_api, "/honors", start_end_count)
+publications_api = "%s%s%s" %(main_profile_api, "/publications", start_end_count)
+courses_api = "%s%s%s" %(main_profile_api, "/courses", start_end_count)
+certifications_api = "%s%s%s" %(main_profile_api, "/certifications", start_end_count)
+educations_api = "%s%s%s" %(main_profile_api, "/educations", start_end_count)
+entity_api = "/following?entityType=%s&q=followedEntities&start=0&count=100"
 groups_api = "%s%s" %(main_profile_api, (entity_api % "GROUP"))
 schools_api =  "%s%s" %(main_profile_api, (entity_api % "SCHOOL"))
 company_api = "%s%s" %(main_profile_api, (entity_api % "COMPANY"))

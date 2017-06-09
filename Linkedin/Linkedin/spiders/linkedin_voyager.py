@@ -91,10 +91,50 @@ class Linkedinpremiumapivoyager(Voyagerapi):
                     languages_data = ', '.join(languages_data)
                 else :
                     languages_data = ''
+		
                 connections_count = textify(re.findall('connectionsCount&quot;:(\d+),', response.body))
                 followers_count = textify(re.findall('followersCount&quot;:(\d+),', response.body))
 
-		linke_a, linkd_javatex, view_url_construction = {}, '' , ''
+		linke_a, linkd_javatex, view_url_construction, contact_info = {}, '' , '',  {}
+		try:
+			contact_info = json.loads(sel.xpath('//code[@style="display: none"][contains(text(),"urn:li:fs_contactinfo")]/text()').extract()[0])
+		except:
+			contact_info = {}
+		email_addresses, phone_number, twitter_handles, instant_message,birth_data_month,\
+			birth_data_year, birth_data_day, websites, interestsview = ['']*9
+		try:
+			interestsview = ', '.join([inte['type']  for inte in filter(None, [i if i['$type'] == 'com.linkedin.voyager.identity.profile.StandardProfileContactInterest' else '' for i in contact_info.get('included',[])])])
+		except:
+			interestsview = ''	
+		if contact_info:
+			email_addresses = contact_info.get('data',{}).get('emailAddress','')
+			phone_number = filter(None, [i if i['$type'] == 'com.linkedin.voyager.identity.profile.PhoneNumber' else '' for i in contact_info.get('included',[])])
+			if phone_number:
+				phone_numbers = phone_number[0].get('number','')
+				phone_number_type = phone_number[0].get('type','')
+				phone_number = ("%s%s%s" % (phone_number_type, ':-',phone_numbers)).strip().strip(':-').strip()
+			else:
+				phone_number = ''
+			twitter_handles = filter(None, [i if i['$type'] == 'com.linkedin.voyager.identity.shared.TwitterHandle' else ''for i in contact_info.get('included',[])])
+			if twitter_handles:
+				twitter_handles = twitter_handles[0].get('name','')
+			else:
+				twitter_handles = ''
+			im_handles = filter(None, [i if i['$type'] == 'com.linkedin.voyager.identity.profile.IM' else ''for i in contact_info.get('included',[])])
+			if im_handles:
+				im_handless = im_handles[0].get('id','')
+				im_provider = im_handles[0].get('provider','')
+				instant_message = ("%s%s%s" % (im_provider, ':-',im_handless)).strip().strip(':-').strip()
+			try:
+				websites = filter(None, [i if i['$type'] == 'com.linkedin.voyager.identity.profile.ProfileWebsite' else '' for i in contact_info.get('included',[])])[0].get('url','')
+			except:
+				websites = ''
+			birth_data_a = filter(None, [i if i['$type'] == 'com.linkedin.common.Date' else '' for i in contact_info.get('included',[])])
+			if birth_data_a:
+				birth_data_month = birth_data_a[0].get('month','')
+				birth_data_year = birth_data_a[0].get('year','')
+				birth_data_day = birth_data_a[0].get('day','')
+				
 		try: linke_a = json.loads(sel.xpath('//code[contains(text(),"authToken")]/text()').extract()[0].replace('\\','').replace('\n','').strip()).get('included','')
 		except: 
 			try:
@@ -112,7 +152,6 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 				cvv = textify(re.findall('\?id=(.*?)&',linkd_javatex))
 				if cvv:
 					view_url_construction = profile_view_url%(cvv,linkedin_auth)
-				
 
                 if basic_data:
                 	basic_dat = basic_data[0]
@@ -129,7 +168,16 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 	                    'connections_count': connections_count,
         	            'followers_count': followers_count,
 			    'login_mail': login_mail,
-			    'view_url_construction': view_url_construction
+			    'view_url_construction': view_url_construction,
+			    'email_addresses':email_addresses, 
+			    'phone_number':phone_number, 
+			    'twitter_handles':twitter_handles, 
+			    'instant_message':instant_message,
+			    'birth_data_month':birth_data_month,
+			    'birth_data_year':birth_data_year,
+			    'birth_data_day':birth_data_day,
+			    'websites': websites,
+			    'interestsview':interestsview
         		        })
 				self.update_status(sk, 10, '')
 		else:
@@ -170,7 +218,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
                 public_identifier = miniprofile.get('publicIdentifier', '')
                 return first_name, entity_urn, headline, industry_name, last_name, location, location_postal_code, location_country_code, version_tag, summary, address, background_image, maiden_name, interests, phonetic_last_name, phonetic_firt_name, state, miniprofile, picture_info, birthdate, object_urn, tracking_id, public_identifier
 
-	def get_basic_item(self, sk, first_name, entity_urn, headline, industry_name, last_name, location, location_postal_code, location_country_code, version_tag, summary, address, background_image, maiden_name, interests, phonetic_last_name, phonetic_firt_name, state, miniprofile, picture_info, birthdate, object_urn, tracking_id, public_identifier, ref_url, languages_data, connections_count, followers_count, view_url_construction):
+	def get_basic_item(self, sk, first_name, entity_urn, headline, industry_name, last_name, location, location_postal_code, location_country_code, version_tag, summary, address, background_image, maiden_name, interests, phonetic_last_name, phonetic_firt_name, state, miniprofile, picture_info, birthdate, object_urn, tracking_id, public_identifier, ref_url, languages_data, connections_count, followers_count, view_url_construction, email_addresses, phone_number, twitter_handles, instant_message, birth_data_month, birth_data_year, birth_data_day, websites, interestsview):
 		linkedin_meta = Linkedinmeta()
 		linkedin_meta['sk'] = normalize(str(object_urn))
 		linkedin_meta['profile_url'] = normalize(ref_url)
@@ -188,17 +236,19 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 		linkedin_meta['industry'] = normalize(industry_name)
 		linkedin_meta['location'] = normalize(location)
 		linkedin_meta['languages'] = normalize(languages_data)
-		linkedin_meta['emails'] = ''
-		linkedin_meta['websites'] = ''
+		linkedin_meta['emails'] = normalize(email_addresses)
+		linkedin_meta['websites'] = normalize(websites)
 		linkedin_meta['addresses'] = normalize(address)
-		linkedin_meta['message_handles'] = ''
-		linkedin_meta['phone_numbers'] = ''
+		linkedin_meta['message_handles'] = normalize(instant_message)
+		linkedin_meta['phone_numbers'] = normalize(phone_number)
 		linkedin_meta['birthday'] = normalize(str(birthdate.get('day','')))
 		linkedin_meta['birth_year'] = normalize(str(birthdate.get('year','')))
+		if not linkedin_meta['birth_year']:
+			linkedin_meta['birth_year'] = normalize(birth_data_year)
 		linkedin_meta['birth_month'] = normalize(str(birthdate.get('month','')))
-		linkedin_meta['twitter_accounts'] = ''
+		linkedin_meta['twitter_accounts'] = normalize(twitter_handles)
 		linkedin_meta['profile_image'] = normalize(picture_info)
-		linkedin_meta['interests'] = ''
+		linkedin_meta['interests'] = normalize(interestsview)
 		linkedin_meta['location_postal_code'] = normalize(location_postal_code)
 		linkedin_meta['location_country_code'] = normalize(location_country_code)
 		linkedin_meta['background_image'] = normalize(background_image)
@@ -219,6 +269,15 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 		connections_count = response.meta.get('connections_count','')
 		followers_count = response.meta.get('followers_count','')
 		view_url_construction = response.meta.get('view_url_construction','')
+		email_addresses = response.meta.get('email_addresses','')
+		phone_number = response.meta.get('phone_number','')
+		twitter_handles = response.meta.get('twitter_handles','')
+		instant_message = response.meta.get('instant_message','')
+		birth_data_month = response.meta.get('birth_data_month','')
+		birth_data_year = response.meta.get('birth_data_year','')
+		birth_data_day = response.meta.get('birth_data_day','')
+		websites = response.meta.get('websites','')
+		interestsview = response.meta.get('interestsview','')
 		if url_type == 'basic':
 			first_name, entity_urn, headline, industry_name, last_name, location,\
 			 location_postal_code, location_country_code, version_tag, summary,\
@@ -233,17 +292,16 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 				 location_country_code, version_tag, summary, address, background_image,
 				 maiden_name, interests, phonetic_last_name, phonetic_firt_name, state,
 				 miniprofile, picture_info, birthdate, object_urn, tracking_id,
-				 public_identifier, main_url, languages_data, connections_count, followers_count, view_url_construction)
+				 public_identifier, main_url, languages_data, connections_count, followers_count, view_url_construction, email_addresses, phone_number, twitter_handles, instant_message, birth_data_month, birth_data_year, birth_data_day, websites, interestsview)
 				if basic_main_data:
 					yield basic_main_data
 					self.update_status(sk, 1, '')
 					track_item = self.get_track_item(sk, str(object_urn), login_mail, '176.9.181.34', '1')
 					yield track_item
-
 			if public_identifier:
 				for api in api_whole_list:
 					api_url_public = api[0]%public_identifier
-					yield Request(api_url_public, headers=headers, callback=self.parse_voyage, meta={'url_type':api[1], 'main_url':api_url_public, 'headers':headers, 'main_member_id':self.get_digit(object_urn),'sk':str(object_urn)})
+					yield Request(api_url_public, headers=headers, callback=self.parse_voyage, meta={'url_type':api[1], 'main_url':api_url_public.replace('?start=0&count=100','').replace('&start=0&count=100',''), 'headers':headers, 'main_member_id':self.get_digit(object_urn),'sk':str(object_urn)})
 		else:
 			for dataloop in data_elements:
 				data_retruned = self.type_of_item(dataloop, url_type, main_member_id, sk)
