@@ -43,6 +43,13 @@ class LinkedinPipeline(object):
                 values = (item['sk'], item.get('profile_sk',''), item.get('course_name',''), item.get('course_number',''), item['sk'], item.get('profile_sk',''), item.get('course_name',''), item.get('course_number',''))
                 self.cursor.execute(query, values)
                 self.conn.commit()
+
+	if isinstance(item, Linkedintestscore):
+		query = 'INSERT INTO linkedin_testscore(sk, profile_sk, testscore_name, testscore_description, testscore, testscore_day, testscore_month, testscore_year, created_at, modified_at, last_seen) values(%s, %s, %s, %s, %s, %s, %s, %s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk=%s, profile_sk=%s, testscore_name=%s, testscore_description=%s, testscore=%s, testscore_day=%s, testscore_month=%s, testscore_year=%s'
+		values = (item['sk'], item.get('profile_sk',''),item.get('testscore_name',''), item.get('testscore_description',''), item.get('testscore',''), item.get('testscore_day',''), item.get('testscore_month',''), item.get('testscore_year',''),item['sk'], item.get('profile_sk',''),item.get('testscore_name',''), item.get('testscore_description',''), item.get('testscore',''), item.get('testscore_day',''), item.get('testscore_month',''), item.get('testscore_year',''))
+		self.cursor.execute(query, values)
+		self.conn.commit()
+
 	if isinstance(item, Linkedintrack):
 		query = 'INSERT INTO linkedin_track(sk, member_id, login_mail_id, machine_ip, crawl_status,created_at, modified_at, last_seen) values(%s, %s, %s, %s, %s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk=%s, member_id=%s, login_mail_id=%s, machine_ip=%s, crawl_status=%s'
 		values = (item['sk'], item.get('member_id',''), item.get('login_mail_id',''), item.get('machine_ip',''), item.get('crawl_status', ''),item['sk'], item.get('member_id',''), item.get('login_mail_id',''), item.get('machine_ip',''), item.get('crawl_status',''))

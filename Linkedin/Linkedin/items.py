@@ -20,6 +20,15 @@ class LinkedinItem(Item):
 	image_path 	= Field()
 	aux_info    = Field()
 	reference_url = Field()
+class Linkedintestscore(Item):
+	sk 	= Field()
+	profile_sk = Field()
+	testscore_name = Field()
+	testscore_description = Field()
+	testscore = Field()
+	testscore_day = Field()
+	testscore_month = Field()
+	testscore_year = Field()
 class Linkedintrack(Item):
 	sk	= Field()
 	member_id = Field()
