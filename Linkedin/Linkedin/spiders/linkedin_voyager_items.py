@@ -15,6 +15,18 @@ class Voyagerapiitems(scrapy.Spider):
 		linkedin_track_['crawl_status'] = normalize(crawl_status)
 		return linkedin_track_
 
+	def get_testscores_item(self, sk , test_score_name, test_score, test_score_description, test_score_day, test_score_month, test_score_year):
+		linkedin_testscore_ = Linkedintestscore()
+		linkedin_testscore_['sk'] = md5("%s%s%s%s" % (sk, str(test_score), test_score_name, test_score_description))
+		linkedin_testscore_['profile_sk'] = normalize(sk)
+		linkedin_testscore_['testscore_name'] = normalize(test_score_name)
+		linkedin_testscore_['testscore_description'] = normalize(test_score_description)
+		linkedin_testscore_['testscore'] = normalize(str(test_score))
+		linkedin_testscore_['testscore_day'] = normalize(str(test_score_day))
+		linkedin_testscore_['testscore_month'] = normalize(str(test_score_month))
+		linkedin_testscore_['testscore_year'] = normalize(str(test_score_year))
+		return linkedin_testscore_
+
         def get_certifications_item(self, sk,  cer_id, cer_name, cer_iso_stdate,au_com_name, au_media_logo, certifications_licence):
                 linkedin_cer_ = Linkedincertifications()
                 linkedin_cer_['sk'] = md5("%s%s%s%s%s" % (sk, cer_id, cer_name, cer_iso_stdate, au_com_name))

@@ -10,6 +10,7 @@ recommendation_rec_api = "%s%s%s" %(main_profile_api, "/recommendations?q=receiv
 recommendation_giv_api = "%s%s%s" %(main_profile_api, "/recommendations?q=given", start_end_an)
 projects_api = "%s%s%s" %(main_profile_api, "/projects", start_end_count)
 posts_api = "%s%s%s" %(main_profile_api, "/posts", start_end_count)
+testscores_api = "%s%s%s"%(main_profile_api, '/testScores', start_end_count)
 organizations_api = "%s%s%s" %(main_profile_api, "/organizations", start_end_count)
 honors_api = "%s%s%s" %(main_profile_api, "/honors", start_end_count)
 publications_api = "%s%s%s" %(main_profile_api, "/publications", start_end_count)
@@ -42,4 +43,5 @@ api_whole_list = [	(positions_api, 'experiences'),
 			(company_api, 'companies'),
 			(influencers_api, 'influencers'),
 			(channel_api, 'channel'),
+			(testscores_api, 'testscores')
 		 ]

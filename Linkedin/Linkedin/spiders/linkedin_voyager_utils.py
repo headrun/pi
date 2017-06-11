@@ -101,6 +101,8 @@ class Voyagerapi(Voyagerapiitems):
 			item = self.get_given_data(data_elements, url_type, sk)
 		elif url_type == 'projects':
 			item = self.get_projects_data(data_elements, url_type, sk)
+		elif url_type == 'testscores':
+			item = self.get_testscores_data(data_elements, url_type, sk)
 		else:
 			item = ''
 		return item
@@ -160,6 +162,20 @@ class Voyagerapi(Voyagerapiitems):
                 certifications_licence = data_elements.get('licenseNumber', '')
                 item = self.get_certifications_item(sk, certification_id, certification_title, date_cer, certification_company_name, certification_company_logo, certifications_licence)
                 return item
+	def get_testscores_data(self, data_elements, url_type, sk):
+		test_score_name = data_elements.get('name','')
+		test_score = data_elements.get('score','')
+		test_score_description = data_elements.get('description','')
+		test_score_date = data_elements.get('date',{})
+		test_score_day, tes_score_month, test_score_year = ['']*3
+		if test_score_date:
+			test_score_day = test_score_date.get('day','')
+			test_score_month = test_score_date.get('month','')
+			test_score_year = test_score_date.get('year','')
+		item = self.get_testscores_item(sk , test_score_name, test_score, test_score_description, test_score_day, test_score_month, test_score_year)
+		return item
+
+			
 
         def get_educations_data(self, data_elements, url_type, sk):
                 time_period = data_elements.get('timePeriod', '')
