@@ -25,11 +25,17 @@ class Linkedinpremiumapivoyager(Voyagerapi):
                 logincsrf = ''.join(sel.xpath('//input[@name="loginCsrfParam"]/@value').extract())
                 csrf_token = ''.join(sel.xpath('//input[@name="csrfToken"]/@value').extract())
                 source_alias = ''.join(sel.xpath('//input[@name="sourceAlias"]/@value').extract())
+                logind_date = "%s%s"%(str(datetime.datetime.now().date()), ' 00:00:00')
+                sk_login_self = self.login
                 login_account = mails_dict[self.login]
                 account_mail, account_password = login_account
-                if account_mail and self.profiles_list:
-                        return [FormRequest.from_response(response, formname = 'login_form',\
-                        formdata={'session_key':account_mail,'session_password':account_password,'isJsEnabled':'','source_app':'','tryCount':'','clickedSuggestion':'','signin':'Sign In','session_redirect':'','trk':'hb_signin','loginCsrfParam':logincsrf,'fromEmail':'','csrfToken':csrf_token,'sourceAlias':source_alias},callback=self.parse_next, meta={'csrf_token':csrf_token, 'login_mail':account_mail})]
+                yes_s, skf_login_self = self.checking_for_limit(account_mail, logind_date, sk_login_self)
+                if skf_login_self:
+                        login_account = mails_dict[skf_login_self]
+                        account_mail, account_password = login_account
+                	if account_mail and self.profiles_list:
+                        	return [FormRequest.from_response(response, formname = 'login_form',\
+                        formdata={'session_key':account_mail,'session_password':account_password,'isJsEnabled':'','source_app':'','tryCount':'','clickedSuggestion':'','signin':'Sign In','session_redirect':'','trk':'hb_signin','loginCsrfParam':logincsrf,'fromEmail':'','csrfToken':csrf_token,'sourceAlias':source_alias},callback=self.parse_next, meta={'csrf_token':csrf_token, 'login_mail':account_mail, 'count_from_': yes_s, 'logind_date':logind_date, 'sk_login_self': skf_login_self})]
 
     	def spider_closed(self, spider):
 		cv = requests.get('https://www.linkedin.com/logout/').text
@@ -37,7 +43,12 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 
 	def parse_next(self, response):
                 sel = Selector(response)
+                count_from_ = response.meta.get('count_from_', '')
+                logind_date = response.meta.get('logind_date', '')
+                sk_login_self = response.meta.get('sk_login_self', '')
                 for li in self.profiles_list:
+                        count_from_ += 1
+                        update_count_from = execute_query(self.cur, "update linkedin_loginlimit set count='%s' where sk = '%s' and login_date='%s'" % (count_from_, sk_login_self, logind_date))
                 	meta_data = json.loads(li[2])
 	                email_address = meta_data.get('email_address', '')
         	        sk, profile_url, m_data = li

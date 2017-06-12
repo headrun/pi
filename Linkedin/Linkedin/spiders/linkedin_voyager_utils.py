@@ -40,17 +40,35 @@ class Voyagerapi(Voyagerapiitems):
 					error = traceback.format_exc()
 					self.alert_mail(sk, crawl_status, error)
 
+        def checking_for_limit(self, account_mail, logind_date, sk_login_self):
+                count_from_ = fetchall(self.cur, "select count from linkedin_loginlimit where sk = '%s' and login_date='%s'" % (self.login, logind_date))
+                if count_from_ and count_from_[0][0] < 50:
+                        return count_from_[0][0], sk_login_self
+                else:
+                        count_from_1 = fetchall(self.cur, "select sk, count from linkedin_loginlimit where count < 50 and login_date='%s' order by rand() limit 1" % (logind_date))
+                        if count_from_1:
+                                sk_login, countc = count_from_1[0]
+                                return  countc, sk_login
+                        else:   
+                                self.alert_mail('updations', 0, 'all accounts are exceeded with todays limit')
+                                return  '', ''
+
 	def alert_mail(self, sk, crawl_status, error):
 		sender_mail = 'facebookdummyfb01@gmail.com'
 		#receivers_mail_list = ['kiranmayi@headrun.net','aravind@headrun.com', 'anushab@headrun.net']
 		receivers_mail_list = ['kiranmayi@headrun.net']
 		sender, receivers  = sender_mail, ','.join(receivers_mail_list)
 		msg = MIMEMultipart('alternative')
-		msg['Subject'] = 'Testing: bug raises while crawl status updation for linkedin'
-		mas = '<html><head><link href="http://getbootstrap.com/dist/css/bootstrap.css" rel="stylesheet"></head>'
-		mas += '<table border="1" style="border-collapse:collapse;" cellpadding="3px" cellspacing="3px"><tr><th>TableName</th><th>crawl_status</th><th>sk</th><th>error</th></tr>'
-		mas += '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr></br>' %('linkedin_crawl', str(crawl_status), sk, error)
-		mas += '</table></html>'
+                if sk  == 'updations':
+                        msg['Subject'] = 'Alert mail for accounts login limit'
+                        mas = '<h3> All accounts are exceeded with todays limit</h3>'
+                else:   
+
+			msg['Subject'] = 'Testing: bug raises while crawl status updation for linkedin'
+			mas = '<html><head><link href="http://getbootstrap.com/dist/css/bootstrap.css" rel="stylesheet"></head>'
+			mas += '<table border="1" style="border-collapse:collapse;" cellpadding="3px" cellspacing="3px"><tr><th>TableName</th><th>crawl_status</th><th>sk</th><th>error</th></tr>'
+			mas += '<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr></br>' %('linkedin_crawl', str(crawl_status), sk, error)
+			mas += '</table></html>'
 		msg['From'] = sender
 		msg['To'] = receivers
 		tem = MIMEText(''.join(mas), 'html')
