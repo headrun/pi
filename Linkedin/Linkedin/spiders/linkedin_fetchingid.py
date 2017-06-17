@@ -10,6 +10,7 @@ class Linkedinfetching(object):
 		self.query3 = "select sk from FACEBOOK.linkedin_connectionprofiles where member_id = '%s'"
 		self.query4 = "select sk from linkedin_get_member_ids where member_id = '%s'"
 		self.update_qry = "insert into linkedin_get_member_ids(sk, member_id, created_at, modified_at, last_seen) values ('%s', '%s', now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk='%s'"
+		self.query1_ = "select count(*), member_id, sk from linkedin_meta where member_id = '%s' group by member_id having count(*)>=1"
 		self.main()
 
 	def __del__(self):
@@ -18,19 +19,19 @@ class Linkedinfetching(object):
 
 	def main(self):
 		execute_query(self.cur, self.query1)
+		counter = 0
 		while True:
 			records = self.cur.fetchmany(10)
 			if not records: break
 			for rec in records:
+				counter += 1
 				count_m, member_id, sk = rec
 				if count_m > 1:
 					sk = fetchone(self.cur1, self.query2%member_id)
 				check = fetchone(self.cur1, self.query3%member_id)
 				if not check:
 					execute_query(self.cur1, self.update_qry%(sk, member_id, sk))
-
-		
-		
+				print counter
 
 if __name__ == "__main__":
 	parser = optparse.OptionParser()
