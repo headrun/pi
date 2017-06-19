@@ -40,12 +40,12 @@ class Voyagerapi(Voyagerapiitems):
 					error = traceback.format_exc()
 					self.alert_mail(sk, crawl_status, error)
 
-        def checking_for_limit(self, account_mail, logind_date, sk_login_self):
-                count_from_ = fetchall(self.cur, "select count from linkedin_loginlimit where sk = '%s' and login_date='%s'" % (self.login, logind_date))
-                if count_from_ and count_from_[0][0] < 50:
+        def checking_for_limit(self, account_mail, logind_date, sk_login_self, command_prxy):
+                count_from_ = fetchall(self.cur, "select count from linkedin_loginlimit where sk = '%s' and login_date='%s' and proxy_ip='%s'" % (sk_login_self, logind_date, command_prxy))
+                if count_from_ and count_from_[0][0] < 301:
                         return count_from_[0][0], sk_login_self
-                else:
-                        count_from_1 = fetchall(self.cur, "select sk, count from linkedin_loginlimit where count < 50 and login_date='%s' order by rand() limit 1" % (logind_date))
+                else:   
+                        count_from_1 = fetchall(self.cur, "select sk, count from linkedin_loginlimit where count < 301 and login_date='%s' and sk != '%s' order by rand() limit 1" % (logind_date, sk_login_self))
                         if count_from_1:
                                 sk_login, countc = count_from_1[0]
                                 return  countc, sk_login

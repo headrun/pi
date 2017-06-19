@@ -22,20 +22,24 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 
 	def parse(self, response):
                 sel = Selector(response)
+                command_prxy = cvs = response.meta.get('proxy','')\
+                .replace('http://','').replace(':3279','')\
+                .replace('https://','')
                 logincsrf = ''.join(sel.xpath('//input[@name="loginCsrfParam"]/@value').extract())
                 csrf_token = ''.join(sel.xpath('//input[@name="csrfToken"]/@value').extract())
                 source_alias = ''.join(sel.xpath('//input[@name="sourceAlias"]/@value').extract())
-                logind_date = "%s%s"%(str(datetime.datetime.now().date()), ' 00:00:00')
-                sk_login_self = self.login
-                login_account = mails_dict[self.login]
-                account_mail, account_password = login_account
-                yes_s, skf_login_self = self.checking_for_limit(account_mail, logind_date, sk_login_self)
-                if skf_login_self:
-                        login_account = mails_dict[skf_login_self]
-                        account_mail, account_password = login_account
-                	if account_mail and self.profiles_list:
-                        	return [FormRequest.from_response(response, formname = 'login_form',\
-                        formdata={'session_key':account_mail,'session_password':account_password,'isJsEnabled':'','source_app':'','tryCount':'','clickedSuggestion':'','signin':'Sign In','session_redirect':'','trk':'hb_signin','loginCsrfParam':logincsrf,'fromEmail':'','csrfToken':csrf_token,'sourceAlias':source_alias},callback=self.parse_next, meta={'csrf_token':csrf_token, 'login_mail':account_mail, 'count_from_': yes_s, 'logind_date':logind_date, 'sk_login_self': skf_login_self})]
+		if self.profiles_list:
+			logind_date = "%s%s"%(str(datetime.datetime.now().date()), ' 00:00:00')
+			sk_login_self = self.login
+			login_account = mails_dict[self.login]
+			account_mail, account_password = login_account
+			yes_s, skf_login_self = self.checking_for_limit(account_mail, logind_date, sk_login_self, command_prxy)
+			if skf_login_self:
+				login_account = mails_dict[skf_login_self]
+				account_mail, account_password = login_account
+				if account_mail and self.profiles_list:
+					return [FormRequest.from_response(response, formname = 'login_form',\
+				formdata={'session_key':account_mail,'session_password':account_password,'isJsEnabled':'','source_app':'','tryCount':'','clickedSuggestion':'','signin':'Sign In','session_redirect':'','trk':'hb_signin','loginCsrfParam':logincsrf,'fromEmail':'','csrfToken':csrf_token,'sourceAlias':source_alias},callback=self.parse_next, meta={'csrf_token':csrf_token, 'login_mail':account_mail, 'count_from_': yes_s, 'logind_date':logind_date, 'sk_login_self': skf_login_self, 'command_prxy':command_prxy})]
 
     	def spider_closed(self, spider):
 		cv = requests.get('https://www.linkedin.com/logout/').text
@@ -43,12 +47,13 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 
 	def parse_next(self, response):
                 sel = Selector(response)
+		command_prxy = response.meta.get('command_prxy','')
                 count_from_ = response.meta.get('count_from_', '')
                 logind_date = response.meta.get('logind_date', '')
                 sk_login_self = response.meta.get('sk_login_self', '')
                 for li in self.profiles_list:
                         count_from_ += 1
-                        update_count_from = execute_query(self.cur, "update linkedin_loginlimit set count='%s' where sk = '%s' and login_date='%s'" % (count_from_, sk_login_self, logind_date))
+                        update_count_from = execute_query(self.cur, "update linkedin_loginlimit set count='%s' where sk = '%s' and login_date='%s' and proxy_ip='%s'" % (count_from_, sk_login_self, logind_date, command_prxy))
                 	meta_data = json.loads(li[2])
 	                email_address = meta_data.get('email_address', '')
         	        sk, profile_url, m_data = li
@@ -59,11 +64,13 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 	                    "sk": sk,
         	            'email_address': email_address,
                 	    'csrf_token': response.meta['csrf_token'],
-			    'login_mail': response.meta.get('login_mail','')
+			    'login_mail': response.meta.get('login_mail',''),
+			    'command_prxy': command_prxy
 	                })
 
 	def parse_correct(self, response):
                 sel = Selector(response)
+		command_prxy = response.meta.get('command_prxy','')
                 sk = response.meta['sk']
 		login_mail = response.meta.get('login_mail','')
                 cooki_list = response.request.headers.get('Cookie', [])
@@ -188,12 +195,13 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 			    'birth_data_year':birth_data_year,
 			    'birth_data_day':birth_data_day,
 			    'websites': websites,
-			    'interestsview':interestsview
+			    'interestsview':interestsview,
+			    'command_prxy': command_prxy
         		        })
 				self.update_status(sk, 10, '')
 		else:
 			self.update_status(sk, 6, '')
-			track_item = self.get_track_item(sk, '', login_mail, '176.9.181.34', '6')
+			track_item = self.get_track_item(sk, '', login_mail, command_prxy, '6')
 			yield track_item
 			
 
@@ -289,6 +297,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 		birth_data_day = response.meta.get('birth_data_day','')
 		websites = response.meta.get('websites','')
 		interestsview = response.meta.get('interestsview','')
+		command_prxy = response.meta.get('command_prxy','')
 		if url_type == 'basic':
 			first_name, entity_urn, headline, industry_name, last_name, location,\
 			 location_postal_code, location_country_code, version_tag, summary,\
@@ -311,7 +320,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
                                                 basic_main_data['image_path'] =  "%s%s%s"%(profile_images_path, hashs,'.jpg')
 					yield basic_main_data
 					self.update_status(sk, 1, '')
-					track_item = self.get_track_item(sk, str(object_urn), login_mail, '176.9.181.34', '1')
+					track_item = self.get_track_item(sk, str(object_urn), login_mail, command_prxy, '1')
 					yield track_item
 			if public_identifier:
 				for api in api_whole_list:
