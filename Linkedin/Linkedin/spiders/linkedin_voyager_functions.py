@@ -19,6 +19,7 @@ import commands
 import optparse
 import datetime
 import csv
+import calendar
 
 from itertools import chain
 from scrapy.spider import BaseSpider

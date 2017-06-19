@@ -305,6 +305,10 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 				 miniprofile, picture_info, birthdate, object_urn, tracking_id,
 				 public_identifier, main_url, languages_data, connections_count, followers_count, view_url_construction, email_addresses, phone_number, twitter_handles, instant_message, birth_data_month, birth_data_year, birth_data_day, websites, interestsview)
 				if basic_main_data:
+                                        if basic_main_data['profile_image']:
+                                                hashs = hashlib.sha1(basic_main_data['profile_image'].encode('utf-8', 'strict')).hexdigest()
+                                                yield ImageItem(image_urls=[basic_main_data['profile_image']])
+                                                basic_main_data['image_path'] =  "%s%s%s"%(profile_images_path, hashs,'.jpg')
 					yield basic_main_data
 					self.update_status(sk, 1, '')
 					track_item = self.get_track_item(sk, str(object_urn), login_mail, '176.9.181.34', '1')
@@ -319,7 +323,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 				if data_retruned:
 					yield data_retruned
 
-		if url_type != 'basic':
+		"""if url_type != 'basic':
 			if url_paging:
 				count_data = url_paging.get('count','')
 				start_data = url_paging.get('start','')
@@ -331,6 +335,6 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 					else:
 						cons_part = "&count=%s&start=%s"%(count_data, start_data+count_data)
 					retrun_url = "%s%s"%(main_url,cons_part)
-					yield Request(retrun_url, headers=headers, callback=self.parse_voyage, meta={'url_type':url_type, 'main_url':main_url, 'headers':headers, 'sk':sk, 'main_member_id':main_member_id})
+					yield Request(retrun_url, headers=headers, callback=self.parse_voyage, meta={'url_type':url_type, 'main_url':main_url, 'headers':headers, 'sk':sk, 'main_member_id':main_member_id})"""
 			
 					

@@ -24,6 +24,7 @@ company_api = "%s%s" %(main_profile_api, (entity_api % "COMPANY"))
 influencers_api = "%s%s" %(main_profile_api, (entity_api % "INFLUENCER"))
 channel_api = "%s%s" %(main_profile_api, (entity_api % "CHANNEL"))
 profile_view_url = "https://www.linkedin.com/profile/view?id=%s&authType=name&authToken=%s"
+profile_images_path = "/root/Linkedin/Linkedin/spiders/images/full/"
 
 api_whole_list = [	(positions_api, 'experiences'),
 			(feature_skills_api, 'skills'),
