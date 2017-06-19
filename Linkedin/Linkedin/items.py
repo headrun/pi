@@ -88,6 +88,7 @@ class Linkedinmeta(Item):
 	location_postal_code = Field()
 	location_country_code = Field()
 	background_image = Field()
+	image_path = Field()
 
 class Linkedinposts(Item):
 	sk  = Field()

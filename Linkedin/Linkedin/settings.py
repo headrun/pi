@@ -32,7 +32,7 @@ ROBOTSTXT_OBEY = True
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
 #DOWNLOAD_DELAY = 10
-DOWNLOAD_DELAY = 1
+DOWNLOAD_DELAY = 10
 DOWNLOAD_TIMEOUT = 360
 RANDOMIZE_DOWNLOAD_DELAY = True
 
@@ -65,10 +65,10 @@ RANDOMIZE_DOWNLOAD_DELAY = True
      #'Linkedin.middlewares.CustomHttpProxyMiddleware': 543,
     #'Linkedin.middlewares.CustomUserAgentMiddleware': 545,
 #}
-"""HTTP_PROXY = 'http://176.9.181.45:3279'
+HTTP_PROXY = 'http://176.9.181.34:3279'
 DOWNLOADER_MIDDLEWARES = {
       'Linkedin.middlewares.ProxyMiddleware':410
-}"""
+}
 #DOWNLOADER_MIDDLEWARES = {
 #    'scrapy.contrib.downloadermiddleware.httpproxy.HttpProxyMiddleware': 110,
 #    'Linkedin.middlewares.ProxyMiddleware': 100,
