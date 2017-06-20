@@ -20,7 +20,7 @@ class Login(object):
 
         self.cur = self.con.cursor()
         self.prs = Presentation()
-        self.sample_text = "test1.pptx"
+       
         self.select_qry = 'select name,sk,summary,headline,location from linkedin_meta where member_id = "%s" '
         self.select_qry1 = 'select exp_title,exp_company_name,start_date,end_date,exp_location from linkedin_experiences where profile_sk ="%s" limit 3'
         self.select_qry2 = 'select image_path from linkedin_connections where member_id = "%s" limit 1'
@@ -29,21 +29,23 @@ class Login(object):
         self.main()
 
     def main(self):
-        member_id = int(options.memberid)
-        self.cur.execute(self.select_qry%member_id)
-        rows = self.cur.fetchall()
-        rows = rows[0]
-        name,sk,summary,headline,location = rows
-        self.cur.execute(self.select_qry2%member_id)
-        img_path = self.cur.fetchall()
-        try:img_path = img_path[0][0]
-        except : img_path = ''
-        self.get_ppt(rows,img_path,sk)
-
-    def get_ppt(self,records,img_path,sk):
+        count = 0
+        member = options.memberid.split(',')
+        for member_id in member:
+                self.cur.execute(self.select_qry%member_id)
+		rows = self.cur.fetchall()
+		rows = rows[0]
+		name,sk,summary,headline,location = rows
+		self.cur.execute(self.select_qry2%member_id)
+		img_path = self.cur.fetchall()
+		try:img_path = img_path[0][0]
+		except : img_path = ''
+		self.get_ppt(rows,img_path,sk,count,member_id)
+                count = count+1
+    def get_ppt(self,records,img_path,sk,count,member_id):
         self.cur.execute(self.select_qry1%sk)
         exp_data = self.cur.fetchall()
-	title_only_slide_layout = self.prs.slide_layouts[0]
+	title_only_slide_layout = self.prs.slide_layouts[count]
 	slide = self.prs.slides.add_slide(title_only_slide_layout)
 	shapes = slide.shapes
         #Adding title
@@ -69,6 +71,7 @@ class Login(object):
 	table.cell(2, 0).text = 'Current Location'
 	table.cell(2, 1).text = records[4]
         table.cell(3, 0).text = 'Work Experience'
+        exp_duration = 'Below 2 years'
         self.cur.execute(self.select_qry4%sk)
         exp_dur = self.cur.fetchall()
         exp_list = []
@@ -158,13 +161,13 @@ class Login(object):
         #Inserting persons  image
         try : pic = slide.shapes.add_picture(img_path,\
               left=Inches(0),top=Inches(1),width=Inches(2),height=Inches(1.5)) 
-        except : pic = ''
+        except : pic = slide.shapes.add_picture('/root/test/ppt/emptylinkedin.png',\
+              left=Inches(0),top=Inches(1),width=Inches(2),height=Inches(1.5))
 
         #Inserting logo
         pic2 = slide.shapes.add_picture('/root/test/ppt/Pmoves-1.png', \
               left=Inches(8.5),top= Inches(0.2),width=Inches(1.2))
-       
-        self.prs.save('test1.pptx')
+        self.prs.save('linkedin_mem.pptx')
         
 
     def __del__(self):
