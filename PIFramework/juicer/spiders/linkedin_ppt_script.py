@@ -46,7 +46,7 @@ class Login(object):
 	title_only_slide_layout = self.prs.slide_layouts[0]
 	slide = self.prs.slides.add_slide(title_only_slide_layout)
 	shapes = slide.shapes
-        #Adding title to slide
+        #Adding title
 	txBox = slide.shapes.add_textbox(left=Cm(0.7),top=Cm(0),width=Cm(10),height=Cm(1))
 	tf = txBox.text_frame
 	p = tf.add_paragraph()
@@ -59,7 +59,7 @@ class Login(object):
 	table = shapes.add_table(rows=5, cols=2, \
         left=Inches(2.0),top=Inches(1.0), width=Inches(2.0),\
         height=Inches(1.0)).table
-	# set column widths
+	#  column widths
 	table.columns[0].width = Inches(2)
 	table.columns[1].width = Inches(6.0)
         table.cell(0, 0).text = 'Previous Organisation'
@@ -163,12 +163,15 @@ class Login(object):
         #Inserting logo
         pic2 = slide.shapes.add_picture('/root/test/ppt/Pmoves-1.png', \
               left=Inches(8.5),top= Inches(0.2),width=Inches(1.2))
+       
         self.prs.save('test1.pptx')
         
 
     def __del__(self):
         self.con.close()
         self.cur.close()
+
+     
 
 if __name__ == '__main__':
     parser = optparse.OptionParser()
