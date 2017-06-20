@@ -45,11 +45,12 @@ class Login(object):
     def get_ppt(self,records,img_path,sk,count,member_id):
         self.cur.execute(self.select_qry1%sk)
         exp_data = self.cur.fetchall()
+        #creating multiple slides
 	title_only_slide_layout = self.prs.slide_layouts[count]
 	slide = self.prs.slides.add_slide(title_only_slide_layout)
 	shapes = slide.shapes
-        #Adding title
-	txBox = slide.shapes.add_textbox(left=Cm(0.7),top=Cm(0),width=Cm(10),height=Cm(1))
+        #Adding title 
+	txBox = slide.shapes.add_textbox(left=Cm(1.8),top=Cm(0),width=Cm(10),height=Cm(1))
 	tf = txBox.text_frame
 	p = tf.add_paragraph()
 	run = p.add_run()
@@ -61,9 +62,10 @@ class Login(object):
 	table = shapes.add_table(rows=5, cols=2, \
         left=Inches(2.0),top=Inches(1.0), width=Inches(2.0),\
         height=Inches(1.0)).table
-	#  column widths
+	# column widths
 	table.columns[0].width = Inches(2)
 	table.columns[1].width = Inches(6.0)
+        #Adding headers
         table.cell(0, 0).text = 'Previous Organisation'
         table.cell(0, 1).text = exp_data[0][1]
         table.cell(1, 0).text  = 'Title/Designation'
@@ -121,9 +123,10 @@ class Login(object):
         row_cells[0]._tc.set('gridSpan', str(col_count))
         for c in row_cells[2:]:
             c._tc.set('hMerge', '2')
-        
         table2.columns[2].width = Inches(2.0)
         table2.columns[3].width = Inches(1.0)
+
+        #Displaying experiences data
 	for ind, colu in enumerate(exp_data):
 		ans = ''
 		for i in exp_data:
@@ -137,6 +140,7 @@ class Login(object):
                     table2.cell(0, ind+1).text = ans
                 except : break
 
+        #Displaying education data
         self.cur.execute(self.select_qry3%sk)
         edu_data = self.cur.fetchall()
         for ind, colu in enumerate(edu_data):
