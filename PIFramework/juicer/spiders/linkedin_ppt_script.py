@@ -154,7 +154,7 @@ class Login(object):
         self.cur.execute(self.select_qry4 % sk)
         exp_dur = self.cur.fetchall()
         exp_list= []
-        if exp_duration:
+        if exp_dur:
             for exp in exp_dur:
                if 'years' in exp[0]:
                    dura = re.findall('\d+', exp[0])[0]
