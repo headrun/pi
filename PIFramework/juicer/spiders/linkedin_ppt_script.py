@@ -54,15 +54,7 @@ class Login(object):
 	slide = self.prs.slides.add_slide(title_only_slide_layout)
 	shapes = slide.shapes
         #Adding title 
-	txBox = slide.shapes.add_textbox(left=Cm(1.8), top=Cm(0), width=Cm(10), height=Cm(1))
-	tf = txBox.text_frame
-	p = tf.add_paragraph()
-	run = p.add_run()
-	run.text = "Profile :" + ' ' + records[0]
-	font = run.font
-        font.bold = True
-	font.size = Pt(20)
-        font.color.rgb = RGBColor(0, 0, 255)
+        self.add_title(slide, shapes, records[0])
 	table = shapes.add_table(rows=5, cols=2, \
         left=Inches(2.0), top=Inches(1.0), width=Inches(2.0),\
         height=Inches(1.0)).table
@@ -77,26 +69,13 @@ class Login(object):
 	table.cell(2, 0).text = 'Current Location'
 	table.cell(2, 1).text = records[4]
         table.cell(3, 0).text = 'Work Experience'
-        exp_duration = 'Below 2 years'
-        self.cur.execute(self.select_qry4 % sk)
-        exp_dur = self.cur.fetchall()
-        exp_list = []
-        if exp_duration: 
-            for exp in exp_dur:
-               if 'years' in exp[0]:
-                   dura = re.findall('\d+', exp[0])[0]
-                   exp_list.append(int(dura))
-               else: exp_duration = 'Below 2 years'
-            exp_duration = str(sum(exp_list))+'+ Years'
-            table.cell(3, 1).text = exp_duration
+        self.calculate_exp(table, sk)
         #Setting font size for whole table
         for row in table.rows:
             for cell in row.cells:
                for paragraph in cell.text_frame.paragraphs:
                    for run in paragraph.runs:
                        run.font.size = Pt(7)
-        self.cur.execute(self.select_qry1 % sk)
-        exp_data = self.cur.fetchall()
         #Creating second table 
         table2 = shapes.add_table(rows=3, cols=4, left=Inches(0.0), \
         top=Inches(2.5), width=Inches(6.0), height=Inches(0.5)).table
@@ -107,23 +86,10 @@ class Login(object):
         table2.cell(0, 0).text = 'Professional experiences'
         table2.cell(1, 0).text = 'Education'
         table2.cell(2, 0).text = 'comments'
-        #Merging cells horizantally
-        row_idx = 2
-        start_col_idx = 1
-        end_col_idx = 3
-        col_count = end_col_idx - start_col_idx + 1
-        row_cells = [c for c in table2.rows[row_idx].cells][start_col_idx:end_col_idx]
-        row_cells[0]._tc.set('gridSpan', str(col_count))
-        for c in row_cells[1:]:
-            c._tc.set('hMerge', '2')
-        row_idx = 1
-        start_col_idx = 1
-        end_col_idx = 2
-        col_count = end_col_idx - start_col_idx + 1
-        row_cells = [c for c in table2.rows[row_idx].cells][start_col_idx:end_col_idx]
-        row_cells[0]._tc.set('gridSpan', str(col_count))
-        for c in row_cells[2:]:
-            c._tc.set('hMerge', '2')
+        row_idx, start_col_idx, end_col_idx = 2, 1, 3
+        self.merge_cells(row_idx, start_col_idx , end_col_idx, table2)
+        row_idx, start_col_idx, end_col_idx = 1, 1, 2
+        self.merge_cells(row_idx, start_col_idx, end_col_idx, table2)
         table2.columns[2].width = Inches(2.0)
         table2.columns[3].width = Inches(1.0)
         #Displaying experiences data
@@ -153,6 +119,11 @@ class Login(object):
                for paragraph in cell.text_frame.paragraphs:
                    for run in paragraph.runs:
                        run.font.size = Pt(7)
+        self.insert_image(slide, shapes, img_path, member_id)
+        self.prs.save(options.filename)
+        print "Created ppt succesfully for '%s' with name '%s'" % (member_id, records[0])
+
+    def insert_image(self, slide, shapes, img_path, member_id):
         #Inserting persons  image
         try: pic = slide.shapes.add_picture(img_path,\
               left=Inches(0), top=Inches(1), width=Inches(2), height=Inches(1.5)) 
@@ -163,8 +134,43 @@ class Login(object):
         #Inserting logo
         pic2 = slide.shapes.add_picture('/root/test/ppt/Pmoves-1.png', \
               left=Inches(8.5), top=Inches(0.2), width=Inches(1.2))
-        self.prs.save(options.filename)
-        print "Created ppt succesfully for '%s' with name '%s'" % (member_id, records[0])
+        return slide, shapes
+
+    def add_title(self, slide, shapes, title):
+        #Adding Title
+        txBox = slide.shapes.add_textbox(left=Cm(1.8), top=Cm(0), width=Cm(10), height=Cm(1))
+        tf = txBox.text_frame
+        p = tf.add_paragraph()
+        run = p.add_run()
+        run.text = "Profile :" + ' ' + title
+        font = run.font
+        font.bold = True
+        font.size = Pt(20)
+        font.color.rgb = RGBColor(0, 0, 255)
+        return slide, shapes
+
+    def calculate_exp(self, table, sk):
+        exp_duration = 'Below 2 years'
+        self.cur.execute(self.select_qry4 % sk)
+        exp_dur = self.cur.fetchall()
+        exp_list= []
+        if exp_duration:
+            for exp in exp_dur:
+               if 'years' in exp[0]:
+                   dura = re.findall('\d+', exp[0])[0]
+                   exp_list.append(int(dura))
+               else: exp_duration = 'Below 2 years'
+            exp_duration = str(sum(exp_list))+'+ Years'
+            table.cell(3, 1).text = exp_duration
+            return table
+
+    def merge_cells(self, row_idx, start_col_idx, end_col_idx, table2): 
+        col_count = end_col_idx - start_col_idx + 1
+        row_cells = [c for c in table2.rows[row_idx].cells][start_col_idx:end_col_idx]
+        row_cells[0]._tc.set('gridSpan', str(col_count))
+        for c in row_cells[1:]:
+            c._tc.set('hMerge', '2')
+
 
     def __del__(self):
         self.con.close()
@@ -173,7 +179,7 @@ class Login(object):
 if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option('-m', '--memberid', default=None, help='member_id, one or many separated by commas')
-    parser.add_option('-f', '--filename', default=None, help='filename, give any filename')
+    parser.add_option('-f', '--filename', default='linkedin_member.pptx', help='filename, give any filename')
     (options, args) = parser.parse_args()
     Login(options)
 
