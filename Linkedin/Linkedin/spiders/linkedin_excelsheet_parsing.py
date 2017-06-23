@@ -1,73 +1,18 @@
-import MySQLdb
-import datetime
-import os
-import openpyxl as px
+from linkedin_voyager_functions import *
 import glob
-import md5
-import hashlib
-import json
-import re
-
-def xcode(text, encoding='utf8', mode='strict'):
-	return text.encode(encoding, mode) if isinstance(text, unicode) else text
-
-def md5(x):
-	return hashlib.md5(xcode(x)).hexdigest()
-
-def replacefun(text):
-	text = text.replace('"','<>#<>').replace("'","<>##<>").replace(',','###').replace(u'\u2013','').strip()
-	return text
-
-def restore(text):
-	text = text.replace('<>#<>','"').replace("<>##<>","'").replace('###',',')
-	return text
-
-def clean(text):
-	if not text: return text
-	value = text
-	value = re.sub("&amp;", "&", value)
-	value = re.sub("&lt;", "<", value)
-	value = re.sub("&gt;", ">", value)
-	value = re.sub("&quot;", '"', value)
-	value = re.sub("&apos;", "'", value)
-
-	return value
-
-def normalize(text):
-	return clean(compact(xcode(text)))
-
-def compact( text, level=0):
-	if text is None: return ''
-	if level == 0:
-	    text = text.replace("\n", " ")
-	    text = text.replace("\r", " ")
-	compacted = re.sub("\s\s(?m)", " ", text)
-	if compacted != text:
-	    compacted = compact(compacted, level+1)
-	return compacted.strip()
-
+import openpyxl as px
 
 class Linkedinparsing(object):
 
 	def __init__(self):
-		self.con = MySQLdb.connect(db='FACEBOOK',
-		user='root', passwd='root',
-		charset="utf8", host='localhost', use_unicode=True)
-		self.cur = self.con.cursor()
-		self.social_processing_path = '/root/Linkedin/Linkedin/spiders/excelfiles'
+		self.con, self.cur = get_mysql_connection(DB_HOST, DB_NAME_REQ, '')
+                current_path =  os.path.dirname(os.path.abspath(__file__))
+                self.social_processing_path = os.path.join(current_path, 'excelfiles')
 		self.query = 'insert into linkedin_crawl(sk, url, content_type ,crawl_status, meta_data,created_at, modified_at) values(%s, %s, %s, %s, %s,now(), now()) on duplicate key update modified_at=now(), content_type=%s, crawl_status=0,meta_data=%s'
 
 	def __del__(self):
-		self.cur.close()
-		self.con.close()
+		close_mysql_connection(self.con, self.cur)
 
-	def rep_spl(self, var):
-        	"""To remove unwanted characters"""
-	        var = str(var).replace('\r', '').replace('\n', '')\
-        	.replace('\t', '').replace(u'\xa0', '').replace(u'\xc2\xa0', '').replace(u'\xc3\u0192\xc2\xb1',' ').strip()
-	        if 'none' in var.lower():
-        	    var = ''
-	        return var
 	def main(self):
 		files_list = glob.glob(self.social_processing_path+'/*.xlsx')
 	        if files_list:
@@ -86,10 +31,6 @@ class Linkedinparsing(object):
 						for i in row:
 							if not i.value: continue
 							lower_head = i.value.lower()
-							"""if 'email' in lower_head:
-								email_address = counter
-							elif ('linkedin' in lower_head) or ('linkdin' in lower_head):
-								linkedin_profile = counter"""
 							if 'key' in lower_head:
 								key_ = counter
 							elif 'linkedin'  in lower_head:
@@ -109,24 +50,13 @@ class Linkedinparsing(object):
 					empty_dic = {}
 					counter_ = 70
 					for row in final_indents:
-						#keyf = self.rep_spl(row[key_])
-						"""try: firstnamef = normalize(row[firstname])
-						except: pass 
-						try:
-							lastnamef = row[lastname]
-							if lastnamef: lastnamef= normalize(lastnamef.replace(u'\xc3\u0192\xc2\xb1',''))
-						except: pass"""
 						email_addressf = normalize(row[email_address])
 						linkedin_profilef = ''
 						try: linkedin_profilef = normalize(row[linkedin_profile])
 						except: pass
 						if not linkedin_profilef: continue
-						#if lastnamef == 'lastname': continue
 						if linkedin_profilef.strip() == 'linkedin': continue
 						meta_date_from_browse = {}
-						#meta_date_from_browse.update({"keys":keyf})
-						#meta_date_from_browse.update({"firstname":firstnamef})
-						#meta_date_from_browse.update({"lastname":lastnamef})
 						meta_date_from_browse.update({"linkedin_url":linkedin_profilef})
 						meta_date_from_browse.update({"email_address":email_addressf})
 						crawl_status = 0
@@ -157,16 +87,18 @@ class Linkedinparsing(object):
 								linkedin_profilef = ( '%s%s%s%s'%('https://www.linkedin.com/in/',''.join(re.findall('https://www.linkedin.com/pub/(.*?)/.*',linkedin_profilef)),'-',''.join(cv)))
 							if 'linkedin.com' not in linkedin_profilef: continue
 							counter_ += 1
-							sk = md5("%s%s%s"%(normalize(email_addressf),normalize( linkedin_profilef), str(counter_)))
+							sk = md5("%s%s"%(normalize(email_addressf),normalize( linkedin_profilef)))
 							linkedin_profilef = linkedin_profilef.replace('pubwww.linkedin.comhttps:','').replace('"','')
 							values = (sk, linkedin_profilef, 'linkedin', crawl_status, json.dumps(meta_date_from_browse),'linkedin', json.dumps(meta_date_from_browse))
-							#print linkedin_profilef
-							#print meta_date_from_browse
-							#print '****************'
-							self.cur.execute(self.query, values)
-							#print self.query%values
-							print values
-							print '*************************'
+							recof = fetchmany(self.cur, 'select * from linkedin_crawl where sk="%s"'%sk)
+							if not recof:
+								self.cur.execute(self.query, values)
+								print 'nodup'
+								print linkedin_profilef
+								print '>>>>>>>'
+							else:
+								print values
+								print '*************************'
 		else:
 		    for prof_url in open('linkedin_file.py'):
 			if prof_url != '\n':

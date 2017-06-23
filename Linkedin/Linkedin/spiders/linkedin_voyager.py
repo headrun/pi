@@ -41,8 +41,10 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 					return [FormRequest.from_response(response, formname = 'login_form',\
 				formdata={'session_key':account_mail,'session_password':account_password,'isJsEnabled':'','source_app':'','tryCount':'','clickedSuggestion':'','signin':'Sign In','session_redirect':'','trk':'hb_signin','loginCsrfParam':logincsrf,'fromEmail':'','csrfToken':csrf_token,'sourceAlias':source_alias},callback=self.parse_next, meta={'csrf_token':csrf_token, 'login_mail':account_mail, 'count_from_': yes_s, 'logind_date':logind_date, 'sk_login_self': skf_login_self, 'command_prxy':command_prxy})]
 
+		
     	def spider_closed(self, spider):
 		cv = requests.get('https://www.linkedin.com/logout/').text
+		#yield Request('https://www.linkedin.com/logout/', callback=self.close_yield)
 		close_mysql_connection(self.con, self.cur)
 
 	def parse_next(self, response):
@@ -56,6 +58,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
                         update_count_from = execute_query(self.cur, "update linkedin_loginlimit set count='%s' where sk = '%s' and login_date='%s' and proxy_ip='%s'" % (count_from_, sk_login_self, logind_date, command_prxy))
                 	meta_data = json.loads(li[2])
 	                email_address = meta_data.get('email_address', '')
+			given_key = meta_data.get('given_key','')
         	        sk, profile_url, m_data = li
                 	meta_data = json.loads(m_data)
 	                vals = (sk, profile_url, sk, profile_url)
@@ -65,11 +68,15 @@ class Linkedinpremiumapivoyager(Voyagerapi):
         	            'email_address': email_address,
                 	    'csrf_token': response.meta['csrf_token'],
 			    'login_mail': response.meta.get('login_mail',''),
-			    'command_prxy': command_prxy
+			    'command_prxy': command_prxy,
+			    'm_data':json.dumps(meta_data),
+			    'given_key':given_key
 	                })
 
 	def parse_correct(self, response):
                 sel = Selector(response)
+		m_data = response.meta.get('m_data','')
+		given_key = response.meta.get('given_key','')
 		command_prxy = response.meta.get('command_prxy','')
                 sk = response.meta['sk']
 		login_mail = response.meta.get('login_mail','')
@@ -196,12 +203,14 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 			    'birth_data_day':birth_data_day,
 			    'websites': websites,
 			    'interestsview':interestsview,
+			    'given_key' : given_key,
+			    'm_data': m_data
 			    'command_prxy': command_prxy
         		        })
 				self.update_status(sk, 10, '')
 		else:
 			self.update_status(sk, 6, '')
-			track_item = self.get_track_item(sk, '', login_mail, command_prxy, '6')
+			track_item = self.get_track_item(sk, '', login_mail, command_prxy, '6', given_key, m_data)
 			yield track_item
 			
 
@@ -282,6 +291,8 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 		url_type = response.meta['url_type']
 		main_url = response.meta['main_url']
 		url_paging  = data.get('paging',[])
+                m_data = response.meta.get('m_data','')
+                given_key = response.meta.get('given_key','')
 		login_mail = response.meta.get('login_mail','')
 		languages_data = response.meta.get('languages_data','')
 		main_member_id = response.meta.get('main_member_id','')
@@ -320,7 +331,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
                                                 basic_main_data['image_path'] =  "%s%s%s"%(profile_images_path, hashs,'.jpg')
 					yield basic_main_data
 					self.update_status(sk, 1, '')
-					track_item = self.get_track_item(sk, str(object_urn), login_mail, command_prxy, '1')
+					track_item = self.get_track_item(sk, str(object_urn), login_mail, command_prxy, '1', given_key, m_data)
 					yield track_item
 			if public_identifier:
 				for api in api_whole_list:

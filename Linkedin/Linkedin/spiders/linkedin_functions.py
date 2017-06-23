@@ -33,7 +33,8 @@ from scrapy import signals
 
 DB_PASSWD = 'root'
 DB_HOST = 'localhost'
-REQ_DB_NAME = 'FACEBOOK'
+#REQ_DB_NAME = 'FACEBOOK'
+REQ_DB_NAME = 'LINKEDIN_TESTING'
 DB_USERNAME = 'root'
 MYSQL_CONNECT_TIMEOUT_VALUE = 30
 BATCH_SIZE = 2000
@@ -155,6 +156,7 @@ def clean(text):
     value = re.sub("&gt;", ">", value)
     value = re.sub("&quot;", '"', value)
     value = re.sub("&apos;", "'", value)
+    value = re.sub("<br>",'',value)
 
     return value
 

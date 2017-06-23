@@ -1,4 +1,4 @@
-from linkedin_functions import *
+from linkedin_voyager_functions import *
 from linkedin_queries import *
 
 class Lifilepde(object):
@@ -7,14 +7,15 @@ class Lifilepde(object):
 	self.modified_at     = options.modified_at
 	self.table_flag = options.table_creation_needed
 	self.limit = options.limit
-	self.con, self.cur = get_mysql_connection(DB_HOST, 'FACEBOOK', '')
+	self.con, self.cur = get_mysql_connection(DB_HOST, DB_NAME_REQ, '')
         self.file_dirs = os.path.join(os.getcwd(),'OUTPUT')
         self.QUERY_FILES_DIR = os.path.join(self.file_dirs, 'processing')
         self.QUERY_FILES_CRAWLOUT_DIR = os.path.join(self.file_dirs, 'crawl_out')
         self.tables_file = self.get_tables_file()
-	self.query2 = "select sk, url, meta_data, crawl_status from LINKEDIN_NEW.linkedin_crawl where date(created_at) >= '%s' limit %s"%(self.modified_at, self.limit)
+	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(created_at) >= '%s'"%(self.modified_at)
 	self.quer1 = 'INSERT INTO %s ('%table_name_denor
 	self.quer2 = quer2_denor
+	self.member_id_track = 'select member_id from linkedin_track where sk = "%s"'
 	if self.table_flag:
 		self.check()
 	if self.limit:
@@ -37,6 +38,7 @@ class Lifilepde(object):
 	final_to_update = []
 	for val in values:
 		vals_ = list(val)[2:-3]
+		vals_ = [str(row) if isinstance(row, long) else row for row in vals_]
 		valf = filter(None, map(lambda a,b: (a+':-'+b) if b else '', fil_list,vals_))
 		final_to_update.append(', '.join(valf))
 	if hindex == 0:
@@ -126,9 +128,9 @@ class Lifilepde(object):
 	records = self.cur.fetchall()
 	for inde, rec in enumerate(records):
 		values_final = []
-		sk = list(rec)[0]
-		old_sk = sk
-		sk = sk[:-7]
+                get_meb_records = fetchmany(self.cur, self.member_id_track % rec[0])
+                sk = get_meb_records[0][0]
+                sk_crawl = list(rec)[0]
 		url_re = rec[1]
                 json_meta = json.loads(rec[2])
                 given_url = json_meta.get('linkedin_url','')
@@ -139,7 +141,6 @@ class Lifilepde(object):
                 keysf = json_meta.get('key','')
                 if not keysf: keysf = json_meta.get('keys','')
 		status_url, data_avai = ['']*2
-		genuni = 'GENUINE'
 		if rec[3] == 1 or rec[3] == 9:
 			status_url = 'Valid'
 			data_avai = 'Available'
@@ -149,17 +150,12 @@ class Lifilepde(object):
 		elif rec[3] == 10 or rec[3] == 5:
 			status_url = 'Not Valid'
 			data_avai = 'Not Available'
-		values_final.extend([old_sk, given_url, given_id, status_url, data_avai, given_email, keysf])
+		values_final.extend([sk, given_url, given_id, status_url, data_avai, given_email, keysf])
 		callfun3 = self.metadesign('linkedin_meta', sk, inde)
 		values_final.extend(callfun3)
-		if values_final[8] == '':
-			values_final[8] = "%s%s%s"%(given_firstname, ' ', given_lastname)
-			values_final[9] = given_firstname
-			values_final[10] = given_lastname
-		if values_final[6] == '': values_final[5] = url_re
 		lasttablename = ''
 		for indes, tabl in enumerate(list_tables_denor):
-			if indes == 0: lasttablename = 'interests'
+			if indes == 0: lasttablename = 'image_path'
 			callfun = self.querydesign(tabl, sk, lasttablename, inde)
 			lasttablename = tabl
 			values_final.extend([callfun])
@@ -169,7 +165,7 @@ class Lifilepde(object):
 			calfun2, lastin = self.colum(tabl, sk, inde, lasttablenames)
 			lasttablenames = lastin
 			values_final.extend(calfun2)
-
+		values_final = [str(row) if isinstance(row, long) else row for row in values_final]
 		values_final =  [normalize(i) for i in values_final]
 		final_qryto = "%s%s%s%s%s%s"%(self.quer1,', '.join(self.quer2), ', created_at, modified_at, last_seen) values (' , ', '.join(['%s' for i in range(len(self.quer2))]), ', now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), ', ', '.join([str(i)+'=%s' for i in self.quer2]))
 		values_final.extend(values_final)
@@ -177,6 +173,7 @@ class Lifilepde(object):
                 self.tables_file.flush()
 		print inde, sk
         self.close_all_opened_query_files()
+	close_mysql_connection(self.con, self.cur)
 
     def main(self):
         self.send_xls()

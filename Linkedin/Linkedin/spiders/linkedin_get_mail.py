@@ -1,13 +1,13 @@
 import email
 import getpass
 import imaplib
-import datetime
-import os
+from linkedin_voyager_functions import *
 
 class Fbmail(object):
 
 	def __init__(self):
-		self.social_processing_path = '/root/Linkedin/Linkedin/spiders/excelfiles'
+		current_path =  os.path.dirname(os.path.abspath(__file__))
+		self.social_processing_path = os.path.join(current_path, 'excelfiles')
 
 	def main(self):
 		m = imaplib.IMAP4_SSL("imap.gmail.com")
@@ -22,7 +22,7 @@ class Fbmail(object):
 			if 'kiranmayi@headrun.net' in mail['From'] or 'facebookdummyfb01@gmail.com' in mail['From']:
 				subject = mail['Subject']
 				date_time =  mail['Date']
-				if 'social' in subject.lower():
+				if subject.lower():
 				    processing_path = self.social_processing_path
 				    for part in mail.walk():
 					    if part.get_content_maintype() == 'multipart':
@@ -30,9 +30,6 @@ class Fbmail(object):
 					    if part.get('Content-Disposition') is None:
 						continue
 					    filename = part.get_filename()
-					
-					    #if 'social' not in filename: continue
-					    #if 'copy' not in filename.lower(): continue
 					    filename = 'Social_%s.xlsx'%datetime.datetime.strftime(datetime.datetime.now(), '%s')
 					    cnt = 1
 					    if not filename:

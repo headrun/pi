@@ -6,13 +6,15 @@ class Voyagerapiitems(scrapy.Spider):
         def __init__(self, name=None, **kwargs):
                 super(Voyagerapiitems, self).__init__(name, **kwargs)
 	
-	def get_track_item(self, sk, member_id, login_mail, machine_ip, crawl_status):
+	def get_track_item(self, sk, member_id, login_mail, machine_ip, crawl_status, given_key, given_information):
 		linkedin_track_ = Linkedintrack()
 		linkedin_track_['sk'] =  normalize(sk)
 		linkedin_track_['member_id'] =  normalize(member_id)
 		linkedin_track_['login_mail_id'] = normalize(login_mail)
 		linkedin_track_['machine_ip'] = normalize(machine_ip)
 		linkedin_track_['crawl_status'] = normalize(crawl_status)
+		linkedin_track_['given_key'] = normalize(given_key)
+		linkedin_track_['aux_info'] = normalize(given_information)
 		return linkedin_track_
 
 	def get_testscores_item(self, sk , test_score_name, test_score, test_score_description, test_score_day, test_score_month, test_score_year):
