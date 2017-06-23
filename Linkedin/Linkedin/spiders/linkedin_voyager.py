@@ -55,10 +55,15 @@ class Linkedinpremiumapivoyager(Voyagerapi):
                 sk_login_self = response.meta.get('sk_login_self', '')
                 for li in self.profiles_list:
                         count_from_ += 1
-                        update_count_from = execute_query(self.cur, "update linkedin_loginlimit set count='%s' where sk = '%s' and login_date='%s' and proxy_ip='%s'" % (count_from_, sk_login_self, logind_date, command_prxy))
+                        update_count_from = execute_query(self.cur, "update linkedin_loginlimit\
+			 set count='%s' where sk = '%s' and login_date='%s'\
+			 and proxy_ip='%s'" % (count_from_, 
+			sk_login_self, logind_date, command_prxy))
                 	meta_data = json.loads(li[2])
 	                email_address = meta_data.get('email_address', '')
-			given_key = meta_data.get('given_key','')
+			given_key = meta_data.get('key','')
+			if not given_key:
+				given_key = meta_data.get('keys','')
         	        sk, profile_url, m_data = li
                 	meta_data = json.loads(m_data)
 	                vals = (sk, profile_url, sk, profile_url)
@@ -204,7 +209,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 			    'websites': websites,
 			    'interestsview':interestsview,
 			    'given_key' : given_key,
-			    'm_data': m_data
+			    'm_data': m_data,
 			    'command_prxy': command_prxy
         		        })
 				self.update_status(sk, 10, '')
