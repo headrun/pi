@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+ <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+<script>
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope) {
+$scope.Isshowfb=false;
+$scope.Isshowln=false;
+$scope.Isshotw=false;
+$scope.IsShowtable=false;
+$scope.row={nofoprofilesformulti:''};
+
+
+$scope.submitprofiles=function()
+{
+$scope.IsShowtable=false;
+if($scope.Isshowln==true)
+{
+$scope.row.nofoprofilesformulti=$scope.row.nofoprofilesformulti;
+ $scope.Minimum=$scope.row.nofoprofilesformulti*3.5;
+        $scope.Average=$scope.row.nofoprofilesformulti*3.75;
+         $scope.Maximum=$scope.row.nofoprofilesformulti*4;
+         $scope.IsShowtable=true;
+$scope.showmainpage=false;
+}
+if($scope.Isshowfb==true)
+{
+
+$scope.Minimum=$scope.row.nofoprofilesformulti*1;
+        $scope.Average=$scope.row.nofoprofilesformulti*2;
+         $scope.Maximum=$scope.row.nofoprofilesformulti*3;
+         $scope.IsShowtable=true;
+$scope.showmainpage=false;
+}
+if($scope.Isshotw==true)
+{
+$scope.Minimum=$scope.row.nofoprofilesformulti*0.06;
+        $scope.Average=$scope.row.nofoprofilesformulti*0.53;
+         $scope.Maximum=$scope.row.nofoprofilesformulti*1;
+         $scope.IsShowtable=true;
+$scope.showmainpage=false;
+
+}
+}
+$scope.back=function () {
+$scope.Isshowfb=false;
+$scope.Isshowln=false;
+$scope.Isshotw=false;
+$scope.showmainpage=true;
+$scope.IsShowtable=false;
+$scope.Minimum = '';
+$scope.Average = '';
+$scope.Maximum = '';
+$scope.row={nofoprofilesformulti:''};
+}
+$scope.showmainpage=true;
+     $scope.showfb = function () {
+     $scope.showmainpage=false;
+$scope.Isshowfb=true;
+$scope.profilename="Facebook";
+
+     }
+        $scope.showln = function () {
+     $scope.showmainpage=false;
+$scope.Isshowln=true;
+$scope.profilename="LinkedIn";
+
+     }
+         $scope.shotw = function () {
+     $scope.showmainpage=false;
+$scope.Isshotw=true;
+$scope.profilename="Twitter";
+
+     }
+$scope.row={nofoprofilesformulti:''};
+});
+</script>
+<body>
+<div ng-app="myApp" ng-controller="myCtrl">
+<div class="container text-center">
+    <div style="float:right;" ng-if="!showmainpage">
+    <button type="button" ng-click="back()" class="btn btn-danger">Back</button>
+    </div>
+<div  ng-if="showmainpage">
+Main Page
+</div>
+<br></br>
+<div class="container text-center" ng-if="showmainpage">
+
+  <div class="row">
+    <div class="col-sm-12 well">
+      <div class="well">
+         <p><a ng-click="showfb()">Facebook</a></p>
+      </div>
+      <div class="well">
+        <p><a ng-click="shotw()">Twitter</a></p>
+      </div>
+       <div class="well">
+        <p><a ng-click="showln()">LinkedIn </a></p>
+      </div>
+    </div>
+    </div>
+    </div>
+    <div ng-if="!showmainpage">
+    <div class="container">
+  <h2>{{profilename}} </h2>
+  <form ng-submit="submitprofiles()" name="myform">
+     <div class="form-group">
+    <label for="exampleInputName2">No of Profiles</label>
+    <input type="number"  ng-model="row.nofoprofilesformulti" class="form-control" id="exampleInputName2" placeholder="Enter No of profiles" required>
+    {{nofoprofilesformulti}}
+  </div>
+  <button type="submit"  class="btn btn-default" ng-disabled="myform.$invalid">Submit</button>
+  </form>
+</div>
+</div>
+</div>
+<br></br>
+
+<div class="container" ng-if="Minimum!=null && !showmainpage && IsShowtable">
+
+  <h3>Time Taken (in minutes)</h3>
+  <table class="table table-bordered" >
+    <thead>
+      <tr>
+        <th>Minimum</th>
+        <th>Average</th>
+        <th>Maximum</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>{{Minimum|angular}}</td>
+        <td>{{Average|angular}}</td>
+        <td>{{Maximum|angular}}</td>
+      </tr>
+    </tbody>
+  </table>
+<br></br>
+<h4  >Provided:</h4>
+<ul>
+  <li>one machine</li>
+  <li>one Account</li>
+  <li>one manual resource to monitor the crawl</li>
+</ul>
+</div>
+</div>
+</body>
+</html>
