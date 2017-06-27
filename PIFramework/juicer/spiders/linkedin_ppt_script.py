@@ -49,13 +49,15 @@ class Login(object):
 		    name, sk, summary, headline, location = rows
 		    self.cur.execute(self.select_qry2 % member_id)
 		    profile_image = self.cur.fetchall()
-		    try: profile_image = profile_image[0][0]
+		    try: 
+                        path = profile_image[0][1]
+                        profile_image = profile_image[0][0]
 		    except: profile_image = ''
-		    self.get_ppt(rows, profile_image, sk, count, member_id)
+		    self.get_ppt(rows, profile_image, sk, count, member_id, path)
                     count = count+1
 
 
-    def get_ppt(self, records, profile_image, sk, count, member_id):
+    def get_ppt(self, records, profile_image, sk, count, member_id, path):
         self.cur.execute(self.select_qry1 % sk)
         exp_data = self.cur.fetchall()
         #creating multiple slides
@@ -92,7 +94,7 @@ class Login(object):
         table2 = shapes.add_table(rows=3, cols=4, left=Inches(0.0), \
         top=Inches(2.1), width=Inches(6.0), height=Inches(0.5)).table
         table2.columns[0].width = Inches(2.4)
-        table2.rows[0].height  = Inches(2)
+        table2.rows[0].height = Inches(2)
         table2.columns[1].width = Inches(5.3)
         table2.rows[1].height = Inches(1.2)
         table2.columns[2].width = Inches(3.8)
@@ -103,8 +105,8 @@ class Login(object):
         table2.cell(2, 0).text = 'comments'
         #Filling colors to cells
         tables = [table, table2]
-        for table in tables :
-            for row in table.rows :
+        for table in tables:
+            for row in table.rows:
                 for cell in row.cells:
                     cell.fill.solid()
                     cell.fill.fore_color.rgb = RGBColor(70, 130, 180)
@@ -156,30 +158,29 @@ class Login(object):
                 for cell in row.cells:
                     self.border_color(cell)
         #Downloading image  to current working path and save the image with member_id
-        img_path = self.download_image(profile_image, member_id)
+        img_path = self.download_image(profile_image, member_id, path)
         #Displaying image
         self.insert_image(slide, shapes, img_path, member_id)
         self.copyrights(slide, shapes)
         self.prs.save(options.filename)
         print "Created ppt succesfully for '%s' with name '%s'" % (member_id, records[0].encode('utf-8'))
 
-    def download_image(self, profile_image, member_id):
+    def download_image(self, profile_image, member_id, path):
         image = urllib.URLopener()
         pattern = ''
-        if not profile_image:  
-            profile_image = 'http://bento.cdn.pbs.org/hostedbento-prod/filer_public/_bento_media/img/no-image-available.jpg'
-        image_name = image.retrieve(profile_image, '%s.jpg'% member_id)
-        img_path = os.path.dirname(os.path.abspath(image_name[0]))+ '/' +image_name[0]
-        if '/mpr/mpr/shrink' in profile_image: pattern = "".join(re.findall('mpr/mpr/shrink_\d+_\d+', profile_image))
-        if options.yes == 'yes' and pattern: 
-            profile_image = profile_image.replace(pattern, 'media')
-        else :
-            profile_image = profile_image
-        if options.yes == 'normal': profile_image = profile_image
-        try: 
-            image_name = image.retrieve(profile_image, '%s.jpg'% member_id)
-            img_path = os.path.dirname(os.path.abspath(image_name[0]))+ '/' +image_name[0]
-        except: img_path= ''
+        if '/mpr/mpr/shrink' in profile_image: 
+            pattern = "".join(re.findall('mpr/mpr/shrink_\d+_\d+', profile_image))
+        if options.yes == 'yes': 
+                if pattern: profile_image = profile_image.replace(pattern, 'media')
+                else: profile_image = 'http://bento.cdn.pbs.org/hostedbento-prod/filer_public/_bento_media/img/no-image-available.jpg'
+                image_name = image.retrieve(profile_image, '%s.jpg'% member_id)
+                img_path = os.path.dirname(os.path.abspath(image_name[0]))+ '/' +image_name[0]
+        if options.yes == 'no' and path:
+                img_path = path
+        if options.yes == 'no' and not path:
+                profile_image = 'http://bento.cdn.pbs.org/hostedbento-prod/filer_public/_bento_media/img/no-image-available.jpg'
+                image_name = image.retrieve(profile_image, '%s.jpg'% member_id)
+                img_path = os.path.dirname(os.path.abspath(image_name[0]))+ '/' +image_name[0]
         return img_path
         
 
@@ -207,14 +208,14 @@ class Login(object):
         font.size = Pt(24)
         line = shapes.add_shape(MSO_SHAPE.LINE_CALLOUT_1_NO_BORDER, Cm(0), Cm(2.32), Cm(30.80), Cm(0.1))
         line.fill.solid()
-        line.fill.fore_color.rgb=RGBColor(255, 99, 71) 
+        line.fill.fore_color.rgb = RGBColor(255, 99, 71) 
         return slide, shapes
 
     def calculate_exp(self, table, sk):
         exp_duration = 'Below 2 years'
         self.cur.execute(self.select_qry4 % sk)
         exp_dur = self.cur.fetchall()
-        exp_list=[]
+        exp_list = []
         if exp_dur:
             for exp in exp_dur:
                if 'years' in exp[0]:
@@ -271,7 +272,7 @@ if __name__ == '__main__':
     parser = optparse.OptionParser()
     parser.add_option('-m', '--memberid', default=None, help='member_id, one or many separated by commas')
     parser.add_option('-f', '--filename', default='linkedin_member.pptx', help='filename, give any filename')
-    parser.add_option('-i', '--yes', default='normal', help='high resolution image /normal image')
+    parser.add_option('-i', '--yes', default='no', help='high resolution image /normal image')
     (options, args) = parser.parse_args()
     Login(options)
 
