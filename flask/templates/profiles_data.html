@@ -217,6 +217,19 @@ function showDivs(n) {
                     <th>Biography: </th>
                     <td> {{data_dic.get('twitter_field',{}).get('biography','--')}}</br></td>
                 </tr>
+                {% if data_dic.get('twitter_field',{}).get('profile_url') %}
+                    <tr>
+                    </br>
+                    <strong><p>Click on submit to get more Info</p></strong>
+                    <form class='kiranmayi' action="{{ url_for('information', media_type = 'twitter', email_id = data_dic.get('enter_email_id'))}}" method="POST" name="{{data_dic.get('twitter_field',{}).get('profile_url')}}">
+                        <div class="btn-group btn-group-sm">
+                            <button type="submit" name='action' value="{{data_dic.get('twitter_field',{}).get('profile_url')}}" class="btn btn-primary">Submit</button>
+                        </div>
+                    </form>
+                    </tr>
+                {% endif %}
+
+
               </div>
     </div>
                 </div>
@@ -241,7 +254,18 @@ function showDivs(n) {
                     <th>Biography: </th>
                     <td> {{data_dic.get('linkedin_field',{}).get('biography','--')}}</br></td>
                 </tr>
+                {% if data_dic.get('linkedin_field',{}).get('profile_url') %}
+                    <tr>
+                    </br>
+                    <strong><p>Click on submit to get more Info</p></strong>
 
+                    <form class='kiranmayi' action="{{ url_for('information', media_type = 'linkedin', email_id = data_dic.get('enter_email_id'))}}" method="POST" name="{{data_dic.get('linkedin_field',{}).get('profile_url')}}">
+                        <div class="btn-group btn-group-sm">
+                            <button type="submit" name='action' value="{{data_dic.get('linkedin_field',{}).get('profile_url')}}" class="btn btn-primary">Submit</button>
+                        </div>
+                    </form>
+                    </tr>
+                {% endif %}
 
               </div>
     </div>
@@ -266,6 +290,18 @@ function showDivs(n) {
                     <th>Biography: </th>
                     <td> {{data_dic.get('facebook_field',{}).get('biography','--')}}</br></td>
                 </tr>
+                {% if data_dic.get('facebook_field',{}).get('profile_url') %}
+                    <tr>
+                    </br>
+                    <strong><p>Click on submit to get more Info</p></strong>
+                    <form class='kiranmayi' action="{{ url_for('information', media_type = 'facebook', email_id = data_dic.get('enter_email_id'))}}" method="POST" name="{{data_dic.get('facebook_field',{}).get('profile_url')}}">
+                        <div class="btn-group btn-group-sm">
+                            <button type="submit" name='action' value="{{data_dic.get('facebook_field',{}).get('profile_url')}}" class="btn btn-primary">Submit</button>
+
+                        </div>
+                    </form>
+                    </tr>
+                {% endif %}
               </div>
     </div>
                 </div>

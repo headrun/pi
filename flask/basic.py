@@ -1,32 +1,60 @@
+from insert_script import *
 from flask import Flask, render_template, jsonify
 from flask import request
-from linkedin_functions import *
-from db_operations import *
+from flask.ext.triangle import Triangle
+from Fullcontact.generic_functions import *
+from Fullcontact.db_operations import *
 
 app = Flask(__name__)
+Triangle(app)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+@app.route('/stats_calculator')
+def stats():
+    return render_template('stats_calculator.html')
+
+
+@app.route('/information/<media_type>', methods=['POST'])
+def information(media_type):
+    profile_url = request.form.get('action', '')
+    emailid = request.args.get('email_id','')
+    lists = ['twitter', 'facebook', 'linkedin']
+    for inner in lists:
+        if media_type == inner:
+            Insert().main(profile_url, inner, emailid)
+            return media_type
+            #return render_template('%s.html' % inner)
+
+
 @app.route('/', methods=['POST'])
 def my_form_post():
     email = request.form['email']
+    #python fullcontact_script.py -d 'FULLCO' -m 'nakul@aromathai.net' -e '9fe11c7ab65dacbd'
     if email:
         excel_file_name = 'fullcontact_%s.txt'%str(datetime.datetime.now().date())
+        real_path = os.path.dirname(os.path.realpath(__file__))
+        os.chdir("%s%s" % (real_path, '/Fullcontact'))
         if os.path.isfile(excel_file_name):
-            os.system('rm %s'%excel_file_name)
+            os.system('rm %s'% excel_file_name)
         cmd = "python fullcontact_script.py -d '%s' -m '%s' -e '%s' >> %s"%(DB_NAME, email, '9fe11c7ab65dacbd', excel_file_name)
         os.system(cmd)
+        os.chdir(real_path)
         con, cur = get_mysql_connection(DB_HOST, DB_NAME, '')
-        name, family_name, websites, age,\
-        gender, country, state, city,\
-        continent, location, likelihood = fetchone(cur, query1_full%email)
+        recs = fetchmany(cur, query1_full%email)
+        name, family_name, websites, age, gender, country, state, city, continent, location, likelihood = ['']*11
+        if recs and len(recs[0]) == 11:
+            name, family_name, websites, age,\
+                gender, country, state, city,\
+                continent, location, likelihood = recs[0]
         profile_details_list = [('name',name), ('family_name', family_name),
         ('websites', websites.split('<>')), ('age', age),
         ('gender', gender), ('country', country), ('state', state), ('city', city),
         ('continent', continent), ('location', location), ('likelihood', likelihood)]
         data_dic = {}
+        data_dic.update({"enter_email_id":email})
         for pd in profile_details_list:
             data_dic.update({pd[0]:pd[1]})
         all_tables = [("social_profiles", list_variables), ("organizations", variables_organizations), ("richmedia", variables_richmedia)]
@@ -58,8 +86,8 @@ def my_form_post():
                     data_dic.update({'twitter_field':soc})
                 if 'linkedin' in soc.get('type_name').lower():
                     data_dic.update({'linkedin_field':soc})
-        checking_ = ''
-        with file(excel_file_name) as f:
+        checking = ''
+        with file("%s%s" % ("Fullcontact/",excel_file_name)) as f:
             s = f.read()
             if s:
                 checking = s
@@ -70,4 +98,5 @@ def my_form_post():
             return render_template('profiles_data.html', data_dic = data_dic)
 
 if __name__ == "__main__":
+    #app.run(debug=True)
     app.run(host='0.0.0.0', port=8545, debug=True)
