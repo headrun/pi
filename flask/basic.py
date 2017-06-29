@@ -1,3 +1,4 @@
+from Twitter.twitter_xlsheet import *
 from insert_script import *
 from flask import Flask, render_template, jsonify
 from flask import request
@@ -24,10 +25,43 @@ def information(media_type):
     lists = ['twitter', 'facebook', 'linkedin']
     for inner in lists:
         if media_type == inner:
-            Insert().main(profile_url, inner, emailid)
-            return media_type
+             key_name, sk, profile_url,\
+             media_type, meta_aux_info = checking(profile_url,
+                inner, emailid, media_type)
+             Insert().main(key_name, sk, profile_url,
+            media_type, meta_aux_info)
             #return render_template('%s.html' % inner)
+             if media_type == 'twitter':
+                twitter_data = twitter(sk, emailid)
+                if twitter_data:
+                    return render_template('twitter_data.html', twd = twitter_data)
+                else:
+                    return jsonify('No data for this profile')
 
+def twitter(sk, emailid):
+    cmd = 'python tweet_analyzer.py -n %s -e %s'%(sk, emailid)
+    real_path = os.path.dirname(os.path.realpath(__file__))
+    os.chdir("%s%s" % (real_path, '/Twitter'))
+    os.system(cmd)
+    os.chdir(real_path)
+    twitter_data = Tixlsfile().main(sk)
+    return twitter_data
+
+def checking(profile_url, inner, emailid, media_type):
+    meta_aux_info = {'email_address':emailid}
+    key_name  = ''
+    sk = md5("%s%s"%(normalize(emailid),normalize(profile_url)))
+    if media_type == 'twitter':
+        key_name = 'twitter_crawl'
+        meta_aux_info = meta_aux_info['email_address']
+        sk = profile_url.split('/')[-1].strip()
+    elif media_type == 'linkedin':
+        key_name = 'linkedin_crawl'
+        meta_aux_info.update({"linkedin_url":profile_url})
+    elif media_type == 'facebook':
+        key_name = 'facebook_crawl'
+        meta_aux_info.update({"mbasic_url": profile_url.replace('www', 'mbasic')})
+    return key_name, sk, profile_url, media_type, meta_aux_info
 
 @app.route('/', methods=['POST'])
 def my_form_post():

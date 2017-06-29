@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="kiranmayi">
+    <title>DEMO</title>
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='css/font-awesome.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css">
+    <script src="https://use.fontawesome.com/07b0ce5d10.js"></script>
+</head>
+<body>
+    <div class="container-2">
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-md-12">
+                    <ul class="list-inline mini-stat offer offer-info">
+                        <h2><i class="fa fa-twitter" aria-hidden="true" style="color: #1dcaff;"></i> Twitter({{twd.get('screen_name')}})</h2>
+                        <li>
+                            <h5>Verified<span class="stat-value color-blue"><i class="fa fa-check"></i> {{twd.get('is_verified')}}</span></h5>
+                        </li>
+                        <li>
+                            <h5>Location<span class="stat-value color-blue"><i class="fa fa-map-marker"></i>{{twd.get('location','')}}</span></h5>
+                        </li>
+                        <li>
+                            <h5>Tweets <span class="stat-value color-blue"><i class="fa fa-twitter"></i>{{twd.get('tweets','')}}</span></h5>
+                        </li>
+                        <li>
+                            <h5>Following <span class="stat-value color-blue"><i class="fa fa-hand-o-up"></i>{{twd.get('following','')}}</span></h5>
+                        </li>
+                        <li>
+                            <h5>Followers <span class="stat-value color-blue"><i class="fa fa-user-plus"></i>{{twd.get('followers','')}}</span></h5>
+                        </li>
+                        <li>
+                            <h5>Likes <span class="stat-value color-blue"><i class="fa fa-thumbs-up"></i>{{twd.get('likes','')}}</span></h5>
+                        </li>
+                        <li>
+                            <h5>Timezone <span class="stat-value color-blue"><i class="fa fa-clock-o"></i>{{twd.get('timezone','')}}</span></h5>
+                        </li>
+                        <li>
+                            <h5>Language <span class="stat-value color-blue"><i class="fa fa-language"></i>{{twd.get('language','')}}</span></h5>
+                        </li>
+
+                        <li>
+
+                            <h5>Description
+
+                                <span class="stat-value color-blue" style="color: gray;
+
+    text-shadow: none;">Test Test Test Test Test Test</span></h5>
+
+                        </li>
+
+                    </ul>
+
+                </div>
+
+            </div>
+            <div class="row">
+
+                <div class="col-xs-12 col-md-3">
+
+                    <div class="offer offer-info" style="margin-bottom: 30px;">
+
+                        <div class="shape">
+
+                            <div class="shape-text">
+
+                                <span class="glyphicon  glyphicon-home"></span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="offer-content">
+
+                            <h3 class="lead">
+
+                                Languages :
+
+                            </h3>
+
+                            <div class="list-group">
+
+                                <a class="list-group-item pad">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="fa fa-usd"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">ENG</h4>
+
+
+
+                                </a>
+
+                                <a class="list-group-item pad">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="fa fa-eur"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        UND
+
+                                    </h4>
+
+                                </a>
+
+                                <a class="list-group-item pad">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="fa fa-rub"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        RUS
+
+                                    </h4>
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="offer offer-info">
+
+                        <div class="shape">
+
+                            <div class="shape-text">
+
+                                <span class="glyphicon  glyphicon-home"></span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="offer-content">
+
+                            <h3 class="lead">
+
+                                Most Refereced :
+
+                            </h3>
+
+                            <div class="list-group">
+
+                                <a class="list-group-item pad">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-globe"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">www.xyz.com</h4>
+
+
+
+                                </a>
+
+                                <a class="list-group-item pad">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-globe"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        www.xyz.com
+
+                                    </h4>
+
+                                </a>
+
+                                <a class="list-group-item pad">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-globe"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        www.xyz.com
+
+                                    </h4>
+
+                                </a>
+
+                                <a class="list-group-item pad">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-globe"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        www.xyz.com
+
+                                    </h4>
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-xs-12 col-md-3">
+
+                    <div class="offer offer-info">
+
+                        <div class="offer-content">
+
+                            <h3 class="lead">
+
+                                Top<label class="label label-info"> 10</label> hashtag
+
+                            </h3>
+
+                            <div class="list-group">
+
+                                <a class="list-group-item pad1">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-user"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">#Test</h4>
+
+
+
+                                </a>
+
+                                <a class="list-group-item pad1">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-user"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        #Test
+
+                                    </h4>
+
+                                </a>
+
+                                <a class="list-group-item pad1">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-user"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        #Test
+
+                                    </h4>
+
+                                </a>
+
+                                <a class="list-group-item pad1">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-user"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">#Test</h4>
+
+
+
+                                </a>
+
+                                <a class="list-group-item pad1">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-user"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        #Test
+
+                                    </h4>
+
+                                </a>
+
+                                <a class="list-group-item pad1">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-user"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        #Test
+
+                                    </h4>
+
+                                </a>
+
+                                <a class="list-group-item pad1">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-user"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">#Test</h4>
+
+
+
+                                </a>
+
+                                <a class="list-group-item pad1">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-user"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        #Test
+
+                                    </h4>
+
+                                </a>
+
+                                <a class="list-group-item pad1">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-user"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">
+
+                                        #Test
+
+                                    </h4>
+
+                                </a>
+
+                                <a class="list-group-item pad1">
+
+                                    <h3 class="pull-right" style="margin-top: 0px;">
+
+                                        <i class="icon glyphicon glyphicon-user"></i>
+
+                                    </h3>
+
+                                    <h4 class="list-group-item-heading count">#Test</h4>
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <div class="col-md-6" style="padding-left: 0px;padding-right: 0px;">
+
+
+
+                    <div class="col-xs-12 col-md-6">
+
+                        <div class="offer offer-info">
+
+                            <div class="offer-content">
+
+                                <h3 class="lead">
+
+                                    Top<label class="label label-info"> 5</label> user mentions
+
+                                </h3>
+
+                                <div class="list-group">
+
+                                    <a class="list-group-item google-plus">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">@Test</h4>
+
+
+
+                                    </a>
+
+                                    <a class="list-group-item visitor">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">
+
+                                            @Test
+
+                                        </h4>
+
+                                    </a>
+
+                                    <a class="list-group-item facebook-like">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">
+
+                                            @Test
+
+                                        </h4>
+
+                                    </a>
+
+                                    <a class="list-group-item google-plus">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">@Test</h4>
+
+
+
+                                    </a>
+
+                                    <a class="list-group-item visitor">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">
+
+                                            @Test
+
+                                        </h4>
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="col-xs-12 col-md-6">
+
+                        <div class="offer offer-info">
+
+                            <div class="offer-content">
+
+                                <h3 class="lead">
+
+                                    Influencers
+
+                                </h3>
+
+                                <div class="list-group">
+
+                                    <a class="list-group-item google-plus">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">@Test</h4>
+
+
+
+                                    </a>
+
+                                    <a class="list-group-item visitor">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">
+
+                                            @Test
+
+                                        </h4>
+
+                                    </a>
+
+                                    <a class="list-group-item facebook-like">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">
+
+                                            @Test
+
+                                        </h4>
+
+                                    </a>
+
+                                    <a class="list-group-item google-plus">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">@Test</h4>
+
+
+
+                                    </a>
+
+                                    <a class="list-group-item visitor">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">
+
+                                            @Test
+
+                                        </h4>
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-xs-12 col-md-12">
+
+                        <div class="offer offer-info">
+
+                            <div class="offer-content">
+
+                                <h3 class="lead">
+
+                                    Influencers
+
+                                </h3>
+
+                                <div class="list-group">
+
+                                    <a class="list-group-item google-plus">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">@Test</h4>
+
+
+
+                                    </a>
+
+                                    <a class="list-group-item visitor">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">
+
+                                            @Test
+
+                                        </h4>
+
+                                    </a>
+
+                                    <a class="list-group-item facebook-like">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">
+
+                                            @Test
+
+                                        </h4>
+
+                                    </a>
+
+                                    <a class="list-group-item google-plus">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">@Test</h4>
+
+
+
+                                    </a>
+
+                                    <a class="list-group-item visitor">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-user"></i>
+
+                                        </h3>
+
+                                        <h4 class="list-group-item-heading count">
+
+                                            @Test
+
+                                        </h4>
+
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div><!-- page-wrapper END-->
+
+    </div><!-- container-1 END-->
+
+    <script src="css/jquery-1.10.2.min.js"></script>
+
+    <script src="css/bootstrap.min.js"></script>
+
+</body>
+
+</html>
