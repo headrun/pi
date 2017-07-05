@@ -19,8 +19,10 @@ import commands
 import optparse
 import datetime
 import csv
+import collections
 import calendar
 
+from operator import itemgetter
 from itertools import chain
 from scrapy.spider import BaseSpider
 from scrapy.selector import Selector

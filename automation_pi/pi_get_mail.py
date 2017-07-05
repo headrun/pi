@@ -16,10 +16,12 @@ class Pimail(object):
 
 	def main(self):
 		mid = imaplib.IMAP4_SSL("imap.gmail.com")
-		mid.login('facebookdummyfb01@gmail.com', '01123123')
+		mid.login('positiveintegersproject@gmail.com', 'integers')
+		#mid.login('facebookdummyfb01@gmail.com', '01123123')
 		mid.select('INBOX')
-		items = mid.search(None, "FLAGGED")
+		items = mid.search(None, "UNSEEN")
 		items = items[1][0].split()
+		check_true = ''
 		for emailid in items:
 			data = mid.fetch(emailid, "(RFC822)")[1]
 			email_body = data[0][1]
@@ -29,26 +31,28 @@ class Pimail(object):
 			if mail_from in ['kiranmayi@headrun.net', 'facebookdummyfb01@gmail.com']:
 				subject = mail['Subject']
 				date_time = mail['Date']
-				if subject.lower():
+				if 'profiles' in subject.lower():
+				    check_true = 'yes'
 				    for part in mail.walk():
 					    if part.get_content_maintype() == 'multipart':
 							continue
 					    if part.get('Content-Disposition') is None:
 							continue
 					    filename = part.get_filename()
-					    filename = 'Social_%s.xlsx'\
-				 % datetime.datetime.strftime(datetime.datetime.now(), '%s')
+					    #filename = 'Social_%s.xlsx'\
+				 #% datetime.datetime.strftime(datetime.datetime.now(), '%s')
 					    cnt = 1
 					    if not filename:
 							filename = 'part-%03d%s' % (cnt, 'bin')
 							cnt += 1
-					    filename = mail["From"]+'___'+str(date_time) + '_' + filename
+					    #filename = mail["From"]+'___'+str(date_time) + '_' + filename
 					    att_path = os.path.join(self.social_processing_path, filename)
 					    if not os.path.isfile(att_path):
 							filep = open(att_path, 'wb')
 							filep.write(part.get_payload(decode=True))
 							filep.close()
-		Piparsing().main()
+					    if items and check_true and filename:
+							Piparsing().main()
 
 if __name__ == '__main__':
     Pimail().main()
