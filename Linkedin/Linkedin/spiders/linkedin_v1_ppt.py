@@ -14,7 +14,6 @@ from pptx.oxml.xmlchemy import OxmlElement
 from pptx.enum.shapes import MSO_SHAPE
 from ppt_db_constants import *
 
-
 class Login(object):
 
     def __init__(self, options):
@@ -57,7 +56,6 @@ class Login(object):
 		    self.get_ppt(rows, profile_image, sk, count, member_id, path)
                     count = count+1
 
-
     def get_ppt(self, records, profile_image, sk, count, member_id, path):
         self.cur.execute(self.select_qry1 % sk)
         exp_data = self.cur.fetchall()
@@ -89,7 +87,6 @@ class Login(object):
         #Borders color
         self.calculate_exp(table, sk)
         #Creating second table 
-         
         table2 = shapes.add_table(rows=4, cols=4, left=Inches(0.0), \
         top=Inches(2.25), width=Inches(6.0), height=Inches(0.5)).table
         table2.columns[0].width = Inches(2.4)
@@ -101,14 +98,12 @@ class Login(object):
         table2.columns[2].width = Inches(2.4)
         table2.columns[3].width = Inches(2.5)
         table2.cell(0, 0).text = '\n\n\n'+ 'Professional experiences'
-
         for ind, colu in enumerate(exp_data):
                 row = 0 
 		for indk, i in enumerate(exp_data):
                     if ind == 0 :  
                         paragraphsi_ = [i[0],i[1]]
                         table2.cell(row, 1).text = paragraphsi_[0]
-			#table2.cell(row, 1).text_frame.paragraphs[0].runs[0].font.bold = False
                         table2.cell(row, 1).text_frame.paragraphs[0].runs[0].font.bold = True
                         for para_str in paragraphsi_[1:]:
                                 p = table2.cell(row, 1).text_frame.add_paragraph()
@@ -117,7 +112,6 @@ class Login(object):
 					table2.cell(row, 1).text_frame.paragraphs[1].runs[0].font.bold = False
 				else:
 	                                p.font.bold = False
-					#p.font.bold = True
                         row = row+1
                     if ind == 1:
                         table2.cell(row, 2).text = i[2]+'\n'+i[3]
@@ -127,10 +121,15 @@ class Login(object):
                         table2.cell(row, 3).text = i[4]
                         table2.cell(row, 3).text_frame.paragraphs[0].font.size = Pt(12)
                         row += 1
-
+        self.cur.execute(self.select_qry3 % sk) 
+        edu_data = self.cur.fetchall()
         table3 = shapes.add_table(rows=2, cols=3, left=Inches(0.0), \
         top=Inches(4.4), width=Inches(6.0), height=Inches(0.7)).table
-        table4 = shapes.add_table(rows=1, cols=2, left=Inches(0.0), \
+        if len(edu_data) < 2:
+            table4 = shapes.add_table(rows=1, cols=2, left=Inches(0.0), \
+            top=Inches(5.2), width=Inches(6.0), height=Inches(0.5)).table
+        else:
+            table4 = shapes.add_table(rows=1, cols=2, left=Inches(0.0), \
         top=Inches(5.5), width=Inches(6.0), height=Inches(0.5)).table
         table4.columns[0].width = Inches(2.4)
         table4.rows[0].height = Inches(2.2)
@@ -145,8 +144,6 @@ class Login(object):
         table4.cell(0, 0).text = '\n' 'Comments'
         table3.cell(0, 0).text_frame.paragraphs[0].font.bold = True
         #Displaying education data
-        self.cur.execute(self.select_qry3 % sk)
-        edu_data = self.cur.fetchall()
         for ind, colu in enumerate(edu_data):
                 ans = ''
                 row = 0
@@ -163,12 +160,10 @@ class Login(object):
 				else:
 	                                p.font.bold = False
                             row = row+1
-
                         if ind == 1: 
                             table3.cell(row, 2).text = i[2]+'-'+i[3].strip('-')
                             table3.cell(row, 2).text_frame.paragraphs[0].font.size = Pt(12)
                             row += 1
-
         table4.cell(0, 1).text = records[2][0:1500].encode('utf8')
         tables = [table, table2, table3]
         for table in tables:
@@ -178,7 +173,6 @@ class Login(object):
                        for run in paragraph.runs:
                            run.font.size = Pt(13)
                            run.font.color.rgb = RGBColor(0, 0, 0)
-                           #run.font.bold = False
         for row in table4.rows:
                 for cell in row.cells:
                    for paragraph in cell.text_frame.paragraphs:
@@ -186,16 +180,8 @@ class Login(object):
                            run.font.size = Pt(13)
                            run.font.color.rgb = RGBColor(0, 0, 0)
                            run.font.bold = False
-
         self.mergeCellsVertically(table2, start_row_idx=0, end_row_idx=3, col_idx=0)
         self.mergeCellsVertically(table3, start_row_idx=0, end_row_idx=1, col_idx=0)
-
-        """table_list = [table,table2,table3,table4]
-        for table in table_list :
-            for row in table.rows:
-                for cell in row.cells:
-                    self.border_color(cell)"""
-
         othr_list_ = [table2.cell(0, 1),table3.cell(0, 1),table2.cell(0, 2),table3.cell(0, 2),table2.cell(0,3),\
         table.cell(0, 0),table4.cell(0,1)]
         for row in othr_list_ :
@@ -205,7 +191,6 @@ class Login(object):
         for row in list_ :
             row.fill.solid()
             row.fill.fore_color.rgb = RGBColor(169, 169, 169)
-        
         try :table3.cell(0, 0).text_frame.paragraphs[0].runs[0].font.bold = True
         except: "no cell"
         try : table4.cell(0, 0).text_frame.paragraphs[0].runs[0].font.bold = True 
@@ -243,7 +228,6 @@ class Login(object):
                 img_path = os.path.dirname(os.path.abspath(image_name[0]))+ '/' +image_name[0]
         return img_path
         
-
     def insert_image(self, slide, shapes, img_path, member_id):
         #Inserting persons  image
         pic = slide.shapes.add_picture(img_path,\
@@ -267,17 +251,8 @@ class Login(object):
         font.bold = True
         font.size = Pt(24)
         line = shapes.add_shape(MSO_CONNECTOR.STRAIGHT,  Cm(0.00), Cm(2.32), Cm(27.90), Cm(0.1))
-        #line = shapes.add_shape(MSO_SHAPE.LINE_CALLOUT_1, Cm(0), Cm(2.32), Cm(30.80), Cm(0))
-        #line = shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, Cm(0), Cm(2.32), Cm(30.80), Cm(0))
-        #width = Pt(2.3)
-        #line = shapes.add_shape(MSO_SHAPE.LINE_INVERSE, Cm(0), Cm(2.32), width, Cm(0))
-        #line = shapes.add_shape(MSO_SHAPE.LINE_CALLOUT_1_BORDER_AND_ACCENT_BAR,Cm(0), Cm(2.32), width, Cm(0))
-        #line = shapes.add_shape(MSO_SHAPE.LIGHTNING_BOLT, Cm(0), Cm(2.32), width, Cm(0.0))
-        #import pdb;pdb.set_trace()
-        #line.width = Pt(3.0)
         line.fill.solid()
         line.fill.fore_color.rgb = RGBColor(255, 99, 71) 
-        #line.width = Cm(30.40)
         return slide, shapes
 
     def calculate_exp(self, table, sk):
@@ -303,15 +278,12 @@ class Login(object):
         for c in row_cells[1:]:
             c._tc.set('hMerge', '2')
 
-
     def mergeCellsVertically(self, table, start_row_idx, end_row_idx, col_idx):
         row_count = end_row_idx - start_row_idx + 1
         column_cells = [r.cells[col_idx] for r in table.rows][start_row_idx:]
         column_cells[0]._tc.set('rowSpan', str(row_count))
         for c in column_cells[1:]:
             c._tc.set('vMerge', '1')
-
-
 
     def SubElement(self, parent, tagname, **kwargs):
         element = OxmlElement(tagname)
@@ -340,7 +312,6 @@ class Login(object):
         round_ = self.SubElement(lnB, 'a:round')
         headEnd = self.SubElement(lnB, 'a:headEnd', type='none', w='med', len='med')
         tailEnd = self.SubElement(lnB, 'a:tailEnd', type='none', w='med', len='med')
-
 
     def __del__(self):
         self.con.close()
