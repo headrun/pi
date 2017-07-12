@@ -60,8 +60,6 @@ class Login(object):
                         profile_image = profile_image[0][0]
 		    except: profile_image = ''
 		    self.get_ppt(rows, profile_image, sk, member_id, path)
-              
-
 
     def get_ppt(self, records, profile_image, sk, member_id, path):
         self.cur.execute(self.select_qry1 % sk)
@@ -82,7 +80,7 @@ class Login(object):
         self.add_connector(slide, shapes, Cm(0.00), Cm(17.80), Cm(33.90), Cm(0.1))
         self.insert_image(slide, shapes, img_path, member_id)
         self.prs.save(options.filename)
-        print "ppt succesfully created "
+        print "ppt succesfully created  for %s " % member_id
 
     def mergeCellsVertically(self, table, start_row_idx, end_row_idx, col_idx):
         row_count = end_row_idx - start_row_idx + 1
@@ -97,7 +95,6 @@ class Login(object):
         row_cells[0]._tc.set('gridSpan', str(col_count))
         for c in row_cells[1:]:
             c._tc.set('hMerge', '2')
-
 
     def add_tables(self, slide, shapes, exp_data):
         table = shapes.add_table(rows=2, cols=2, \
@@ -139,7 +136,6 @@ class Login(object):
               pic = slide.shapes.add_picture(img_path,\
               left=Cm(13.93), top=Cm(0.80), width=Cm(1.55), height=Cm(1.65))
         except: print "Company logo not Found"
-
         return slide, shapes
 
     def add_current_role(self, slide, shapes, exp_data):
@@ -163,7 +159,6 @@ class Login(object):
         if exp_data[0][2]: table2.cell(1, 1).text = exp_data[0][2].split('-')[0]+'-current'
         table2.cell(1, 1).text_frame.paragraphs[0].font.size = Pt(9)
         return slide, shapes
-
 
     def add_education(self, slide, shapes, sk):
         self.cur.execute(self.select_qry3 % sk)
@@ -296,7 +291,6 @@ class Login(object):
                 image_name = image.retrieve(profile_image, '%s.jpg'% member_id)
                 img_path = os.path.dirname(os.path.abspath(image_name[0]))+ '/' +image_name[0]
         return img_path
-        
 
     def insert_image(self, slide, shapes, img_path, member_id):
         #Inserting persons  image
@@ -330,9 +324,7 @@ class Login(object):
         img_path = os.path.dirname(os.path.abspath(image_name[0]))+ '/' +image_name[0]
         logo = slide.shapes.add_picture(img_path, \
               left=Cm(21), top=Cm(12.60), width=Cm(1.80), height=Cm(1.60))
-
         return slide, shapes
-
 
     def add_summary(self, slide, shapes, summary):
         txBox_sum = slide.shapes.add_textbox(left=Inches(0.2), top=Cm(5.40), \
@@ -434,7 +426,6 @@ class Login(object):
         font.name = 'Calibri'
         font.size = Pt(12)
         font.color.rgb = RGBColor(0, 0, 0)
- 
 
     def __del__(self):
         self.con.close()
