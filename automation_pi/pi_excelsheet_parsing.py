@@ -1,25 +1,30 @@
 import smtplib
-from generic_functions import *
+from table_schemas.generic_functions import *
+from table_schemas.pi_db_operations import sender_mail_pi, sender_pwd_pi
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from terminal_commands import *
 import glob
 import openpyxl as px
+
 
 class Piparsing(object):
 
 	def parameters(self):
 		con, cur = get_mysql_connection(DB_HOST, DB_NAME_REQ, '')
+		print DB_NAME_REQ
                 current_path = os.path.dirname(os.path.abspath(__file__))
 		present_date = re.sub('\.(.*)','', str(datetime.datetime.now()))
                 social_processing_path = os.path.join(
 		current_path, 'excelfiles')
 		return con, cur, current_path, social_processing_path, present_date
 
-	def main(self):
+	def main(self, email_from_list):
 		con, cur, current_path, social_processing_path, present_date = self.parameters()
 		files_list = glob.glob(social_processing_path+'/*.xlsx')
 		if not files_list:
 			files_list = glob.glob(social_processing_path+'/*.xlsx*')
+		twitter_check, linkedin_check, facebook_check = ['']*3
 	        if files_list:
 			final_send_mail = []
 			for _file in files_list:
@@ -86,7 +91,7 @@ class Piparsing(object):
 							firstnamef = normalize(str(row[firstname].encode('utf-8')))
 							meta_date_from_browse.update({"firstname":firstnamef})
 						if lastname != '' and lastname in row_check:
-							lastnamef = normalize(str(row[lastnamef].encode('utf-8')))
+							lastnamef = normalize(str(row[lastname].encode('utf-8')))
 							meta_date_from_browse.update({"lastname":lastnamef})
 						if key_ != '' and key_ in row_check:
 							key_f = normalize(str(row[key_].encode('utf-8')))
@@ -124,31 +129,41 @@ class Piparsing(object):
 						self.getindex_value(twitter_profile, final_indents)
 						an_lentw = self.get_total_curdate('twitter_crawl', cur, present_date)
 						final_send_mail.append([len_tw_total, len_tw_dup, tw_dup_urls, an_lentw, 'twitter', filenamei, xl_])
+						if an_lentw and an_lentw != 0:
+							twitter_check = 'on'
 					if linkedin_profile != '' and final_indents:
 						len_lk_total, len_lk_dup, lk_dup_urls = \
 						self.getindex_value(linkedin_profile, final_indents)
 						an_lenlk = self.get_total_curdate('linkedin_crawl', cur, present_date)
 						final_send_mail.append([len_lk_total, len_lk_dup, lk_dup_urls, an_lenlk, 'linkedin', filenamei, xl_])
+						if an_lenlk and an_lenlk != 0:
+							linkedin_check = 'on'
 					if facebook_profile != '' and final_indents:
 						len_fb_total, len_fb_dup, fb_dup_urls = \
 						self.getindex_value(facebook_profile, final_indents)
 						an_lenfb = self.get_total_curdate('facebook_crawl', cur, present_date)
 						final_send_mail.append([len_fb_total, len_fb_dup, fb_dup_urls, an_lenfb, 'facebook', filenamei, xl_])
+						if an_lenfb and an_lenfb != 0:
+							facebook_check = 'on'
 				#cmd = ('"' + _file + '"')
 				os.remove(_file)
 			if final_send_mail:
-				self.alert_mail(final_send_mail)
+				self.alert_mail(final_send_mail, email_from_list)
+				
 		close_mysql_connection(con, cur)
+		if linkedin_check or facebook_check or twitter_check:
+			lastseen_date = re.sub('\.(.*)','', str(datetime.datetime.now()))
+			Commands().main(present_date, linkedin_check, facebook_check, twitter_check, email_from_list, lastseen_date)	
+		#return present_date
 
 	def get_total_curdate(self, table, cur, present_date):
 		total_count = "select count(*) from %s where modified_at >= '%s'" % (table, present_date)
 		t_count = fetchmany(cur, total_count)
 		return str(t_count[0][0])
 
-        def alert_mail(self, final_send_mail):
-                sender_mail = 'positiveintegersproject@gmail.com'
-                #receivers_mail_list = ['kiranmayi@headrun.net','aravind@headrun.com', 'anushab@headrun.net']
-                receivers_mail_list = ['kiranmayi@headrun.net']
+        def alert_mail(self, final_send_mail, email_from_list):
+                sender_mail = sender_mail_pi
+                receivers_mail_list = email_from_list
                 sender, receivers  = sender_mail, ','.join(receivers_mail_list)
 		che_here = ''
                 msg = MIMEMultipart('alternative')
@@ -189,15 +204,13 @@ class Piparsing(object):
 			s = smtplib.SMTP('smtp.gmail.com:587')
 			s.ehlo()
 			s.starttls()
-			s.login(sender_mail, 'integers')
+			s.login(sender_mail, sender_pwd_pi)
 			s.sendmail(sender, receivers_mail_list, msg.as_string())
 			s.quit()
 
 
 
 	def getindex_value(self, indexi, final_indents):
-		#try: total_countt_urls = filter(None, list(map(itemgetter(indexi), final_indents[1:])))
-		#except: import pdb;pdb.set_trace()
 		total_countt_urls = []
 		for fi in final_indents[1:]:
 			try: total_countt_urls.append(fi[indexi])
@@ -235,4 +248,4 @@ class Piparsing(object):
 
 						
 if __name__ == '__main__':
-    Piparsing().main()
+    Piparsing().main(' ')
