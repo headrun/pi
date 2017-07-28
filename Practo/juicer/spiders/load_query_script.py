@@ -39,7 +39,8 @@ def load_data_files(queries_file):
             params = eval(params)
             try:
                     cursor.execute(query, params)
-            except: import pdb;pdb.set_trace()
+            #except: import pdb;pdb.set_trace()
+            except: print params
         move_file(query_file)
     cursor.close()
     connection.close()
