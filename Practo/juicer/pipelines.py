@@ -112,6 +112,30 @@ class JuicerPipeline(object):
             spider.get_doctorinfo_file().flush()
             self.write_item_into_avail_file(item, spider,'doctorinfo')
 
+        if isinstance(item, HospitalInfo):
+            hospitalinfo_values = '#<>#'.join([
+                item['hospital_id'], item.get('hospital_name', ''), item.get('hospital_link', ''), item.get('hospital_images', ''), item.get('hospital_location', ''), item.get('hospital_speciality', ''), item.get('no_of_doctors_in_hospital', ''), item.get('hospital_star_rating', ''), item.get('hospital_feedback_count', ''), item.get('hospital_practo_gurantee', ''), item.get('hospital_booking_type', ''), item.get('hospital_open_timings', ''), item.get('hospital_schedule_timeslot', ''), item.get('hospital_accredited', ''), item.get('reference_url', ''), MySQLdb.escape_string(item.get('aux_info', ''))
+                ])
+            spider.get_hospitalinfo_file().write('%s\n' % hospitalinfo_values)
+            spider.get_hospitalinfo_file().flush()
+            self.write_item_into_avail_file(item, spider,'hospitalinfo')
+
+        if isinstance(item, HospitalMeta):
+            hospitalmeta_values = '#<>#'.join([
+                item['hospital_id'], item.get('hospital_name', ''), item.get('hospital_profile_link', ''), item.get('rating_count', ''), item.get('rating_value', ''), item.get('location', ''), item.get('medical_specialities', ''), item.get('number_of_doctors', ''), item.get('description', ''), item.get('no_of_beds', ''), item.get('no_of_ambulances', ''), item.get('method_of_payment', ''), item.get('address', ''), item.get('street_address', ''), item.get('locality', ''), item.get('region', ''), item.get('postal_code'),item.get('opening_timings', ''), item.get('clinic_timings', ''), item.get('amenities', ''), item.get('emergency_contact_number', ''), item.get('services', ''), item.get('longitude', ''), item.get('latitude', ''), item.get('establishment_data', ''), item.get('feedback_count', ''), item.get('awards', ''), item.get('other_centers', ''), item.get('reference_url', ''), MySQLdb.escape_string(item.get('aux_info', ''))
+                ])
+            spider.get_hospitalmeta_file().write('%s\n' % hospitalmeta_values)
+            spider.get_hospitalmeta_file().flush()
+            self.write_item_into_avail_file(item, spider,'hospitalmeta')
+
+        if isinstance(item, HospitalDoctor):
+            hospitaldoctor_values = '#<>#'.join([
+                item['sk'], item.get('hospital_id', ''), item.get('doctor_id', ''), item.get('doctor_name', ''), item.get('doctor_profile_link', ''), item.get('qualification', ''), item.get('years_of_experience', ''), item.get('specialization', ''), item.get('rating', ''), item.get('vote_count', ''), item.get('feedback_count', ''), item.get('consultation_fee', ''), item.get('doctor_image', ''), item.get('doctor_practo_gurantee', ''), item.get('booking_type', ''),  item.get('doctor_monday_timing', ''),  item.get('doctor_tuesday_timing', ''),  item.get('doctor_wednesday_timing', ''),  item.get('doctor_thursday_timing', ''),  item.get('doctor_friday_timing', ''),  item.get('doctor_saturday_timing', ''),  item.get('doctor_sunday_timing', ''), item.get('doctor_on_call', ''), item.get('reference_url', ''), MySQLdb.escape_string(item.get('aux_info', ''))
+                ])
+            spider.get_hospitaldoctor_file().write('%s\n' % hospitaldoctor_values)
+            spider.get_hospitaldoctor_file().flush()
+            self.write_item_into_avail_file(item, spider,'hospitaldoctor')
+
 
         if isinstance(item, DoctorMeta):
             doctormeta_values = '#<>#'.join([
@@ -129,6 +153,13 @@ class JuicerPipeline(object):
             spider.get_doctorfeedback_file().flush()
             self.write_item_into_avail_file(item, spider,'doctorfeedback')
 
+        if isinstance(item, HospitalFeedback):
+            hospitalfeedback_values = '#<>#'.join([
+                item['sk'],item.get('hospital_id',''), item.get('feedback_count',''), item.get('feedback_filters',''), item.get('feedback_name',''), item.get('feedback_like',''), item.get('feedback_publish_date',''), item.get('feedback_text',''), item.get('feedback_helpful_count',''), item.get('feedback_helpful_overallcount',''), item.get('feedback_reply',''), item.get('feedback_practice_name',''), item.get('feedback_practice_locality',''), item.get('feedback_practice_city',''), item.get('feedback_for',''), item.get('reference_url',''), item.get('aux_info','')
+                ])
+            spider.get_hospitalfeedback_file().write('%s\n' % hospitalfeedback_values)
+            spider.get_hospitalfeedback_file().flush()
+            self.write_item_into_avail_file(item, spider,'hospitalfeedback')
 
         if isinstance(item, DoctorHospital):
             doctorhospital_values = '#<>#'.join([

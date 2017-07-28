@@ -15,6 +15,7 @@ DEFAULT_ITEM_CLASS = 'juicer.items.JuicerItem'
 
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36"
 #USER_AGENT =  'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36'
+#USER_AGENT =  'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36'
 
 ITEM_PIPELINES = {
     #'juicer.validations_pipeline.ValidateRecordPipeline': 300,
@@ -22,8 +23,8 @@ ITEM_PIPELINES = {
 }
 
 HTTPCACHE_ENABLED = True                                    # Note: Disable Cache Option in Prod setup.
-#HTTPCACHE_DIR = '%s/cache/' % PROJECT_DIR
-HTTPCACHE_DIR= '/root/pi_crawling/PIFramework/juicer'
+HTTPCACHE_DIR = '%s/cache/' % PROJECT_DIR
+#HTTPCACHE_DIR= '/root/pi_crawling/PIFramework/juicer'
 #HTTPCACHE_EXPIRATION_SECS = 0
 #HTTPCACHE_STORAGE = 'juicer.cache.LevelDBCacheStorage'
 
@@ -57,7 +58,7 @@ WEBSERVICE_ENABLED = False
 
 NUM_ITEMS_TO_CONSUME = 10000
 
-CONCURRENT_SPIDERS = 10
+CONCURRENT_SPIDERS = 5
 
 RETRY_TIMES = 10
 RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
@@ -106,4 +107,3 @@ USER_AGENT_LIST = ["Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHT
 
 #PROXIES_LIST = ['http://%s:3279' % random.choice(list(open('/root/pi_crawling/Practo/juicer/proxy.list'))).strip()]
 PROXIES_LIST = [i.strip() for i in list(open('/root/pi_crawling/Practo/juicer/proxy1.list'))]
-#print PROXIES_LIST

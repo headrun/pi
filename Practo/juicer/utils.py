@@ -119,7 +119,7 @@ class JuicerSpider(Spider):
             self._sks = defaultdict(set)
             self.location_file = self.lineup_file = self.richmedia_file = self.relatedsellers_file= None
             self.source = self.json_file = self.bestsellers_file = self.products_file = self.customerreviews_file=  None
-            self.custom_query_file  = self.created_file= self.twitter_file = self.comments_file = self.linkedinpositions_file= self.linkedinviewers_file = self.linkedin_file = self.doctorinfo_file = self.doctormeta_file = self.doctorfeedback_file = self.doctorhospital_file = None
+            self.custom_query_file  = self.created_file= self.twitter_file = self.comments_file = self.linkedinpositions_file= self.linkedinviewers_file = self.linkedin_file = self.doctorinfo_file = self.doctormeta_file = self.doctorfeedback_file = self.doctorhospital_file = self.hospitalinfo_file = self.hospitalmeta_file = self.hospitaldoctor_file = self.hospitalfeedback_file = None
 
             self.urlQ_cursor = None
             self.got_page_sks_len = 0
@@ -332,7 +332,6 @@ class JuicerSpider(Spider):
             return self.relatedsellers_file
 
 
-
         def get_bestsellers_file(self):
             if self.bestsellers_file: return self.bestsellers_file
 
@@ -376,6 +375,31 @@ class JuicerSpider(Spider):
             doctorinfo_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_doctorinfo_%s.queries" % (self.name, get_current_ts_with_ms()))
             self.doctorinfo_file = open(doctorinfo_queries_filename,'w')
             return self.doctorinfo_file
+
+        def get_hospitalinfo_file(self):
+            if self.hospitalinfo_file : return self.hospitalinfo_file
+            hospitalinfo_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_hospitalinfo_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.hospitalinfo_file = open(hospitalinfo_queries_filename,'w')
+            return self.hospitalinfo_file
+
+
+        def get_hospitalmeta_file(self):
+            if self.hospitalmeta_file : return self.hospitalmeta_file
+            hospitalmeta_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_hospitalmeta_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.hospitalmeta_file = open(hospitalmeta_queries_filename,'w')
+            return self.hospitalmeta_file
+
+        def get_hospitaldoctor_file(self):
+            if self.hospitaldoctor_file : return self.hospitaldoctor_file
+            hospitaldoctor_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_hospitaldoctor_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.hospitaldoctor_file = open(hospitaldoctor_queries_filename,'w')
+            return self.hospitaldoctor_file
+
+        def get_hospitalfeedback_file(self):
+            if self.hospitalfeedback_file : return self.hospitalfeedback_file
+            hospitalfeedback_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_hospitalfeedback_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.hospitalfeedback_file = open(hospitalfeedback_queries_filename,'w')
+            return self.hospitalfeedback_file
 
 
         def get_doctormeta_file(self):
@@ -463,7 +487,7 @@ class JuicerSpider(Spider):
 
         def close_all_opened_query_files(self):
             files_list = [
-                self.bestsellers_file , self.products_file , self.customerreviews_file, self.created_file, self.richmedia_file, self.relatedsellers_file, self.twitter_file, self.comments_file, self.linkedinpositions_file, self.linkedinviewers_file, self.linkedin_file, self.doctorinfo_file, self.doctormeta_file, self.doctorfeedback_file, self.doctorhospital_file
+                self.bestsellers_file , self.products_file , self.customerreviews_file, self.created_file, self.richmedia_file, self.relatedsellers_file, self.twitter_file, self.comments_file, self.linkedinpositions_file, self.linkedinviewers_file, self.linkedin_file, self.doctorinfo_file, self.doctormeta_file, self.doctorfeedback_file, self.doctorhospital_file, self.hospitalinfo_file, self.hospitalmeta_file, self.hospitaldoctor_file, self.hospitalfeedback_file
             ]
             for f in files_list:
                 if not isinstance(f, file): continue
