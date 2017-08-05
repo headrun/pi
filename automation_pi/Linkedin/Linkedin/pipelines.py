@@ -32,13 +32,13 @@ class LinkedinPipeline(object):
 
     def process_item(self, item, spider):
 	if isinstance(item, LinkedinItem):
-		query = 'INSERT INTO linkedin_connections(sk, profile_sk, connections_profile_url, member_id, headline, name, image_url, image_path, aux_info, reference_url,created_at, modified_at, last_seen) values (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk=%s, profile_sk=%s, connections_profile_url=%s, member_id=%s, headline=%s, name=%s, image_url=%s, image_path=%s, aux_info=%s'
+		query = 'INSERT INTO linkedin_connections(sk, profile_sk, connections_profile_url, member_id, headline, name, image_url, image_path, background_image_url, aux_info, reference_url,created_at, modified_at, last_seen) values (%s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk=%s, profile_sk=%s, connections_profile_url=%s, member_id=%s, headline=%s, name=%s, image_url=%s, image_path=%s, background_image_url=%s, aux_info=%s'
 		values = (item['sk'], item.get('profile_sk',''), item.get('connections_profile_url','') ,\
 		    item.get('member_id',''), item.get('headline',''), item.get('name',''), \
-		      item.get('image_url',''), item.get('image_path',''),item.get('aux_info',''), item.get('reference_url',''),\
+		      item.get('image_url',''), item.get('image_path',''), item.get('background_image_url', ''), item.get('aux_info',''), item.get('reference_url',''),\
 		     item['sk'], item.get('profile_sk','') , item.get('connections_profile_url',''),\
 			item.get('member_id',''), item.get('headline',''), item.get('name',''), \
-		     item.get('image_url',''), item.get('image_path',''),item.get('aux_info',''))
+		     item.get('image_url',''), item.get('image_path',''), item.get('background_image_url', ''), item.get('aux_info',''))
 		self.cursor.execute(query, values)
 		self.conn.commit()
 
@@ -67,10 +67,11 @@ class LinkedinPipeline(object):
 		self.conn.commit()
 
         if isinstance(item, Linkedinaccounts):
-		query = 'INSERT INTO linkedin_accounts(profile_sk, status, username, password, aux_info, reference_url,created_at, modified_at, last_seen) values (%s,%s,%s,%s,%s,%s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), profile_sk=%s, status=%s, username=%s, password=%s, aux_info=%s, reference_url=%s'
-		values = (item['profile_sk'], item.get('status',''), item.get('username',''), item.get('password',''), item.get('aux_info',''), item.get('reference_url',''), item['profile_sk'], item.get('status',''), item.get('username',''), item.get('password',''), item.get('aux_info',''), item.get('reference_url',''))
-		self.cursor.execute(query, values)
-		self.conn.commit()
+                query = 'INSERT INTO linkedin_accounts(profile_sk, status, exact_connections_count, username, password, aux_info, reference_url,created_at, modified_at, last_seen) values (%s,%s,%s,%s,%s,%s,%s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), profile_sk=%s, status=%s, exact_connections_count=%s, username=%s, password=%s, aux_info=%s, reference_url=%s'
+                values = (item['profile_sk'], item.get('status',''), item.get('exact_connections_count', ''), item.get('username',''), item.get('password',''), item.get('aux_info',''), item.get('reference_url',''), item['profile_sk'], item.get('status',''), item.get('exact_connections_count', ''), item.get('username',''), item.get('password',''), item.get('aux_info',''), item.get('reference_url',''))
+                self.cursor.execute(query, values)
+                self.conn.commit()
+
 
 	if isinstance(item, Linkedinmeta):
 		query = 'INSERT INTO linkedin_meta(sk, profile_url, profileview_url, name, first_name, last_name, member_id, headline, no_of_followers, profile_post_url, summary, number_of_connections, industry, location, languages, emails, websites, addresses, message_handles, phone_numbers, birthday, birth_year, birth_month, twitter_accounts, profile_image, interests,location_postal_code, location_country_code, background_image, image_path, created_at, modified_at, last_seen) values (%s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk=%s, profile_url=%s, profileview_url=%s, name=%s, first_name=%s, last_name=%s, member_id=%s, headline=%s, no_of_followers=%s, profile_post_url=%s, summary=%s, number_of_connections=%s, industry=%s, location=%s, languages=%s, emails=%s, websites=%s, addresses=%s, message_handles=%s, phone_numbers=%s, birthday=%s, birth_year=%s, birth_month=%s, twitter_accounts=%s, profile_image=%s, interests=%s, location_postal_code=%s, location_country_code=%s, background_image=%s, image_path=%s'
