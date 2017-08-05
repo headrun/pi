@@ -18,6 +18,7 @@ class LinkedinItem(Item):
 	name        = Field()
 	image_url       = Field()
 	image_path 	= Field()
+	background_image_url = Field()
 	aux_info    = Field()
 	reference_url = Field()
 class Linkedintestscore(Item):
@@ -35,6 +36,8 @@ class Linkedintrack(Item):
 	login_mail_id	= Field()
 	machine_ip = Field()
 	crawl_status = Field()
+	given_key = Field()
+	aux_info = Field()
 class Linkedincourse(Item):
         sk = Field()
         profile_sk = Field()
@@ -51,6 +54,7 @@ class Linkedinpublications(Item):
 class Linkedinaccounts(Item):
 	profile_sk 	= Field()
 	status	= Field()
+	exact_connections_count = Field()
 	username	= Field()
 	password	= Field()
 	aux_info	= Field()
