@@ -1,11 +1,13 @@
 from linkedin_voyager_functions import *
+import ast
 
 class Licsvfilepremium(object):
 
     def __init__(self, *args, **kwargs):
 	self.con, self.cur = get_mysql_connection(DB_HOST, DB_NAME_REQ, '')
 	self.modified_at     = options.modified_at
-        self.excel_file_name = 'linkedin_enrichment_profiles_%s.csv'%str(datetime.datetime.now().date())
+	self.limit = options.limit
+        self.excel_file_name = 'linkedin_enrichment_profiles_%s_%s.csv' % (self.limit, str(datetime.datetime.now().date()))
 	if os.path.isfile(self.excel_file_name):
 		os.system('rm %s'%self.excel_file_name)
 	oupf = open(self.excel_file_name, 'ab+')
@@ -13,7 +15,7 @@ class Licsvfilepremium(object):
 	self.header_params =  []
 	self.size = 1000
 	patternk = '%keys%'
-	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(created_at) >= '%s'"%(self.modified_at)
+	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(created_at) >= '%s' limit %s"%(self.modified_at, self.limit)
 	self.list_tables = ['linkedin_certifications','linkedin_courses','linkedin_following_channels','linkedin_following_companies','linkedin_following_influencers','linkedin_following_schools','linkedin_given_recommendations','linkedin_groups','linkedin_organizations','linkedin_posts','linkedin_projects','linkedin_received_recommendations','linkedin_skills','linkedin_volunteer_experiences', 'linkedin_publications', 'linkedin_testscore']
 	self.list_tables1 = ['linkedin_educations','linkedin_experiences','linkedin_honors']
 
@@ -35,7 +37,7 @@ class Licsvfilepremium(object):
 	fileds_list = list(fields)
 	fil_list = list(chain.from_iterable(fileds_list))[2:-3]
 	self.header_params.extend([tble])
-	q1 = 'select * from %s where profile_sk="%s" and date(modified_at)>= "%s"'%(tble, sk, self.modified_at)
+	q1 = 'select * from %s where profile_sk="%s" and date(last_seen)>= "%s"'%(tble, sk, self.modified_at)
 	self.cur.execute(q1)
 	values = fetchmany(self.cur, q1)
 	final_to_update = []
@@ -51,7 +53,7 @@ class Licsvfilepremium(object):
 	fields = fetchmany(self.cur, q5)
 	fileds_list = list(fields)
 	fil_list = list(chain.from_iterable(fileds_list))[2:-3]
-	q6 = "select count(*)  from %s where date(modified_at)>= '%s' group by profile_sk order by count(*) desc limit 1"%(table, self.modified_at)
+	q6 = "select count(*)  from %s where date(last_seen)>= '%s' group by profile_sk order by count(*) desc limit 1"%(table, self.modified_at)
 	self.cur.execute(q6)
 	large_count = fetchmany(self.cur, q6)
 	max_count = ''
@@ -63,7 +65,7 @@ class Licsvfilepremium(object):
 			for fl in fil_list:
 				va.append(fl+str(fi))
 	if inde == 0: self.header_params.extend(va)
-	q9  = 'select * from %s where profile_sk="%s" and date(modified_at)>= "%s"'%(table, sk, self.modified_at)
+	q9  = 'select * from %s where profile_sk="%s" and date(last_seen)>= "%s"'%(table, sk, self.modified_at)
 	self.cur.execute(q9)
 	countrec = fetchmany(self.cur, q9)
 	cntf_ = []
@@ -77,7 +79,7 @@ class Licsvfilepremium(object):
 
     def metadesign(self, table, sk, inde):
 	if inde == 0: self.header_params.extend(self.fil_list)
-	q8 = 'select * from %s where sk ="%s" and date(modified_at)>= "%s"'%(table, sk, self.modified_at)
+	q8 = 'select * from %s where sk ="%s" and date(last_seen)>= "%s"'%(table, sk, self.modified_at)
         self.cur.execute(q8)
         values = fetchmany(self.cur, q8)
 	cntf_ = []
@@ -97,7 +99,11 @@ class Licsvfilepremium(object):
 		sk = get_meb_records[0][0]
 		sk_crawl = list(rec)[0]
 		url_re = rec[1]
-                json_meta = json.loads(rec[2])
+		json_meta = {}
+                try:
+			json_meta = json.loads(rec[2])
+		except:
+			json_meta = ast.literal_eval(rec[2])
                 given_url = json_meta.get('linkedin_url','')
                 given_id = json_meta.get('id','')
                 given_firstname = json_meta.get('firstname','')
@@ -129,6 +135,7 @@ class Licsvfilepremium(object):
 		values_final =  [normalize(i) for i in values_final]
 		if inde == 0:
 			self.todays_excel_file.writerow(self.header_params)
+		print inde, sk
 		self.todays_excel_file.writerow(values_final)
 		
     def main(self):
@@ -136,6 +143,7 @@ class Licsvfilepremium(object):
 if __name__ == '__main__':
 	parser = optparse.OptionParser()
 	parser.add_option('-m', '--modified-at', default='', help = 'modified_at')
+	parser.add_option('-l','--limit', default = '', help = 'limit')
 	(options, args) = parser.parse_args()
         Licsvfilepremium(options)
 

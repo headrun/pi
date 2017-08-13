@@ -41,13 +41,15 @@ class Companyliurls(object):
 							data1 = fetchmany(self.cur, self.qu3 % pa_new_sk)
 					final_list = []
 					if  data1:
-						
+						data12 = fetchmany(self.cur, self.qu3 % data1[0][6])
+						if not data12:
+							data12 = data1
 						"""name, first_name, last_name, headline, member_id, profile_url = data1[0]
 						row_valus = [meta_data, name, first_name, last_name, headline, member_id, profile_url, row]
 						row_valus[0] = row_valus[0].replace('{','').replace('}','').replace('"','')
 						print row_valus"""
 						meta_data = meta_data.replace('{','').replace('}','').replace('"','')
-						fileds_list = list(data1)[0]
+						fileds_list = list(data12)[0]
 						final_list = list(fileds_list)[1:-5]
 						#fil_list = list(chain.from_iterable(fileds_list))[1:-5]
 						final_list.extend([meta_data, row,'Available'])

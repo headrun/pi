@@ -1,3 +1,4 @@
+import ast
 from linkedin_voyager_functions import *
 from linkedin_queries import *
 
@@ -12,7 +13,7 @@ class Lifilepde(object):
         self.QUERY_FILES_DIR = os.path.join(self.file_dirs, 'processing')
         self.QUERY_FILES_CRAWLOUT_DIR = os.path.join(self.file_dirs, 'crawl_out')
         self.tables_file = self.get_tables_file()
-	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(created_at) >= '%s'"%(self.modified_at)
+	self.query2 = "select sk, url, meta_data, crawl_status from linkedin_crawl where date(created_at) >= '%s' limit %s"%(self.modified_at, self.limit)
 	self.quer1 = 'INSERT INTO %s ('%table_name_denor
 	self.quer2 = quer2_denor
 	self.member_id_track = 'select member_id from linkedin_track where sk = "%s"'
@@ -132,8 +133,12 @@ class Lifilepde(object):
                 sk = get_meb_records[0][0]
                 sk_crawl = list(rec)[0]
 		url_re = rec[1]
-                json_meta = json.loads(rec[2])
+		json_meta = {}
+                try: json_meta = json.loads(rec[2])
+		except: json_meta = ast.literal_eval(rec[2])
                 given_url = json_meta.get('linkedin_url','')
+		if sk == 0:
+			sk = md5(given_url)
                 given_id = json_meta.get('id','')
                 given_firstname = json_meta.get('firstname','')
                 given_lastname = json_meta.get('lastname','')
