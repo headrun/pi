@@ -38,6 +38,12 @@ class LinkedinPipeline(object):
 		self.cursor.execute(query, values)
 		self.conn.commit()
 
+	if isinstance(item, Linkedincompanymeta):
+		query = 'INSERT INTO linkedin_company_meta(sk, company_given_url, company_given_sno, company_given_name, company_name,company_page_url, number_of_employees, no_of_followers, industry, city, geographic_area, line1, line2, postal_code, company_type, company_description,created_at, modified_at, last_seen) values (%s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s, %s, %s, %s, %s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk=%s, company_given_url=%s, company_given_sno=%s, company_given_name=%s, company_name=%s, company_page_url=%s, number_of_employees=%s, no_of_followers=%s, industry=%s, city=%s, geographic_area=%s, line1=%s, line2=%s, postal_code=%s, company_type=%s, company_description=%s'
+		values = (item['sk'], item.get('company_given_url', ''), item.get('company_given_sno', ''), item.get('company_given_name', ''), item.get('company_name', ''), item.get('company_page_url', ''), item.get('number_of_employees', ''), item.get('no_of_followers', ''), item.get('industry', ''), item.get('city', ''), item.get('geographic_area', ''), item.get('line1', ''), item.get('line2', ''), item.get('postal_code', ''), item.get('company_type', ''), item.get('company_description', ''), item['sk'], item.get('company_given_url', ''), item.get('company_given_sno', ''), item.get('company_given_name', ''), item.get('company_name', ''), item.get('company_page_url', ''), item.get('number_of_employees', ''), item.get('no_of_followers', ''), item.get('industry', ''), item.get('city', ''), item.get('geographic_area', ''), item.get('line1', ''), item.get('line2', ''), item.get('postal_code', ''), item.get('company_type', ''), item.get('company_description', ''))
+		self.cursor.execute(query, values)
+		self.conn.commit()
+
         if isinstance(item, Linkedincourse):
                 query = 'INSERT INTO linkedin_courses(sk, profile_sk, course_name, course_number, created_at, modified_at, last_seen) values(%s, %s, %s, %s, now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk=%s, profile_sk=%s, course_name=%s, course_number=%s'
                 values = (item['sk'], item.get('profile_sk',''), item.get('course_name',''), item.get('course_number',''), item['sk'], item.get('profile_sk',''), item.get('course_name',''), item.get('course_number',''))

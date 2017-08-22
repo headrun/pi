@@ -7,6 +7,24 @@
 
 from scrapy.item import Item, Field
 
+class Linkedincompanymeta(Item):
+	sk		= Field()
+	company_given_url= Field()
+	company_given_sno= Field()
+	company_given_name= Field()
+	company_name= Field()
+	company_page_url= Field()
+	number_of_employees= Field()
+	no_of_followers= Field()
+	industry= Field()
+	city= Field()
+	geographic_area= Field()
+	line1= Field()
+	line2= Field()
+	postal_code= Field()
+	company_type= Field()
+	company_description = Field()
+
 class LinkedinItem(Item):
 	# define the fields for your item here like:
 	# name = scrapy.Field()
