@@ -13,12 +13,12 @@ BOT_NAME = 'Facebook'
 
 SPIDER_MODULES = ['Facebook.spiders']
 NEWSPIDER_MODULE = 'Facebook.spiders'
-#LOG_LEVEL = 'INFO'
+LOG_LEVEL = 'INFO'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'Pibot (+http://www.positiveintegers.com)'
-USER_AGENT = 'Mozilla/5.0 (Linux; Pibot; + http://positiveintegers.com/) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0'
-#USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36"
+#USER_AGENT = 'Mozilla/5.0 (Linux; Pibot; + http://positiveintegers.com/) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0'
+USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36"
 
 # Obey robots.txt rules
 ROBOTSTXT_OBEY = False
@@ -29,7 +29,7 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 12
+DOWNLOAD_DELAY = 20
 DOWNLOAD_TIMEOUT = 360
 RANDOMIZE_DOWNLOAD_DELAY = True
 URLLENGTH_LIMIT = 3000
