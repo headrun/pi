@@ -9,6 +9,7 @@ class Lvccc(object):
 		self.con, self.cur = get_mysql_connection(DB_HOST, DB_NAME_REQ, '')
 		print DB_NAME_REQ
 		self.query = 'insert into linkedin_company_crawl(sk, url, content_type ,crawl_status, meta_data,created_at, modified_at) values(%s, %s, %s, %s, %s,now(), now()) on duplicate key update modified_at=now(), content_type=%s, crawl_status=0,meta_data=%s'
+		self.query1 = 'insert into linkedin_company_check(sno, sk, url, meta_data, created_at, modified_at) values (%s, %s, %s, %s, now(), now()) on duplicate key update modified_at=now(), meta_data=%s'
 
 	def __del__(self):
 		close_mysql_connection(self.con, self.cur)
@@ -33,10 +34,12 @@ class Lvccc(object):
 				    	sk = md5(url)
 				    	values = (sk, url, 'linkedin_company', crawl_status, json.dumps(meta_date_from_browse),'linkedin_company', json.dumps(meta_date_from_browse))
 			                self.cur.execute(self.query, values)
-		dupe_list = [item for item, count in collections.Counter(url_list).items() if count > 1]
-		print dupe_list
+					values1 = (sno, sk,url, json.dumps(meta_date_from_browse), json.dumps(meta_date_from_browse))
+					
+					self.cur.execute(self.query1, values1)
+		dupe_list = [(item, count) for item, count in collections.Counter(url_list).items() if count > 1]
 		for dp in dupe_list:
-			file("duplicate_linkedin_company_urls_list.txt","ab+").write("%s\n" %dp)
+			file("duplicate_linkedin_company_urls_list.txt","ab+").write("%s%s%s\n" %(dp[0],', ',dp[1]))
 		
 
 if __name__ == '__main__':
