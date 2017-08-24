@@ -10,7 +10,8 @@ class Fbpagescsc(object):
 		self.todays_excel_file  = csv.writer(oupf)
 		self.query1 = 'select * from %s'
 		self.query2 = 'select * from %s where %s = "%s"'
-		self.headers1 = ['page_url', 'page_name', 'page_id', 'post_id', 'post_shares_count', 'post_url', 'post_message', 'post_created_time', 'post_updated_time', 'post_picture', 'post_from_name', 'post_from_id', 'post_to_name', 'post_to_id', 'post_comments_total_count', 'post_reactions_total_count', 'post_like_count', 'post_love_count', 'post_wow_count', 'post_haha_count', 'post_sad_count', 'post_angry_count', 'post_reactions_data','comment_id', 'comment_from_id', 'comment_from_name', 'comment_message', 'comment_created_time', 'inner_comments_total_count', 'comment_reactions_total_count', 'comment_like_count', 'comment_love_count', 'comment_wow_count', 'comment_haha_count', 'comment_sad_count', 'comment_angry_count', 'comment_reactions_data','inner_comment_id', 'inner_comment_from_id', 'inner_comment_from_name', 'inner_comment_message', 'inner_comment_created_time', 'innercomment_like_count', 'inner_comment_love_count', 'inner_comment_wow_count', 'inner_comment_haha_count', 'inner_comment_sad_count', 'inner_comment_angry_count', 'inner_comment_reactions_total_count', 'inner_comment_reactions_data']
+		#self.headers1 = ['page_url', 'page_name', 'page_id', 'post_id', 'post_shares_count', 'post_url', 'post_message', 'post_created_time', 'post_updated_time', 'post_picture', 'post_from_name', 'post_from_id', 'post_to_name', 'post_to_id', 'post_comments_total_count', 'post_reactions_total_count', 'post_like_count', 'post_love_count', 'post_wow_count', 'post_haha_count', 'post_sad_count', 'post_angry_count', 'post_reactions_data','comment_id', 'comment_from_id', 'comment_from_name', 'comment_message', 'comment_created_time', 'inner_comments_total_count', 'comment_reactions_total_count', 'comment_like_count', 'comment_love_count', 'comment_wow_count', 'comment_haha_count', 'comment_sad_count', 'comment_angry_count', 'comment_reactions_data','inner_comment_id', 'inner_comment_from_id', 'inner_comment_from_name', 'inner_comment_message', 'inner_comment_created_time', 'innercomment_like_count', 'inner_comment_love_count', 'inner_comment_wow_count', 'inner_comment_haha_count', 'inner_comment_sad_count', 'inner_comment_angry_count', 'inner_comment_reactions_total_count', 'inner_comment_reactions_data']
+		self.headers1 = ['page_url', 'page_name', 'page_id', 'post_id', 'post_shares_count', 'post_url', 'post_message', 'post_created_time', 'post_updated_time', 'post_picture', 'post_from_name', 'post_from_id', 'post_to_name', 'post_to_id', 'post_comments_total_count', 'post_reactions_total_count', 'post_like_count', 'post_love_count', 'post_wow_count', 'post_haha_count', 'post_sad_count', 'post_angry_count','comment_id', 'comment_from_id', 'comment_from_name', 'comment_message', 'comment_created_time', 'inner_comments_total_count', 'comment_reactions_total_count', 'comment_like_count', 'comment_love_count', 'comment_wow_count', 'comment_haha_count', 'comment_sad_count', 'comment_angry_count','inner_comment_id', 'inner_comment_from_id', 'inner_comment_from_name', 'inner_comment_message', 'inner_comment_created_time', 'innercomment_like_count', 'inner_comment_love_count', 'inner_comment_wow_count', 'inner_comment_haha_count', 'inner_comment_sad_count', 'inner_comment_angry_count', 'inner_comment_reactions_total_count']
 		self.vals_ = ['member_id', 'member_name', 'reaction_type']
 		self.todays_excel_file.writerow(self.headers1)
 
@@ -33,9 +34,9 @@ class Fbpagescsc(object):
 			for pos_rec in post_records:
 				pos_rec1 = list(pos_rec)[2:-4]
 				here_values = main_values + pos_rec1[1:]
-				post_reaction_data = fetchmany(self.cur, self.query2 % ('facebook_pages_posts_reactions', 'post_sk', pos_rec1[0]))
-				final_to_update = self.reactions_data(post_reaction_data, 5, -3)
-				here_values = here_values + [final_to_update] 
+				#post_reaction_data = fetchmany(self.cur, self.query2 % ('facebook_pages_posts_reactions', 'post_sk', pos_rec1[0]))
+				#final_to_update = self.reactions_data(post_reaction_data, 5, -3)
+				#here_values = here_values + [final_to_update] 
 					
 				callfun = fetchmany(self.cur, self.query2 % ('facebook_pages_posts_comments', 'post_sk', pos_rec1[0]))
 				if not callfun:
@@ -43,18 +44,18 @@ class Fbpagescsc(object):
 				for clfun in callfun:
 					calf1 = list(clfun)[4:-3]
 					her_va = here_values + calf1[1:]
-					comment_reaction_data = fetchmany(self.cur, self.query2 % ('facebook_pages_posts_comments_reactions', 'comment_sk', calf1[0]))
-					final_to_update1 = self.reactions_data(comment_reaction_data, 7, -3)
-					her_va = her_va + [final_to_update1]
+					#comment_reaction_data = fetchmany(self.cur, self.query2 % ('facebook_pages_posts_comments_reactions', 'comment_sk', calf1[0]))
+					#final_to_update1 = self.reactions_data(comment_reaction_data, 7, -3)
+					#her_va = her_va + [final_to_update1]
 					innerfunc = fetchmany(self.cur, self.query2 % ('facebook_pages_posts_inner_comments', 'comment_sk', calf1[0]))
 					if not innerfunc or calf1[0] == '':
 						innerfunc = ((['' for i in range(22)]),)
 					for innclfu in innerfunc:
 						calf3 = list(innclfu)[6:-3]
 						her_va3 = her_va + calf3[1:]
-						inner_comment_reaction_data = fetchmany(self.cur, self.query2 % ('facebook_pages_posts_comments_inner_reactions', 'inner_comment_sk', calf3[0]))
-						final_to_update2 = self.reactions_data(inner_comment_reaction_data, 9, -3)
-						her_va3 = her_va3 + [final_to_update2]
+						#inner_comment_reaction_data = fetchmany(self.cur, self.query2 % ('facebook_pages_posts_comments_inner_reactions', 'inner_comment_sk', calf3[0]))
+						#final_to_update2 = self.reactions_data(inner_comment_reaction_data, 9, -3)
+						#her_va3 = her_va3 + [final_to_update2]
 						her_va3 = [normalize(i) for i in her_va3]
 						print len(self.headers1)
 						print len(her_va3)

@@ -3,9 +3,14 @@ from generic_functions import *
 from facebook_pages_queries import *
 from Facebook.items import *
 import urllib
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+
 
 class Facebookpagesbrowse(scrapy.Spider):
 	name = "facebookpages_browse"
+	handle_httpstatus_list = [500]
 	
 	def __init__(self, name=None, **kwargs):
 		super(Facebookpagesbrowse, self).__init__(name, **kwargs)
@@ -17,7 +22,7 @@ class Facebookpagesbrowse(scrapy.Spider):
 	def start_requests(self):
 		for i in self.urls:
 			page_id_url = '%s%s?access_token=%s' % (graph_api, i[1], user_access_token)
-			#execute_query(self.cur, update_query_fbp % ('9', i[0]))
+			execute_query(self.cur, update_query_fbp % ('9', i[0]))
 			yield scrapy.Request(page_id_url, self.parse, meta = {'crawl_rec_data':i})
 
 	def parse_pages_meta_item(self, page_sk, page_url, page_id, page_name):
@@ -32,7 +37,7 @@ class Facebookpagesbrowse(scrapy.Spider):
 	def parse(self, response):
 		tmp = json.loads(response.body)
 		crawl_rec_data = response.meta['crawl_rec_data']
-		#execute_query(self.cur, update_query_fbp % ('1', crawl_rec_data[0]))
+		execute_query(self.cur, update_query_fbp % ('1', crawl_rec_data[0]))
 		page_name = tmp.get('name', '')
 		page_id = tmp.get('id', '')
 		return_pagemeta_item = self.parse_pages_meta_item(crawl_rec_data[0], crawl_rec_data[1], page_id, page_name)
@@ -40,64 +45,160 @@ class Facebookpagesbrowse(scrapy.Spider):
 			yield return_pagemeta_item
 		if page_id:
 			graph_api_url = "%s%s%s" % (graph_api, page_id, graph_api1)
+			#graph_api_url = graph_api1
 			yield scrapy.Request(graph_api_url, callback= self.parse_next,
-		meta = {'crawl_rec_data':response.meta.get('crawl_rec_data',{}), 'page_id' : page_id, 'page_name':page_name, "counter":0})
+		meta = {'crawl_rec_data':response.meta.get('crawl_rec_data',{}), 'page_id' : page_id, 'page_name':page_name, "counter":0, "parsed":''})
+
+	def alert_mail(self, url, message):
+		sender_mail = 'facebookdummyfb01@gmail.com'
+		#receivers_mail_list = ['kiranmayi@headrun.net','aravind@headrun.com', 'anushab@headrun.net']
+		receivers_mail_list = ['kiranmayi@headrun.net']
+		sender, receivers  = sender_mail, ','.join(receivers_mail_list)
+		msg = MIMEMultipart('alternative')
+                msg['Subject'] = 'Alert mail for facebook pages - 500 status for navigation'
+                mas = '<h3> Got 500 status for API url : %s </h3>' % url
+		mas += '<p>Response body : %s </p>' % normalize(message)
+		msg['From'] = sender
+		msg['To'] = receivers
+		tem = MIMEText(''.join(mas), 'html')
+		msg.attach(tem)
+		s = smtplib.SMTP('smtp.gmail.com:587')
+		s.ehlo()
+		s.starttls()
+		s.login(sender_mail, '01123123')
+		s.sendmail(sender, receivers_mail_list, msg.as_string())
+		s.quit()
 
 	def parse_next(self, response):
-		tmp = json.loads(response.body)
-		crawl_rec_data = response.meta['crawl_rec_data']
-		total_page_rec = tmp.get('data', [])
-		next_page = tmp.get('paging',{}).get('next', '')
-		counter = response.meta.get('counter','')
-		counter += 1
-		import pdb;pdb.set_trace()
-		if counter == 3:
-			next_page = ''
-		if next_page:
-			yield scrapy.Request(urllib.unquote(next_page), callback=self.parse_next, meta = {'crawl_rec_data':response.meta.get('crawl_rec_data',{}), 'page_id' : response.meta.get('page_id',''), 'page_name':response.meta.get('page_name', ''), 'counter':counter}, dont_filter=True, errback=self.parse_next)
-		for page_rec in total_page_rec:
-			post_shares_count = str(page_rec.get('shares', {}).get('count', ''))
-			post_url = page_rec.get('permalink_url', '')
-			post_id = page_rec.get('id', '')
-			if '/posts/' not in post_url:
-				post_url = '%s%s%s' % (response.meta.get('crawl_rec_data')[1], 
-				'/posts/', post_id.split('_')[-1])
-			post_description = page_rec.get('message', '')
-			reactions_key = page_rec.get('reaction', {})
-			post_link = page_rec.get('link', '')
-			post_created_time = page_rec.get('created_time', '').replace('T', ' ')
-			post_updated_time = page_rec.get('updated_time', '').replace('T', ' ')
-			post_picture = page_rec.get('full_picture', '')
-			post_from = page_rec.get('from', {})
-			post_from_name = post_from.get('name', '')
-			post_from_id = post_from.get('id', '')
-			post_to = page_rec.get('to', {})
-			post_to_data = page_rec.get('data', [])
-			if post_to_data:
-				post_to_data = post_to_data[0]
+		if response.status != 200:
+			if not response.meta.get('parsed', ''):
+				yield scrapy.Request(response.url, callback= self.parse_next,
+        	        meta = {'crawl_rec_data':response.meta.get('crawl_rec_data',{}), 'page_id' : response.meta.get('page_id', ''), 'page_name':response.meta.get('page_name',''), "counter":0, "parsed":'yes'}, dont_filter = True)
 			else:
-				post_to_data = {}
-			post_to_name = post_to_data.get('name', '')
-			post_to_id = post_to_data.get('id', '')
-			post_comments_key = page_rec.get('comments', {})
-			post_comments_total_count = str(post_comments_key.get('summary', '').get('total_count', ''))
-			post_reactions_total_count = str(reactions_key.get('summary', {}).get('total_count', ''))
-			post_reactions_like_count = self.parse_like(page_rec, 'like')
-			post_reactions_love_count = self.parse_like(page_rec, 'love')
-			post_reactions_wow_count = self.parse_like(page_rec, 'wow')
-			post_reactions_haha_count = self.parse_like(page_rec, 'haha')
-			post_reactions_sad_count = self.parse_like(page_rec, 'sad')
-			post_reactions_angry_count = self.parse_like(page_rec, 'angry')
-			reactions_data = reactions_key.get('data', {})
-			post_comments_data = post_comments_key.get('data', [])
-			post_sk = md5("%s%s%s" % (crawl_rec_data[0], response.meta['page_id'], post_id))
-			post_comment_basic_list = [crawl_rec_data[0], response.meta['page_id'], post_sk, post_id]	
-			fbpost_data_item = self.fbppost(crawl_rec_data[0], response.meta['page_id'], post_sk, post_id, post_shares_count, post_url, post_description, post_created_time, post_updated_time, post_picture, post_from_name, post_from_id, post_to_name, post_to_id, post_comments_total_count, post_reactions_total_count, post_reactions_like_count, post_reactions_love_count, post_reactions_wow_count, post_reactions_haha_count, post_reactions_sad_count, post_reactions_angry_count, response.url)
-			if fbpost_data_item:
-				yield fbpost_data_item
-			for post_com_data in post_comments_data:
+				self.alert_mail(response.url, response.body)
+		tmp = {}
+		try:
+			tmp = json.loads(response.body)
+		except:
+			tmp = {}
+		if tmp:
+			crawl_rec_data = response.meta['crawl_rec_data']
+			total_page_rec = tmp.get('data', [])
+			next_page = tmp.get('paging',{}).get('next', '')
+			counter = response.meta.get('counter','')
+			counter += 1
+			"""if counter == 100:
+				next_page = '' """
+			if next_page:
+				yield scrapy.Request(urllib.unquote(next_page), callback=self.parse_next, meta = {'crawl_rec_data':response.meta.get('crawl_rec_data',{}), 'page_id' : response.meta.get('page_id',''), 'page_name':response.meta.get('page_name', ''), 'counter':counter, "parsed":''}, dont_filter=True, errback=self.parse_next)
+			for page_rec in total_page_rec:
+				post_shares_count = str(page_rec.get('shares', {}).get('count', ''))
+				post_url = page_rec.get('permalink_url', '')
+				post_id = page_rec.get('id', '')
+				if '/posts/' not in post_url:
+					post_url = '%s%s%s' % (response.meta.get('crawl_rec_data')[1], 
+					'/posts/', post_id.split('_')[-1])
+				post_description = page_rec.get('message', '')
+				if not post_description:
+					post_description = page_rec.get('description', '')
+				reactions_key = page_rec.get('reactions', {})
+				post_link = page_rec.get('link', '')
+				post_created_time = page_rec.get('created_time', '').replace('T', ' ')
+				#print post_created_time
+				post_updated_time = page_rec.get('updated_time', '').replace('T', ' ')
+				post_picture = page_rec.get('full_picture', '')
+				post_from = page_rec.get('from', {})
+				post_from_name = post_from.get('name', '')
+				post_from_id = post_from.get('id', '')
+				post_to = page_rec.get('to', {})
+				post_to_data = post_to.get('data', [])
+				if post_to_data:
+					post_to_data = post_to_data[0]
+				else:
+					post_to_data = {}
+				post_to_name = post_to_data.get('name', '')
+				post_to_id = post_to_data.get('id', '')
+				post_comments_key = page_rec.get('comments', {})
+				post_comments_total_count = str(post_comments_key.get('summary', '').get('total_count', ''))
+				post_reactions_total_count = str(reactions_key.get('summary', {}).get('total_count', ''))
+				post_reactions_like_count = self.parse_like(page_rec, 'like')
+				post_reactions_love_count = self.parse_like(page_rec, 'love')
+				post_reactions_wow_count = self.parse_like(page_rec, 'wow')
+				post_reactions_haha_count = self.parse_like(page_rec, 'haha')
+				post_reactions_sad_count = self.parse_like(page_rec, 'sad')
+				post_reactions_angry_count = self.parse_like(page_rec, 'angry')
+				reactions_data = reactions_key.get('data', {})
+				post_comments_data = post_comments_key.get('data', [])
+				post_sk = md5("%s%s%s" % (crawl_rec_data[0], response.meta['page_id'], post_id))
+				post_comment_basic_list = [crawl_rec_data[0], response.meta['page_id'], post_sk, post_id]	
+				fbpost_data_item = self.fbppost(crawl_rec_data[0], response.meta['page_id'], post_sk, post_id, post_shares_count, post_url, post_description, post_created_time, post_updated_time, post_picture, post_from_name, post_from_id, post_to_name, post_to_id, post_comments_total_count, post_reactions_total_count, post_reactions_like_count, post_reactions_love_count, post_reactions_wow_count, post_reactions_haha_count, post_reactions_sad_count, post_reactions_angry_count, response.url)
+				if fbpost_data_item:
+					yield fbpost_data_item
+				post_comments_next_page = post_comments_key.get('paging', {}).get('next', '')
+				if post_comments_next_page:
+					yield Request(post_comments_next_page, callback=self.parse_next_page_comments, meta = {'post_comment_basic_list':post_comment_basic_list})
+				
+				for post_com_data in post_comments_data:
+					return_data = self.parse_comments(post_com_data, 'main_comment', post_comment_basic_list, [])
+					if return_data:
+						if return_data[4]:
+							yield Request(return_data[4], callback=self.parse_next_ic, meta = {"post_comment_basic_list":post_comment_basic_list, 'comment_sk':return_data[0].get('comment_sk', ''), 'comment_id':return_data[0].get('comment_id', '')})
+						yield return_data[0]
+						for pcom_inner_cmd in return_data[1]:
+							return_data1 = self.parse_comments(pcom_inner_cmd, 'inner_comment', post_comment_basic_list, [return_data[0].get('comment_sk', ''), return_data[0].get('comment_id', '')])
+							if return_data1:
+								yield return_data1[0]
+								for pincomm_rea_data in return_data1[1]:
+									return_data2i = self.parse_reactions(pincomm_rea_data, 'post_inner_comment_reactions', post_comment_basic_list, [return_data[0].get('comment_sk', ''), return_data[0].get('comment_id', '')], [return_data1[0].get('inner_comment_sk', ''), return_data1[0].get('inner_comment_id', '')])
+									if return_data2i:
+										yield return_data2i
+						for pcomments_rea_data in return_data[3]:
+							return_data2 = self.parse_reactions(pcomments_rea_data, 'post_comment_reactions', post_comment_basic_list, [return_data[0].get('comment_sk', ''), return_data[0].get('comment_id', '')], [])
+							if return_data2:
+								yield return_data2
+							
+				for rea_da in reactions_data:
+					rea_return_data = self.parse_reactions(rea_da, 'post_reactions', post_comment_basic_list, [], [])
+					if rea_return_data:
+						yield rea_return_data
+	def parse_next_ic(self, response):
+		post_comment_basic_list = response.meta.get('post_comment_basic_list', '')
+		comment_id = response.meta.get('comment_id', '')
+		comment_sk = response.meta.get('comment_sk', '')
+                tmp = {}
+                try:
+                        tmp = json.loads(response.body)
+                except:
+                        tmp = {}
+                if tmp: 
+                        net_p = tmp.get('paging',{}).get('next','')
+                        if net_p:
+                                yield Request(net_p, callback=self.parse_next_ic, meta = {'post_comment_basic_list':post_comment_basic_list, 'comment_sk':comment_sk, 'comment_id':comment_id})
+			comments_data = tmp.get('data',[])
+			for post_com_data in comments_data:
+				return_data1 = self.parse_comments(post_com_data, 'inner_comment', post_comment_basic_list, [comment_sk, comment_id])
+				if return_data1:
+					yield return_data1[0]
+
+
+		
+	def parse_next_page_comments(self, response):
+		post_comment_basic_list = response.meta.get('post_comment_basic_list',[])
+		tmp = {}
+		try:
+			tmp = json.loads(response.body)
+		except:
+			tmp = {}
+		if tmp:
+			net_p = tmp.get('paging',{}).get('next','')
+			if net_p:
+				yield Request(net_p, callback=self.parse_next_page_comments, meta = {'post_comment_basic_list':post_comment_basic_list})
+			comments_data = tmp.get('data',[])
+			for post_com_data in comments_data:
 				return_data = self.parse_comments(post_com_data, 'main_comment', post_comment_basic_list, [])
 				if return_data:
+                                	if return_data[4]:
+                                        	yield Request(return_data[4], callback=self.parse_next_ic, meta = {"post_comment_basic_list":post_comment_basic_list, 'comment_sk':return_data[0].get('comment_sk', ''), 'comment_id':return_data[0].get('comment_id', '')})
 					yield return_data[0]
 					for pcom_inner_cmd in return_data[1]:
 						return_data1 = self.parse_comments(pcom_inner_cmd, 'inner_comment', post_comment_basic_list, [return_data[0].get('comment_sk', ''), return_data[0].get('comment_id', '')])
@@ -111,11 +212,9 @@ class Facebookpagesbrowse(scrapy.Spider):
 						return_data2 = self.parse_reactions(pcomments_rea_data, 'post_comment_reactions', post_comment_basic_list, [return_data[0].get('comment_sk', ''), return_data[0].get('comment_id', '')], [])
 						if return_data2:
 							yield return_data2
-						
-			for rea_da in reactions_data:
-				rea_return_data = self.parse_reactions(rea_da, 'post_reactions', post_comment_basic_list, [], [])
-				if rea_return_data:
-					yield rea_return_data
+
+				
+				
 
 	def parse_fbpostreactions(self, po_tpe, sk1, sk2, sk3, sk4, sk5, sk6, sk7, sk8, rea_da_id, rea_da_name, rea_da_type):
 		Fbpagespostreactions_ = Fbpagespostreactions()
@@ -183,10 +282,11 @@ class Facebookpagesbrowse(scrapy.Spider):
 		if comment_type_mainorinner == 'main_comment':
 			pcommnent_sk = md5("%s%s%s%s%s" % (sk1, sk2, sk3, sk4, pcomment_id))
 			p_comment_inner_comment = p_comments.get('comments', {})
+			p_comment_inner_comment_next_link = p_comments.get('comments', {}).get('paging', {}).get('next', '')
 			pcomment_total_inner_comments_count = str(p_comment_inner_comment.get('summary', {}).get('total_count', ''))
 			pcomment_inner_comments_data = p_comment_inner_comment.get('data', [])
 			fbpostcomment = self.fbpostcomment(sk1, sk2, sk3, sk4, pcommnent_sk, pcomment_id, pcomment_from_id, pcomment_from_name, pcomment_message, pcomment_created_time, pcomment_total_inner_comments_count, pcomment_total_reactions_count, pcomment_reac_like_count, pcomment_reac_love_count, pcomment_reac_wow_count, pcomment_reac_haha_count, pcomment_reac_sad_count, pcomment_react_angry_count)
-			return fbpostcomment, pcomment_inner_comments_data, pcomment_total_inner_comments_count, pcomment_reactions_data
+			return fbpostcomment, pcomment_inner_comments_data, pcomment_total_inner_comments_count, pcomment_reactions_data, p_comment_inner_comment_next_link
 		else:
 			sk5, sk6 = another_basic
 			pinner_commentsk = md5("%s%s%s%s%s%s%s" % (sk1, sk2, sk3, sk4, sk5, sk6, pcomment_id))
