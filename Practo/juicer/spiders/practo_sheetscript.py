@@ -26,7 +26,7 @@ class Practocsv(object):
         doct_info_columns = fetchmany(self.cur, self.columns_query%('DoctorInfo'))
         doc_info_list = list(doct_info_columns)
         self.doc_info_uplist = list(chain.from_iterable(doc_info_list))[:-3]
-        self.doc_info_uplist.extend(['phone_number', 'extension'])
+        self.doc_info_uplist.extend(['phone_number', 'extension', 'city', 'Availability Text'])
         doct_meta_columns = fetchmany(self.cur, self.columns_query%('DoctorMeta'))
         doct_meta_ls = list(doct_meta_columns)
         self.doc_meta_uplist = list(chain.from_iterable(doct_meta_ls))[1:-3]
@@ -68,23 +68,33 @@ class Practocsv(object):
 
     def send_csv(self):
         records = fetchall(self.cur, self.query1%('DoctorInfo'))
+        counterpa = 0
         for inde, rec in enumerate(records):
             info_rec = list(rec)[:-2]
-            phone_no, extension = ['']*2
+            phone_no, extension, city_name = ['']*3
             try:
                 jsd = json.loads(info_rec[-1])
                 if jsd:
                     phone_no = jsd.get('phone_number','')
                     extension = jsd.get('extension','')
+                    city_name = jsd.get('city', '')
+                    availability_text = jsd.get('doc_avilability_text','')
             except:
                 pass
+
             info_rec[-1] = phone_no
             info_rec.extend([extension])
+            info_rec.extend([city_name])
+            info_rec.extend([availability_text])
             print info_rec[0], '>>>>'
+            counterpa+=1
+            print counterpa
             #if '316500' in info_rec[0]  or '555819' in info_rec[0]: continue
             if inde == 0:
                 self.headerlisting.extend(self.doc_info_uplist)
                 self.headerprofiles.extend(self.doc_meta_uplist)
+                #import pdb;pdb.set_trace()
+                self.headerprofiles.extend(['city'])
                 self.todays_excel_file.writerow(self.headerlisting)
             info_rec = [normalize(i) for i in info_rec]
             self.todays_excel_file.writerow(info_rec)
@@ -94,9 +104,10 @@ class Practocsv(object):
             meta_rec = []
             status = 'Available'
             if meta_:
-                meta_rec = list(meta_[0])[1:-3]
+                meta_rec = list(meta_[0])[1:-2]
+                meta_rec[-1] = json.loads(meta_rec[-1]).get('city', '')
             else:
-                meta_rec = ['' for i in range(22)]
+                meta_rec = ['' for i in range(23)]
                 meta_rec[0] = doctor_id
                 status = 'Not Available'
             values_final.extend(meta_rec)
