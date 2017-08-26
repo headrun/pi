@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="kiranmayi">
+    <title>Twitter</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link href="{{ url_for('static', filename='css/font-awesome.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" type="text/css">
+    <script src="https://use.fontawesome.com/07b0ce5d10.js"></script>
+</head>
+<body>
+    <div class="container-2">
+        <div id="page-wrapper">
+            <div class="row">
+                <div class="col-md-12">
+                    <ul class="list-inline mini-stat offer offer-info">
+                        <h2><i class="fa fa-twitter" aria-hidden="true" style="color: #1dcaff;"></i> Twitter({{twd.get('screen_name')}})</h2>
+                        <div class="col-md-1 w3-content w3-display-container" align="center">
+                            <img alt="User Pic" src= {{twd.get('image')}}>
+                        </div>
+            <li>
+                <h5>Name<span class="stat-value color-blue"> {{twd.get('name', '')}}</span></h5>
+            </li>
+            {% if twd.get('is_verified', '') and twd.get('is_verified', '') not in ["0","NA"] %}
+                <li>
+                    <h5>Verified<span class="stat-value color-blue"><i class="fa fa-check"></i> {{twd.get('is_verified', '')}}</span></h5>
+                </li>
+            {% endif %}
+            {% if twd.get('location', '') and twd.get('location', '') not in ["0","NA"] %}
+            <li>
+                <h5>Location<span class="stat-value color-blue"><i class="fa fa-map-marker"></i> {{twd.get('location', '')}}</span></h5>
+            </li>
+            {% endif %}
+            {% if twd.get('tweets', '') and twd.get('tweets', '')!="0" %}
+            <li>
+                <h5>Tweets <span class="stat-value color-blue"><i class="fa fa-twitter"> {{twd.get('tweets', '')}}</i> </span></h5>
+            </li>
+            {% endif %}
+            {% if twd.get('Avg_no_of_tweets_per_day', '') and twd.get('Avg_no_of_tweets_per_day', '') not in ["0","NA"] %}
+            <li>
+                <h5>Average no.of tweets per day <span class="stat-value color-blue"><i class="fa fa-twitter"> {{twd.get('Avg_no_of_tweets_per_day', '')}}</i> </span></h5>
+            </li>
+            {% endif %}
+            {% if twd.get('following', '') and twd.get('following', '') not in ["0","NA"] %}
+            <li>
+                <h5>Following <span class="stat-value color-blue"><i class="fa fa-hand-o-up"></i> {{twd.get('following', '')}}</span></h5>
+            </li>
+            {% endif %}
+            {% if twd.get('followers', '') and twd.get('followers', '') not in ["0","NA"]%}
+            <li>
+                <h5>Followers <span class="stat-value color-blue"><i class="fa fa-user-plus"></i> {{twd.get('followers', '')}}</span></h5>
+            </li>
+            {% endif %}
+            {% if twd.get('likes', '') and twd.get('likes', '') not in ["0","NA"] %}
+            <li>
+                <h5>Likes <span class="stat-value color-blue"><i class="fa fa-thumbs-up"></i> {{twd.get('likes', '')}}</span></h5>
+            </li>
+            {% endif %}
+            {% if twd.get('timezone', '') and twd.get('timezone', '') not in ["0","NA"] %}
+            <li>
+                <h5>Timezone <span class="stat-value color-blue"><i class="fa fa-clock-o"></i> {{twd.get('timezone','' )}}</span></h5>
+            </li>
+            {% endif %}
+            {% if twd.get('lists', '') and twd.get('lists', '') not in ["0","NA"] %}
+            <li>
+                <h5>Listed count<span class="stat-value color-blue">{{twd.get('lists', '')}}</span></h5>
+            </li>
+            {% endif %}
+            {% if twd.get('language', '') and twd.get('language', '') not in ["0","NA"] %}
+            <li>
+                <h5>Language <span class="stat-value color-blue"><i class="fa fa-language"></i> {{twd.get('language', '')}}</span></h5>
+            </li>
+            {% endif %}
+            {% if twd.get('email_id', '') and twd.get('email_id', '') not in ["0","NA"] %}
+            <li>
+                <h5>Email Id<span class="stat-value color-blue"><i class="fa fa-envelope"></i> {{twd.get('email_id','')}}</span></h5>
+            </li>
+            {% endif %}
+            {% if twd.get('retweeted_percentage', '') and twd.get('retweeted_percentage', '') not in ["0","NA"] %}
+            <li>
+                <h5>Retweeted Percentage <span class="stat-value color-blue"> {{twd.get('retweeted_percentage','')}}</span></h5>
+            <li>
+            {% endif %}
+            <li>
+                <h5>Twitter Url<span class="stat-value color-blue"><i class="fa fa-external-link"></i> {{twd.get('twitter_url', '')}}</span></h5>
+            </li>
+            {% if twd.get('description', '') and twd.get('description', '') not in ["0","NA"] %}
+            <li>
+                            <h5>Description
+
+                                <span class="stat-value color-blue" style="color: gray; text-shadow: none;"> {{twd.get('description', '')}}</span></h5>
+
+
+            </li>
+            {% endif %}
+            </ul>
+
+                </div>
+
+            </div>
+            <div class="row">
+
+                <div class="col-xs-12 col-md-3">
+
+                    <div class="offer offer-info" style="margin-bottom: 30px;">
+
+                        <div class="shape">
+
+                            <div class="shape-text">
+
+                                <span class="glyphicon  glyphicon-home"></span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="offer-content">
+
+                            <h3 class="lead">
+
+                                Detected Languages
+
+                            </h3>
+
+                            <div class="list-group">
+                                {% for dl in twd.get('detected_languages', 'NA').split('; ') %}
+
+                                    <a class="list-group-item pad">
+                                        <h4 class="list-group-item-heading count">{{dl}}</h4>
+
+                                    </a>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="offer offer-info">
+
+                        <div class="shape">
+
+                            <div class="shape-text">
+
+                                <span class="glyphicon  glyphicon-home"></span>
+
+                            </div>
+
+                        </div>
+
+                        <div class="offer-content">
+
+                            <h3 class="lead">
+
+                                Most referenced domains
+
+                            </h3>
+                            {% for mrd in twd.get('Most_referenced_domains', 'NA').split('; ') %}
+
+                                <div class="list-group">
+
+                                    <a class="list-group-item pad">
+
+                                        <h3 class="pull-right" style="margin-top: 0px;">
+
+                                            <i class="icon glyphicon glyphicon-globe"></i>
+                                        </h3>
+                                    <h4 class="list-group-item-heading count">{{mrd}}</h4>
+                                    </a>
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-xs-12 col-md-3">
+
+                    <div class="offer offer-info">
+
+                        <div class="offer-content">
+
+                            <h3 class="lead">
+
+                                Top<label class="label label-info"> 10</label> hashtags
+
+                            </h3>
+                            {% for t1h in twd.get('top_10_hashtags', 'NA').split('; ') %}
+                                <div class="list-group">
+                                        <a class="list-group-item pad1">
+                                            <h3 class="pull-right" style="margin-top: 0px;">
+                                                <i class="icon glyphicon glyphicon-user"></i>
+                                            </h3>
+                                            <h4 class="list-group-item-heading count">{{t1h}}</h4>
+                                        </a>
+                                </div>
+                            {% endfor %}
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <div class="col-md-6" style="padding-left: 0px;padding-right: 0px;">
+
+                    <div class="col-xs-12 col-md-6">
+
+                        <div class="offer offer-info">
+
+                            <div class="offer-content">
+
+                                <h3 class="lead">
+
+                                    Top<label class="label label-info"> 5</label> mentioned users
+
+                                </h3>
+                                    {% for tmu in twd.get('top_5_mentioned_users', 'NA').split('; ') %}
+                                        <div class="list-group">
+                                            <a class="list-group-item google-plus">
+                                                <h3 class="pull-right" style="margin-top: 0px;">
+                                                    <i class="icon glyphicon glyphicon-user"></i>
+                                                </h3>
+                                                <h4 class="list-group-item-heading count">{{tmu}}</h4>
+                                            </a>
+                                        </div>
+                                    {% endfor %}
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6">
+
+                        <div class="offer offer-info">
+
+                            <div class="offer-content">
+
+                                <h3 class="lead">
+
+                                    Detected sources
+
+                                </h3>
+                                {% for ds in twd.get('detected_sources', 'NA').split('; ')%}
+
+                                    <div class="list-group">
+
+                                        <a class="list-group-item google-plus">
+
+                                            <h3 class="pull-right" style="margin-top: 0px;">
+
+                                                <i class="icon glyphicon glyphicon-user"></i>
+
+                                            </h3>
+
+                                            <h4 class="list-group-item-heading count">{{ds}}</h4>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-xs-12 col-md-12">
+
+                        <div class="offer offer-info">
+
+                            <div class="offer-content">
+
+                                <h3 class="lead">
+
+                                    Retweeted users
+
+                                </h3>
+                                {% for rus in twd.get('retweeted_users', 'NA').split('; ') %}
+                                    <div class="list-group">
+
+                                        <a class="list-group-item google-plus">
+                                            <h3 class="pull-right" style="margin-top: 0px;">
+
+                                                <i class="icon glyphicon glyphicon-user"></i>
+
+                                            </h3>
+
+                                            <h4 class="list-group-item-heading count">{{rus}}</h4>
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div><!-- page-wrapper END-->
+
+    </div><!-- container-1 END-->
+
+    <script src="{{ url_for('static', filename='css/jquery-1.10.2.min.js')}}"></script>
+
+    <script src="{{ url_for('static', filename='css/bootstrap.min.js')}}"></script>
+
+</body>
+
+</html>
