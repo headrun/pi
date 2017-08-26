@@ -313,13 +313,13 @@ def main():
     retweeted_use = print_stats(retweeted_users_names, top=5)
     mentioned_users_names = {}
     for k in mentioned_users.keys():
-        mentioned_users_names[id_screen_names[k]] = mentioned_users[k]
+        try: mentioned_users_names[id_screen_names[k]] = mentioned_users[k]
+        except:pass
     print("[+] Top 5 most mentioned users")
     mentioned_us = print_stats(mentioned_users_names, top=5)
 
     print("[+] Most referenced domains (from URLs)")
     detected_dom = print_stats(detected_domains, top=6)
-
     if args.friends:
         max_friends = numpy.amin([user_info.friends_count, 300])
         print("[+] Getting %d @%s's friends data..." % (max_friends, args_name))
@@ -336,7 +336,6 @@ def main():
 
         print("[+] Friends timezones")
         print_stats(friends_timezone, top=8)
-
     list_,detected_sou,detected_las,mentioned_user_name,\
     detected_has,ret_user= [],[],[],[],[],[]
     for i,j in zip(detected_dom.keys(),detected_dom.values()):

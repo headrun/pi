@@ -5,7 +5,7 @@ import MySQLdb
 db_user   = 'root'
 db_passwd = 'hdrn59!'
 db_host   = 'localhost'
-db_name   = 'TWITTER'
+db_name   = 'PROFILE_ANALYZER'
 
 #Access and Consumer Tokens
 #Aruna

@@ -8,6 +8,7 @@ import time
 import timeit
 import random
 import codecs
+import itertools
 
 
 
