@@ -5,6 +5,7 @@ from flask import request
 from flask.ext.triangle import Triangle
 from Fullcontact.generic_functions import *
 from Fullcontact.db_operations import *
+from Fullcontact.fullcontact_script import *
 
 app = Flask(__name__)
 Triangle(app)
@@ -16,6 +17,19 @@ def index():
 @app.route('/stats_calculator')
 def stats():
     return render_template('stats_calculator.html')
+
+@app.route('/direct_twitter_page')
+def direct_twitter_page():
+    #twitter_data = twitter('smantena', '')
+    #return render_template('twitter_data.html', twd = twitter_data)
+    return render_template('twitter_hash_tag.html')
+
+@app.route('/direct_twitter_page', methods=['POST'])
+def run_twitter_again():
+    hashtag = request.form['hashtag']
+    twitter_data = twitter('smantena', '')
+    return render_template('twitter_pf_data.html', twd = twitter_data)
+
 
 
 @app.route('/information/<media_type>', methods=['POST'])
@@ -33,18 +47,27 @@ def information(media_type):
             #return render_template('%s.html' % inner)
              if media_type == 'twitter':
                 twitter_data = twitter(sk, emailid)
+                print twitter_data
                 if twitter_data:
-                    return render_template('twitter_data.html', twd = twitter_data)
+                    return render_template('twitter_pf_data.html', twd = twitter_data)
                 else:
-                    return jsonify('No data for this profile')
+                    return 'No data for this profile'
+             else:
+                    return 'Need to design for this social media profile'
 
 def twitter(sk, emailid):
-    cmd = 'python tweet_analyzer.py -n %s -e %s'%(sk, emailid)
-    real_path = os.path.dirname(os.path.realpath(__file__))
-    os.chdir("%s%s" % (real_path, '/Twitter'))
-    os.system(cmd)
-    os.chdir(real_path)
+    con, cur = get_mysql_connection(DB_HOST, DB_NAME, '')
+    tw_ch = fetchmany(cur, twitter_check_db%sk)
+    if not tw_ch:
+        cmd = "python tweet_analyzer.py -n %s -e %s"%(sk, emailid)
+        if not emailid:
+            cmd = "python tweet_analyzer.py -n %s -e ''" % sk
+        real_path = os.path.dirname(os.path.realpath(__file__))
+        os.chdir("%s%s" % (real_path, '/Twitter'))
+        os.system(cmd)
+        os.chdir(real_path)
     twitter_data = Tixlsfile().main(sk)
+    close_mysql_connection(con, cur)
     return twitter_data
 
 def checking(profile_url, inner, emailid, media_type):
@@ -66,18 +89,10 @@ def checking(profile_url, inner, emailid, media_type):
 @app.route('/', methods=['POST'])
 def my_form_post():
     email = request.form['email']
-    #python fullcontact_script.py -d 'FULLCO' -m 'nakul@aromathai.net' -e '9fe11c7ab65dacbd'
     if email:
-        excel_file_name = 'fullcontact_%s.txt'%str(datetime.datetime.now().date())
-        real_path = os.path.dirname(os.path.realpath(__file__))
-        os.chdir("%s%s" % (real_path, '/Fullcontact'))
-        if os.path.isfile(excel_file_name):
-            os.system('rm %s'% excel_file_name)
-        cmd = "python fullcontact_script.py -d '%s' -m '%s' -e '%s' >> %s"%(DB_NAME, email, '9fe11c7ab65dacbd', excel_file_name)
-        os.system(cmd)
-        os.chdir(real_path)
+        data_from_ful = Fullcontact().main(email, '9fe11c7ab65dacbd')
         con, cur = get_mysql_connection(DB_HOST, DB_NAME, '')
-        recs = fetchmany(cur, query1_full%email)
+        recs = fetchmany(cur, query1_full % email)
         name, family_name, websites, age, gender, country, state, city, continent, location, likelihood = ['']*11
         if recs and len(recs[0]) == 11:
             name, family_name, websites, age,\
@@ -120,12 +135,6 @@ def my_form_post():
                     data_dic.update({'twitter_field':soc})
                 if 'linkedin' in soc.get('type_name').lower():
                     data_dic.update({'linkedin_field':soc})
-        checking = ''
-        with file("%s%s" % ("Fullcontact/",excel_file_name)) as f:
-            s = f.read()
-            if s:
-                checking = s
-        data_from_ful = ast.literal_eval(json.loads(json.dumps(checking.replace('\n',''))))
         if 'message' in data_from_ful.keys():
             return jsonify(data_from_ful)
         else:
