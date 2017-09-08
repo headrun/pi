@@ -25,7 +25,7 @@ class Imagecheck(scrapy.Spider):
                 self.excel_file_name2 = 'linkedin_downloaded_image_%s.csv'%str(datetime.datetime.now().date())
                 if os.path.isfile(self.excel_file_name2):
                         os.system('rm %s'%self.excel_file_name2)
-                oupf2 = open(self.excel_file_name1, 'ab+')
+                oupf2 = open(self.excel_file_name2, 'ab+')
                 self.todays_excel_file2  = csv.writer(oupf2)
 		self.header_params = ['pi_id', 'lnkd_original_url', 'lnkd_profile_url', 'lnkd_candidate_url[not Available]']
 		self.header_params1 = ['pi_id', 'lnkd_original_url', 'lnkd_profile_url', 'lnkd_company_logo_url[not Available]']
