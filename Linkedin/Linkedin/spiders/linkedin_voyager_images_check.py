@@ -12,7 +12,7 @@ class Imagecheck(scrapy.Spider):
 		self.qu1 = "select sk, pi_id, lnkd_original_url, lnkd_profile_url, candidate_profile_picture, company_logo, company_logo_path, candidate_profile_picture_path from linkedin_mapping_meta where company_logo_path != '' or candidate_profile_picture_path != ''"
 		self.qu2 = "update linkedin_mapping_meta set company_logo_path = '' where sk = '%s'"
 		self.qu3 = "update linkedin_mapping_meta set candidate_profile_picture_path = '' where sk = '%s'"
-		self.excel_file_name = 'linkedin_candidate profiles_notavailable_data_%s.csv'%str(datetime.datetime.now().date())
+		self.excel_file_name = 'linkedin_candidate_profiles_notavailable_data_%s.csv'%str(datetime.datetime.now().date())
 		if os.path.isfile(self.excel_file_name):
 			os.system('rm %s'%self.excel_file_name)
 		oupf = open(self.excel_file_name, 'ab+')
@@ -22,10 +22,18 @@ class Imagecheck(scrapy.Spider):
                         os.system('rm %s'%self.excel_file_name1)
                 oupf1 = open(self.excel_file_name1, 'ab+')
                 self.todays_excel_file1  = csv.writer(oupf1)
+                self.excel_file_name2 = 'linkedin_downloaded_image_%s.csv'%str(datetime.datetime.now().date())
+                if os.path.isfile(self.excel_file_name2):
+                        os.system('rm %s'%self.excel_file_name2)
+                oupf2 = open(self.excel_file_name1, 'ab+')
+                self.todays_excel_file2  = csv.writer(oupf2)
 		self.header_params = ['pi_id', 'lnkd_original_url', 'lnkd_profile_url', 'lnkd_candidate_url[not Available]']
 		self.header_params1 = ['pi_id', 'lnkd_original_url', 'lnkd_profile_url', 'lnkd_company_logo_url[not Available]']
+		self.header_params2 = ['pi_id', 'lnkd_original_url', 'lnkd_profile_url', 'member_id', 'company_logo', 'candidate_profile_picture', 'company_logo_path', 'candidate_profile_picture_path', 'modified_url']
 		self.todays_excel_file.writerow(self.header_params)
 		self.todays_excel_file1.writerow(self.header_params1)
+		self.todays_excel_file2.writerow(self.header_params2)
+		self.qu2_ = 'select * from linkedin_mapping_meta'
 	
 	def parse(self, response):
 		if self.type_of_crawl == 'fetch':
@@ -50,7 +58,19 @@ class Imagecheck(scrapy.Spider):
 					valus1 = [pi_id, lnkd_original_url, lnkd_profile_url, company_logo]
 					valus1 =  [normalize(i) for i in valus1]
 					self.todays_excel_file1.writerow(valus1)
+
+		if self.type_of_crawl == 'in_sheet':
+			counter = 0
+			recsq = fetchall(self.cur, self.qu2_)
+			for qrec in recsq:
+				qrec = qrec[1:-3]
+				pi_id, lnkd_original_url, lnkd_profile_url, member_id, company_logo, candidate_profile_picture, company_logo_path, candidate_profile_picture_path, modified_url = qrec
+				valus2 = [pi_id, lnkd_original_url, lnkd_profile_url, member_id, company_logo, candidate_profile_picture, company_logo_path, candidate_profile_picture_path, modified_url]
+				valus2 =  [normalize(i) for i in valus2]
+				self.todays_excel_file2.writerow(valus2)
+				counter += 1
 				print counter
+			
 			
 			
 		
