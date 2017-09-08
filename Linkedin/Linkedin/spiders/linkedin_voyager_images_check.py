@@ -65,8 +65,8 @@ class Imagecheck(scrapy.Spider):
 			for qrec in recsq:
 				qrec = qrec[1:-3]
 				pi_id, lnkd_original_url, lnkd_profile_url, member_id, company_logo, candidate_profile_picture, company_logo_path, candidate_profile_picture_path, modified_url = qrec
-				if candidate_profile_picture:
-					candidate_profile_picture = candidate_profile_picture.split('/')[-1]
+				if candidate_profile_picture_path:
+					candidate_profile_picture_path = candidate_profile_picture_path.split('/')[-1]
 				if company_logo_path:
 					company_logo_path = company_logo_path.split('/')[-1]
 				valus2 = [pi_id, lnkd_original_url, lnkd_profile_url, member_id, company_logo, candidate_profile_picture, company_logo_path, candidate_profile_picture_path, modified_url]
