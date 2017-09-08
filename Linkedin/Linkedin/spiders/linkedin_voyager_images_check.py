@@ -29,7 +29,7 @@ class Imagecheck(scrapy.Spider):
                 self.todays_excel_file2  = csv.writer(oupf2)
 		self.header_params = ['pi_id', 'lnkd_original_url', 'lnkd_profile_url', 'lnkd_candidate_url[not Available]']
 		self.header_params1 = ['pi_id', 'lnkd_original_url', 'lnkd_profile_url', 'lnkd_company_logo_url[not Available]']
-		self.header_params2 = ['pi_id', 'lnkd_original_url', 'lnkd_profile_url', 'member_id', 'company_logo', 'candidate_profile_picture', 'company_logo_path', 'candidate_profile_picture_path', 'modified_url']
+		self.header_params2 = ['pi_id', 'lnkd_original_url', 'lnkd_profile_url', 'member_id', 'company_logo', 'candidate_profile_picture', 'company_logo_file_name', 'candidate_profile_picture_file_name', 'modified_url']
 		self.todays_excel_file.writerow(self.header_params)
 		self.todays_excel_file1.writerow(self.header_params1)
 		self.todays_excel_file2.writerow(self.header_params2)
@@ -65,6 +65,10 @@ class Imagecheck(scrapy.Spider):
 			for qrec in recsq:
 				qrec = qrec[1:-3]
 				pi_id, lnkd_original_url, lnkd_profile_url, member_id, company_logo, candidate_profile_picture, company_logo_path, candidate_profile_picture_path, modified_url = qrec
+				if candidate_profile_picture:
+					candidate_profile_picture = candidate_profile_picture.split('/')[-1]
+				if company_logo_path:
+					company_logo_path = company_logo_path.split('/')[-1]
 				valus2 = [pi_id, lnkd_original_url, lnkd_profile_url, member_id, company_logo, candidate_profile_picture, company_logo_path, candidate_profile_picture_path, modified_url]
 				valus2 =  [normalize(i) for i in valus2]
 				self.todays_excel_file2.writerow(valus2)
