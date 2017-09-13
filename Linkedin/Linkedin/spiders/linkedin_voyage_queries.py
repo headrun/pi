@@ -48,5 +48,6 @@ api_whole_list = [	(positions_api, 'experiences'),
 		 ]
 insert_count_qry = "insert into linkedin_loginlimit(sk, login_mail_id, count, login_date, proxy_ip, created_at, modified_at, last_seen) values ('%s', '%s', %s, '%s', '%s', now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), sk='%s', login_mail_id='%s', count=%s, login_date='%s', proxy_ip='%s'"
 get_insert_count_qry = 'select count from linkedin_loginlimit where sk="%s" and login_date="%s" and proxy_ip = "%s"'
+
 selectmailparams = "select sk, email, pass from linkedin_mails where crawl_status = 0 limit 1"
 update_based_table = "update %s set crawl_status=%s where sk = '%s'"

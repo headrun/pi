@@ -1,6 +1,7 @@
 from linkedin_logins import *
 from linkedin_voyage_queries import *
 from linkedin_voyager_utils import *
+import ast
 
 class Linkedinpremiumapivoyager(Voyagerapi):
 	name = "linkedinapivoyager_browse"
@@ -11,7 +12,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 		super(Linkedinpremiumapivoyager, self).__init__(*args, **kwargs)
                 self.login = kwargs.get('login', 'ramanujan')
                 self.con, self.cur = get_mysql_connection(DB_HOST, DB_NAME_REQ, '')
-                get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 limit 15"
+                get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 order by rand() limit 15"
 		#get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 and url like '%linkedin.com%' order by rand() limit 1"
                 self.cur.execute(get_query_param)
                 self.profiles_list = [i
@@ -59,13 +60,32 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 			 set count='%s' where sk = '%s' and login_date='%s'\
 			 and proxy_ip='%s'" % (count_from_, 
 			sk_login_self, logind_date, command_prxy))
-                	meta_data = json.loads(li[2])
+			meta_data = {}
+                	try:
+				meta_data = json.loads(li[2])
+			except:
+				try:
+					meta_data = ast.literal_eval(li[2])
+				except:
+					try:
+						meta_data = ast.literal_eval(normalize(li[2]).replace('\\',''))
+					except:
+						pass
 	                email_address = meta_data.get('email_address', '')
 			given_key = meta_data.get('key','')
 			if not given_key:
 				given_key = meta_data.get('keys','')
         	        sk, profile_url, m_data = li
-                	meta_data = json.loads(m_data)
+			meta_data = {}
+                	try: meta_data = json.loads(m_data)
+			except:
+				try:
+					meta_data = ast.literal_eval(m_data)
+				except:
+					try:
+						meta_data = ast.literal_eval(normalize(m_data).replace('\\',''))
+					except:
+						pass
 	                vals = (sk, profile_url, sk, profile_url)
         	        self.update_status(sk, 9, 0)
                 	yield Request(profile_url, callback = self.parse_correct, meta = {
