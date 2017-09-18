@@ -7,6 +7,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 	name = "linkedinapivoyager_browse"
 	allowed_domains = ["linkedin.com"]
 	start_urls = ('https://www.linkedin.com/uas/login?goback=&trk=hb_signin',)
+	handle_httpstatus_list = [403]
 
 	def __init__(self, *args, **kwargs):
 		super(Linkedinpremiumapivoyager, self).__init__(*args, **kwargs)
@@ -27,7 +28,8 @@ class Linkedinpremiumapivoyager(Voyagerapi):
                 .replace('http://','').replace(':3279','')\
                 .replace('https://','')
                 logincsrf = ''.join(sel.xpath('//input[@name="loginCsrfParam"]/@value').extract())
-                csrf_token = ''.join(sel.xpath('//input[@name="csrfToken"]/@value').extract())
+                #csrf_token = ''.join(sel.xpath('//input[@name="csrfToken"]/@value').extract())
+		csrf_token = ''.join(sel.xpath('//input[@id="csrfToken-login"]/@value').extract())
                 source_alias = ''.join(sel.xpath('//input[@name="sourceAlias"]/@value').extract())
 		if self.profiles_list:
 			logind_date = "%s%s"%(str(datetime.datetime.now().date()), ' 00:00:00')
