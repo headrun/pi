@@ -69,7 +69,7 @@ class Linkedingetcrawl(object):
 					file_ids_limit = []
 					if (int(total_counts)) <=1000:
 						linkedin_file_name = 'linkedin_data_on_%s.csv' % str(datetime.datetime.now())
-						cmd1 = 'python linkedin_csvsheetprofiles.py -i %s -f "%s"' % (recs_allow[0].replace(' ','#'), linkedin_file_name)
+						cmd1 = 'python linkedin_voyager_csvsheetprofiles.py -i %s -f "%s"' % (recs_allow[0].replace(' ','#'), linkedin_file_name)
 						os.system(cmd1)
 						
 						file_id = Googleupload().main('Linkedin', email_from_list, linkedin_file_name)
@@ -80,7 +80,7 @@ class Linkedingetcrawl(object):
 						new_limit = set_limit_to
 						for ic in range(int(total_counts)):
 							linkedin_file_namel = 'linkedin_data_on_%s_limit_%s.csv' % (str(datetime.datetime.now()), new_limit.replace(',','_'))
-							cmd1 = 'python linkedin_csvsheetprofiles.py -i %s -l %s -f "%s"' % (recs_allow[0].replace(' ','#'), new_limit, linkedin_file_namel)
+							cmd1 = 'python linkedin_voyager_csvsheetprofiles.py -i %s -l %s -f "%s"' % (recs_allow[0].replace(' ','#'), new_limit, linkedin_file_namel)
 							os.system(cmd1)
 							if os.path.isfile(linkedin_file_namel):
 								file_id = Googleupload().main('Linkedin', email_from_list, linkedin_file_namel)
