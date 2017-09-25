@@ -62,6 +62,8 @@ class Piparsing(object):
 								twitter_profile = counter
 							elif 'facebook' in lower_head:
 								facebook_profile = counter
+							elif 's.no' in lower_head:
+								snoa = counter
 							counter += 1
 						break
 					m = 0
@@ -96,6 +98,9 @@ class Piparsing(object):
 						if key_ != '' and key_ in row_check:
 							key_f = normalize(str(row[key_].encode('utf-8')))
 							meta_date_from_browse.update({"keys":key_f})
+						if snoa != '' and snoa in row_check:
+							snoaf = normalize(str(row[snoa]))
+							meta_date_from_browse.update({"sno":snoaf})
                                                 if linkedin_profile != '' and linkedin_profile in row_check:
                                                         linkedin_profilef = normalize(str(row[linkedin_profile].encode('utf-8')))
                                                         meta_date_from_browse.update({"linkedin_url":linkedin_profilef})
@@ -111,7 +116,8 @@ class Piparsing(object):
 							sk = twitter_profilef.split('/')[-1].strip()
 							met_browse = meta_date_from_browse.get('email_address', '')
 							if twitter_profilef and 'twitter.com' in twitter_profilef:
-								values = ('twitter_crawl', sk, twitter_profilef, 'twitter', 0, MySQLdb.escape_string(met_browse), MySQLdb.escape_string(met_browse))
+								#values = ('twitter_crawl', sk, twitter_profilef, 'twitter', 0, MySQLdb.escape_string(met_browse), MySQLdb.escape_string(met_browse))
+								values = ('twitter_crawl', sk, twitter_profilef, 'twitter', 0, MySQLdb.escape_string(json.dumps(meta_date_from_browse)), MySQLdb.escape_string(json.dumps(meta_date_from_browse)))
 								execute_query(cur, insert_script_query%values)
 						if facebook_profile != '' and facebook_profile in row_check:
 							facebook_profilef = normalize(str(row[facebook_profile].encode('utf-8')))

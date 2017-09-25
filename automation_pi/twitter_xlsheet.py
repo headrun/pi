@@ -7,6 +7,7 @@ import sys
 import optparse
 from  table_schemas.generic_functions import *
 from table_schemas.to_udrive import *
+from table_schemas.pi_db_operations import *
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
@@ -23,12 +24,12 @@ class Tixlsfile(object):
         self.row_count = 1
         self.db_list = self.db_list.split(',')
         self.selectqry =  'select screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day from Twitter_latest where modified_at >= "%s"' % self.modified_at_cmd
-	self.selectqry2 = 'select sk, url from twitter_crawl where modified_at >= "%s" and crawl_status != 1;' % self.modified_at_cmd
+	self.selectqry2 = 'select sk, url, meta_data from twitter_crawl where modified_at >= "%s" and crawl_status != 1;' % self.modified_at_cmd
         self.excel_file_name = 'twitter_data_on_%s.xls'%str(datetime.datetime.now())
 	self.excel_file_name = self.excel_file_name.replace(' ','_')
         self.todays_excel_file = xlwt.Workbook(encoding="utf-8")
         self.todays_excel_sheet1 = self.todays_excel_file.add_sheet("sheet1")
-        header_params = ['screen_name','name','description','location','tweets','following','followers','likes','image','listsi','timezone','language','is_verified','twitter_url','email_id','top_10_hashtags','top_5_mentioned_users','retweeted_percentage','retweeted_users', 'Most_referenced_domains','detected_sources', 'detected_languages', 'Avg_no_of_tweets_per_day','Status']
+        header_params = ['sno', 'screen_name','name','description','location','tweets','following','followers','likes','image','listsi','timezone','language','is_verified','twitter_url','email_id','top_10_hashtags','top_5_mentioned_users','retweeted_percentage','retweeted_users', 'Most_referenced_domains','detected_sources', 'detected_languages', 'Avg_no_of_tweets_per_day','Status']
         for i, row in enumerate(header_params):
             self.todays_excel_sheet1.write(0, i, row)
         self.main()
@@ -46,7 +47,12 @@ class Tixlsfile(object):
 	    records_2 = cur2_.fetchall()
             for record in records:
                 screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day = record
-                values = [screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day,'DataAvailable']
+		sno_given = fetchmany(cur2_, 'select meta_data from twitter_crawl where sk = "%s"' % screen_name)
+		if sno_given:
+			sno_given = json.loads(sno_given[0][0]).get('sno','')
+		else:
+			sno_given = ''
+                values = [sno_given, screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day,'DataAvailable']
                 for col_count, value in enumerate(values):
                     try : 
                         value = str(value)
@@ -60,7 +66,7 @@ class Tixlsfile(object):
                 self.row_count = self.row_count+1
 	    if records_2:
 		for rec2 in records_2:
-		    values = [rec2[0], '', '', '', '', '', '', '', '', '', '', '', '', rec2[1], '', '', '', '', '', '', '', '', '', 'DataUnAvailable']
+		    values = [json.loads(rec2[2]).get('sno',''), rec2[0], '', '', '', '', '', '', '', '', '', '', '', '', rec2[1],json.loads(rec2[2]).get('email_address', ''), '', '', '', '', '', '', '', '', 'DataUnAvailable']
 		    for col_count, value in enumerate(values):
 			self.todays_excel_sheet1.write(self.row_count, col_count, value)
 		    self.row_count = self.row_count+1
