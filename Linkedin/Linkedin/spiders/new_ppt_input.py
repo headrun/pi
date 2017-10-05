@@ -24,3 +24,5 @@ select_qry4_v2 = 'select Lnkd_exp_company_logo1 from pm_csv1 where Pm_id = "%s"'
 select_qry3_v2_1 = 'select Lnkd_edu_degree1, Lnkd_edu_field_of_study1, Lnkd_edu_school_name1 from pm_csv1 where Pm_id="%s"'
 
 select_qry6_v2 = 'select Lnkd_Accomplishments_languages from  pm_csv1  where Pm_id = "%s" '
+
+select_qry7_v2 = 'select Fb_gender from pm_csv1 where Pm_id = "%s"'
