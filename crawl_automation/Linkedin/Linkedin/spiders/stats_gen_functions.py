@@ -82,8 +82,8 @@ def get_nodes(data, path):
 def md5(x):
     return hashlib.md5(xcode(x)).hexdigest()
 
-sender_mails = 'sraju@notemonk.com'
-#receivers_mail_lists = ['sraju@notemonk.com','anushab@headrun.net','kiranmayi@headrun.net']
-receivers_mail_lists = ['sraju@notemonk.com']
-password = 'rajurao1!'
+sender_mails = 'positiveintegersproject@gmail.com'
+receivers_mail_lists = ['sraju@notemonk.com','anushab@headrun.net','kiranmayi@headrun.net','aravind@headrun.com']
+#receivers_mail_lists = ['sraju@notemonk.com']
+password = 'integers'
 crawl_status = [0,1,9,6]
