@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env 
 
 import sys
 from glob import glob
@@ -38,29 +38,23 @@ def load_data_files(queries_file):
     con1 = MySQLdb.connect(user=_cfg.get('aws', 'user'),host=_cfg.get('aws', 'host'), db=_cfg.get('aws', 'db_name'), passwd=_cfg.get('aws', 'awspasswd'))
     con1.set_character_set('utf8')
     cur1 = con1.cursor()
-    #query = "INSERT INTO test_lnkd(created_dt,lnkd_url)values('2017-09-28','https://www.linkedin.com/in/aravindrajanm/')"
-    #query2 = "INSERT INTO test_lnkd(created_dt,lnkd_url)values('2017-09-27','https://www.linkedin.com/in/kiranmayi-cheedella-b87699a3/')"
-    #query3 = "INSERT INTO test_lnkd(created_dt,lnkd_url)values('2017-09-27','https://www.linkedin.com/in/anusha-boyina-349812140/')"
-    #cur1.execute(query)
-    #cur1.execute(query3)
-    #cur1.execute(query2)
-    import pdb;pdb.set_trace()
     query_files = [queries_file] if queries_file else glob("%s/*.queries" % (PROCESSING_QUERY_FILES_PATH))
-  
-    """for query_file in query_files:
+    for query_file in query_files:
         data = queries_input_gen(open(query_file))                                                                              
         count=0                                                                                                                 
         for index, (query, params) in enumerate(data):                                                                          
             count = count + 1
             params = eval(params)
             try : 
-                if 'linkedin_aws_csv1' in query_file :                                                                                                          	cur1.execute(query, params)
-                elif 'linkedin_pi_csv1' in query_file :                                                                                                                cursor.execute(query, params)                                                                               
+                if 'linkedin_aws_csv1' in query_file :
+                        cur1.execute(query, params)
+                elif 'linkedin_pi_csv1' in query_file :
+                        cursor.execute(query, params)
                 else : print query
 
-            except: print params[0] 
+            except: print params[0]
                                                                                                                                 
-        move_file(query_file)"""                                                                                                   
+        move_file(query_file)
     cursor.close()                                                                                                              
     connection.close()                                                                                                          
                                                                                                                                 

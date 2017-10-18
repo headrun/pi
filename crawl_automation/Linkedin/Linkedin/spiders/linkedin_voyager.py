@@ -14,7 +14,7 @@ class Linkedincrawlautomation(Voyagerapi):
         super(Linkedincrawlautomation, self).__init__(*args, **kwargs)
         self.login = kwargs.get('login', 'raja')
         self.con, self.cur = get_mysql_connection(DB_HOST, DB_NAME_REQ, '')
-        get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 order by rand() limit 2"
+        get_query_param = "select sk, url, meta_data from linkedin_crawl where crawl_status=0 order by rand() limit 15"
         self.cur.execute(get_query_param)
         self.profiles_list = [i
                               for i in self.cur.fetchall()

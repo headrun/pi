@@ -20,16 +20,15 @@ class Licrawlaws(object):
         def __init__(self, options):
                 self.modified_at = options.modified_at
                 self.cur, self.con = self.get_cursor_dbs( _cfg.get('aws', 'user'), _cfg.get('aws', 'host'), _cfg.get('aws', 'db_name'), _cfg.get('aws', 'awspasswd'))
-		import pdb;pdb.set_trace()
                 self.con1, self.cur1 = get_mysql_connection(DB_HOST, DB_NAME_REQ, '')
-                yesterday_date = str(date.today() - timedelta(1))
-                cur_date =  '%'+yesterday_date+'%'               
-                #self.log = create_logger_obj('linkedin_voyager_aws_input')
+                self.cur1.execute('select now()')
+                aws_date = self.cur1.fetchall()[0][0]
+                aws_date = str(aws_date.date())
+                start_date = aws_date+' '+'03:30:00'
+                end_date = aws_date+' '+'18:30:00'
                 self.query = 'insert into linkedin_crawl(sk, url, content_type ,crawl_status, meta_data,created_at, modified_at) values(%s, %s, %s, %s, %s,now(), now()) on duplicate key update modified_at=now(), content_type=%s, crawl_status=0,meta_data=%s'
-                self.query2 = 'select %s from %s where %s like "%s"' % (
-                   _cfg.get('aws', 'input_fields'),  _cfg.get('aws', 'input_table'), _cfg.get('aws', "where_field"), cur_date)
-                #self.query2 = 'select %s from %s' % (_cfg.get('aws', 'input_fields'),  _cfg.get('aws', 'input_table'), _cfg.get('aws', "where_field"))
-                #self.query2 = 'select id,created_dt,lnkd_url from linkedin_crawl_sample'
+                self.query2 = 'select %s from %s where %s between "%s" and "%s" ' % (
+                   _cfg.get('aws', 'input_fields'),  _cfg.get('aws', 'input_table'), _cfg.get('aws', "where_field"),start_date, end_date)
                 self.main()
 
         def __del__(self):
@@ -42,8 +41,12 @@ class Licrawlaws(object):
                 for tocr in total_connection_records:
                         meta_date_from_browse = {}
                         id_, url_, created_date_ = tocr
-                        meta_date_from_browse.update(
-                            {"linkedin_url": url_, 'id': id_, 'created_date': created_date_})
+                        try : meta_date_from_browse.update(
+                                {"linkedin_url": url_, 'id': id_, 'created_date': str(created_date_.date())})
+                        except :
+                             meta_date_from_browse.update(
+                                {"linkedin_url": url_, 'id': id_, 'created_date': created_date_})
+
                         sk = md5(url_)
                         crawl_status = 0
                         try:
