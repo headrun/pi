@@ -52,11 +52,3 @@ class UpcitemdbTerminal(JuicerSpider):
 			dict1.get('ISBN Publisher:',''),dict1.get('ISBN Title ID:',''),dict1.get('ISBN Check Digit:',''),image,\
 			json.dumps(aux_info),normalize(response.url))
 	    self.execute_query(self.insert_query1, values3)
-	    nodes = response.xpath('//table[@class="list"]/tbody/tr')
-	    for node in nodes:
-                link = 'http://www.upcitemdb.com'+normalize(''.join(node.xpath('./td/a/@href').extract()))
-                name = normalize(''.join(node.xpath('.//td/b/text()').extract()))
-                price = normalize(''.join(node.xpath('./td/text()').extract()[-2]))
-                date  = normalize(''.join(node.xpath('./td/text()').extract()[-1]))
-		values = (dict1.get('UPC-A:',''),link,name,price,date)
-		self.execute_query(self.insert_query2, values)
