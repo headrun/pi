@@ -29,7 +29,7 @@ class Tixlsfile(object):
 	self.excel_file_name = self.excel_file_name.replace(' ','_')
         self.todays_excel_file = xlwt.Workbook(encoding="utf-8")
         self.todays_excel_sheet1 = self.todays_excel_file.add_sheet("sheet1")
-        header_params = ['sno', 'screen_name','name','description','location','tweets','following','followers','likes','image','listsi','timezone','language','is_verified','twitter_url','email_id','top_10_hashtags','top_5_mentioned_users','retweeted_percentage','retweeted_users', 'Most_referenced_domains','detected_sources', 'detected_languages', 'Avg_no_of_tweets_per_day','Status']
+        header_params = ['id', 'sno', 'screen_name','name','description','location','tweets','following','followers','likes','image','listsi','timezone','language','is_verified','twitter_url','email_id','top_10_hashtags','top_5_mentioned_users','retweeted_percentage','retweeted_users', 'Most_referenced_domains','detected_sources', 'detected_languages', 'Avg_no_of_tweets_per_day','Status']
         for i, row in enumerate(header_params):
             self.todays_excel_sheet1.write(0, i, row)
         self.main()
@@ -47,12 +47,14 @@ class Tixlsfile(object):
 	    records_2 = cur2_.fetchall()
             for record in records:
                 screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day = record
-		sno_given = fetchmany(cur2_, 'select meta_data from twitter_crawl where sk = "%s"' % screen_name)
-		if sno_given:
-			sno_given = json.loads(sno_given[0][0]).get('sno','')
+		sno_given1 = fetchmany(cur2_, 'select meta_data from twitter_crawl where sk = "%s"' % screen_name)
+		id_value, sno_given = ['']*2
+		if sno_given1:
+			sno_given = json.loads(sno_given1[0][0]).get('sno','')
+			id_value = json.loads(sno_given1[0][0]).get('id', '')
 		else:
 			sno_given = ''
-                values = [sno_given, screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day,'DataAvailable']
+                values = [id_value, sno_given, screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day,'DataAvailable']
                 for col_count, value in enumerate(values):
                     try : 
                         value = str(value)
@@ -66,7 +68,7 @@ class Tixlsfile(object):
                 self.row_count = self.row_count+1
 	    if records_2:
 		for rec2 in records_2:
-		    values = [json.loads(rec2[2]).get('sno',''), rec2[0], '', '', '', '', '', '', '', '', '', '', '', '', rec2[1],json.loads(rec2[2]).get('email_address', ''), '', '', '', '', '', '', '', '', 'DataUnAvailable']
+		    values = [json.loads(rec2[2]).get('id',''),json.loads(rec2[2]).get('sno',''), rec2[0], '', '', '', '', '', '', '', '', '', '', '', '', rec2[1],json.loads(rec2[2]).get('email_address', ''), '', '', '', '', '', '', '', '', 'DataUnAvailable']
 		    for col_count, value in enumerate(values):
 			self.todays_excel_sheet1.write(self.row_count, col_count, value)
 		    self.row_count = self.row_count+1

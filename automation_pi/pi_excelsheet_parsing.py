@@ -28,7 +28,7 @@ class Piparsing(object):
 	        if files_list:
 			final_send_mail = []
 			for _file in files_list:
-				ws_ = px.load_workbook(_file, use_iterators=True)
+				ws_ = px.load_workbook(_file, use_iterators=True, data_only = True)
 				sheet_list = ws_.get_sheet_names()
 				if not sheet_list:
 					continue
@@ -36,8 +36,8 @@ class Piparsing(object):
 					sheet_ = ws_.get_sheet_by_name(name=xl_)
 					row_check = 0
 					email_address, linkedin_profile, ida,\
-					firstname, lastname, key_,\
-					twitter_profile, facebook_profile = ['']*8
+					firstname, lastname, key_,snoa,\
+					twitter_profile, facebook_profile = ['']*9
 					for row in sheet_.iter_rows():
 						if row_check > 0:
 							row_check += 1

@@ -52,6 +52,7 @@ class Facebookgetcrawl(object):
                                 if not rows: break
                                 check_inprocess = 'yes'
                                 cmd = scrapy_run_cmd % (random.choice(constants_dict.keys()), recs_allow[0])
+				print cmd
                                 try: os.system(cmd)
 				except : check_inprocess = ''
                         if check_inprocess and recs_allow:
@@ -68,6 +69,7 @@ class Facebookgetcrawl(object):
 					self.alert_mail(variable_tgrp_rec, variable_agrp_rec, variable_ugrp_rec, email_from_list, '', '', '')
 					facebook_file_name = 'facebook_data_on_%s.xlsx' % str(datetime.datetime.now())
 					cmd1 = 'python xlsheet.py "%s" "%s"' % (recs_allow[0], facebook_file_name)
+					print cmd1
 					os.system(cmd1)
                                 	execute_query(self.cur, self.update_pi_crawl % recs_allow[2])
 					file_id = Googleupload().main('Facebook', email_from_list, facebook_file_name)
