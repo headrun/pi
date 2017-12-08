@@ -70,7 +70,6 @@ class Justdial(BaseSpider):
         buisness_info = normalize("".join(sel.xpath('//div[@class="col-sm-12 businfo seoshow "]//text()').extract()))
 	book_appointment = ''.join(response.xpath('//section[@id="alldtlbtn"]/a//text()').extract()).replace('\n','').replace('\t','')
 	number_of_ratings=''.join(response.xpath('//ul[@class="tabsCustom"]/li[contains(text(),"All Ratings")]/text()').extract()).replace('All Ratings','').replace('\n','').replace('\t','').replace('(','').replace(')','')
-	import pdb;pdb.set_trace()
         patt_match = re.findall('\d{4}',year)
         if patt_match : year = "".join(year)
 	aux_info=''
