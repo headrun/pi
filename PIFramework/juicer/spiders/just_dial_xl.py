@@ -25,9 +25,10 @@ class ExcelGenIOC():
         self.cur = self.conn.cursor()
 
     def excel_generation(self):
-                header = ['sk', 'name', 'city', 'ref_url_city', 'photos', 'image', 'address','Category', 'payment_mode','rating_val','rating_count','telephone','time', 'year', 'available_services', 'buisness_info', 'reviewed_by', 'reviewed_on','review','reference_url','Main_url']
+                header = ['doctor_id', 'name', 'city', 'ref_url_city', 'photos', 'image', 'address','Category', 'payment_mode','rating_val','votes','telephone','time', 'year', 'available_services', 'buisness_info', 'place','website_link','doctor_availability','fee','experience','number_of_views','reviewed_by', 'reviewed_on','review','review_rating','reference_url','Main_url']
 
-                query = 'select sk, name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, reference_url,main_url from justdail_meta where date(modified_at)="2017-08-29"'
+                query = 'select sk, name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, place,website_link,book_appointment,fee,exp,number_of_ratings,reference_url,main_url from justdail_meta where date(modified_at)="2017-12-07"'
+
                  
 		self.cur.execute(query)
 		rows = self.cur.fetchall()
@@ -41,24 +42,24 @@ class ExcelGenIOC():
                 
 		for _row in rows:
 		        sk = _row[0]
-                        sk, name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, reference_url, main_url = _row
-                        qry = 'select reviewed_by, reviewed_on,review from Reviews where program_sk ="%s"'%sk
+                        sk, name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, place,website_link,doctor_availability,fee,experience,number_of_ratings,reference_url, main_url = _row
+                        qry = 'select reviewed_by, reviewed_on,review,rating_value from Reviews where program_sk ="%s"'%sk
                         self.cur.execute(qry)
                         data = self.cur.fetchall()
                         if data :
                             for data_ in data :
-			        reviewed_by, reviewed_on,review = data_
+			        reviewed_by, reviewed_on,review,rating_value = data_
 
-			        values = [sk, name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, reviewed_by, str(reviewed_on),review,reference_url,main_url]
+			        values = [sk, name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, place,website_link,doctor_availability,fee,experience,number_of_ratings,reviewed_by, str(reviewed_on),review,rating_value,reference_url,main_url]
 
 		                for col_count, value in enumerate(values):
 	                            todays_excel_sheet1.write(row_count, col_count, value)
 	                        row_count = row_count+1 
                         else : 
                              
-                             reviewed_by, reviewed_on,review = '','',''
+                             reviewed_by, reviewed_on,review,rating_value = '','','',''
 
-                             values = [sk, name,city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, reviewed_by, reviewed_on, review, reference_url, main_url]
+                             values = [sk, name,city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, place,website_link,doctor_availability,fee,experience,number_of_ratings,reviewed_by, reviewed_on, review, rating_value,reference_url, main_url]
 
                              for col_count, value in enumerate(values):
                                     todays_excel_sheet1.write(row_count, col_count, value)
