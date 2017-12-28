@@ -5,8 +5,7 @@ reload(sys)
 sys.setdefaultencoding('utf-8')
 
 class Practohospitalsapi(JuicerSpider):
-    name = 'practo_hospitalinfoapi_crawl'
-    start_urls = ['https://www.practo.com/client-api/v1/profile/pallavaram-children-medical-centre-pcmc-hospital-pallavaram-1?slug=pallavaram-children-medical-centre-pcmc-hospital-pallavaram-1&profile_type=practices&with_relations=true&is_slug=true&platform=desktop_web&doctors_limit=10&is_hospital=true&is_profile=true&city=chennai&label=hospital&with_seo_data=true&all_amenities=true&mr=true']
+    name = 'practo_hospitalsapi_terminal'
 
     def __init__(self, *args, **kwargs):
         super(Practohospitalsapi, self).__init__(*args, **kwargs)
@@ -14,24 +13,31 @@ class Practohospitalsapi(JuicerSpider):
         self.pattern2 = re.compile('(.*) (.*)')
 
     def parse(self, response):
-        api_data=json.loads(response.body)
+        api_data = json.loads(response.body)
+        response_url = response.meta.get('data').get('main_link','')
+        doc_booking_type = response.meta.get('data').get('book_type','')
+        hosp_feedback_count = api_data.get('feedback','').get('reviews_count','')
         hospital_details = api_data.get('profile',{})
         hospital_id = str(hospital_details.get('id',''))
         hospital_name = hospital_details.get('name','')
         hospital_slug = hospital_details.get('new_slug','')
         hospital_link = "https://www.practo.com/chennai/hospital/"+str(hospital_slug)
         hospital_images = hospital_details.get('photos',[])
-        hospital_images = [i.get('url','') for i in hospital_images]
-        hosp_street_address = hospital_details.get('street_address','')
+        hospital_images ='<>'.join([i.get('url','') for i in hospital_images])
+        hospital_address = str(hospital_details.get('street_address',{})).encode('ascii', 'ignore').decode('ascii') + str(hospital_details.get('landmark',{})).encode('ascii', 'ignore').decode('ascii')
+        street_address = hospital_details.get('street_address','')
         hosp_landmark = hospital_details.get('landmark','')
         hosp_locality = hospital_details.get('locality',{}).get('name','')
-        hospital_latitude = hospital_details.get('latitude','')
-        hospital_longitude = hospital_details.get('longitude','')
+       
+        latitude = hospital_details.get('latitude','')
+        longitude = hospital_details.get('longitude','')
         no_of_doctors_in_hospital = hospital_details.get('doctors_count','')
+        no_of_ambulances = str(hospital_details.get('ambulance_count',''))
         hosp_rating = hospital_details.get('clinic_score',{})
         hosp_avg_rating = hosp_rating.get('avg_clinic_rating','')
         hosp_instant_rating = hosp_rating.get('instant_score','')
-        number_of_rating_responses = hosp_rating.get('number_of_rating_responses','')
+        star_rating = hosp_rating.get('clinic_score','')
+        rating_responses = hosp_rating.get('number_of_rating_responses','')
         number_of_wait_time_responses_rating = hosp_rating.get('number_of_wait_time_responses','')
         hospital_beds = hospital_details.get('bed_count','')
         hospital_book_type = str(hospital_details.get('status',''))
@@ -51,10 +57,10 @@ class Practohospitalsapi(JuicerSpider):
         hospital_timings = hospital_details.get('has_24x7_timings','')
         if hospital_timings == True :
             opening_timings = 'Open 24 x 7'
-        else:
-            hsp_times = []
-            hosp_times = hospital_details.get('timings', [])
-            for vit in hosp_times:
+        else : opening_timings = ''
+        hsp_times = []
+        hosp_times = hospital_details.get('timings', [])
+        for vit in hosp_times:
                 vit_days1 = vit.get('days', [])
                 vit_timisng1 = vit.get('timings', [])
                 vit_day_list1, vit_timisng_list1 = [], []
@@ -75,10 +81,12 @@ class Practohospitalsapi(JuicerSpider):
                 for toalid in vit_timisng_list1:
                     for toada in vit_day_list1:
                         hsp_times.append("%s%s%s" % (toada, ':-', toalid))
-            opening_timings='<>'.join(hsp_times)
+        sch_timings='<>'.join(hsp_times)
+        if not opening_timings : opening_times = sch_timings
+        esta = str(hospital_details.get('group_establishment_year',''))
         hosp_services = hospital_details.get('facilities',{})
         hospital_services = '<>'.join([h_s.get('facility',{}).get('name','') for h_s in hosp_services])
-        hospital_emergency_number = hospital_details.get('emergency_phone_number','')
+        emergency_contact_number = hospital_details.get('emergency_phone_number','')
         hosp_amenities = hospital_details.get('amenities',{})
         hospital_amenities = []
         for i,j in hosp_amenities.iteritems():
@@ -86,13 +94,60 @@ class Practohospitalsapi(JuicerSpider):
             if hosp_amenitie==True:
                 hospital_amenitie = j.get('name','')
                 hospital_amenities.append(hospital_amenitie)
- 
-        centers_data = hospital_details.get('group_data',{}).get('id','')
-        if centers_data:
-            centers_url = 'https://www.practo.com/client-api/v1/practicegroups/'+str(centers_data)+'?offset=0&city=chennai&type=clinic&group_id='+str(centers_data)
-            yield Request(centers_url, callback=self.center_data)
+        amenities = "<>".join(hospital_amenities)
+        aux_infos = {}
         hosp_speciality = hospital_details.get('seo_data',{})
         hospital_speciality = hosp_speciality.get('clinicKeyword','')
+        hospital_item = HospitalInfo()
+        hospital_item['hospital_id']                 = str(hospital_id)
+        hospital_item['hospital_name']               = normalize(hospital_name)
+        hospital_item['hospital_link']               = normalize(hospital_link)
+        hospital_item['hospital_images']             = str(hospital_images)
+        hospital_item['hospital_location']           = normalize(hosp_locality)
+        hospital_item['hospital_speciality']         = normalize(hospital_speciality)
+        hospital_item['no_of_doctors_in_hospital']   = str(no_of_doctors_in_hospital)
+        hospital_item['hospital_star_rating']        = str(star_rating)
+        hospital_item['hospital_feedback_count']     = str(hosp_feedback_count)
+        hospital_item['hospital_practo_gurantee']    = ''
+        hospital_item['hospital_booking_type']       = normalize(doc_booking_type)
+        hospital_item['hospital_open_timings']       = str(opening_timings)
+        hospital_item['hospital_schedule_timeslot']  = normalize(opening_times)
+        hospital_item['hospital_accredited']         = normalize(hospital_accreditations)
+        hospital_item['reference_url']               = normalize(response_url)
+        if aux_infos:
+            hospital_item['aux_info']                    = normalize(json.dumps(aux_infos))
+
+        hospital_meta = HospitalMeta()
+        hospital_meta['hospital_id']  = normalize(hospital_id)
+        hospital_meta['hospital_name']  = normalize(hospital_name)
+        hospital_meta['hospital_profile_link']  = normalize(hospital_link)
+        hospital_meta['rating_count']  = str(rating_responses)
+        hospital_meta['rating_value']  = str(star_rating)
+        hospital_meta['location']  = normalize(hosp_locality)
+        hospital_meta['medical_specialities']  = normalize(hospital_speciality)
+        hospital_meta['number_of_doctors']  = str(no_of_doctors_in_hospital)
+        hospital_meta['description']  = normalize(hospital_summary)
+        hospital_meta['no_of_beds']  = str(hospital_beds)
+        hospital_meta['no_of_ambulances']  = str(no_of_ambulances)
+        hospital_meta['method_of_payment']  = normalize(hospital_pay_mode)
+        hospital_meta['address']  = normalize(hospital_address)
+        hospital_meta['street_address']  = normalize(street_address)
+        hospital_meta['locality']  = normalize(hosp_locality)
+        hospital_meta['region']  = normalize(hosp_landmark)
+        hospital_meta['postal_code']  = ''
+        hospital_meta['opening_timings']  = opening_timings
+        hospital_meta['clinic_images']  = normalize(hospital_images)
+        hospital_meta['amenities']  = normalize(amenities)
+        hospital_meta['emergency_contact_number']  = normalize(emergency_contact_number)
+        hospital_meta['services']  = normalize(hospital_services)
+        hospital_meta['longitude']  = str(latitude)
+        hospital_meta['latitude']  = str(longitude)
+        hospital_meta['establishment_data']  = normalize(esta)
+        hospital_meta['feedback_count']  = normalize(hosp_feedback_count)
+        hospital_meta['awards']  = normalize(hospital_awards)
+        hospital_meta['other_centers']  = ''
+        hospital_meta['reference_url']  = normalize(response_url) 
+        centers_data = hospital_details.get('group_data',{}).get('id','')
         hsp_doc_nodes = hospital_details.get('relations', [])
         for hsp_doc_node in hsp_doc_nodes:
             doc_id = str(hsp_doc_node.get('doctor','').get('id', ''))
@@ -225,20 +280,98 @@ class Practohospitalsapi(JuicerSpider):
                                         "doctor_sunday_timing":normalize('<>'.join(final_dict.get('SUN',[]))),
                                         "doctor_on_call":normalize(doc_on_call),"reference_url":normalize(doctor_ref_url)})
                 yield doctor_hospital
-        hosp_feedback_details = api_data.get('feedback',{})
-        hospital_feedback_count = hosp_feedback_details.get('reviews_count','')
-        hospital_feedback_review_details = hosp_feedback_details.get('reviews',[])
-        for hospital_feedback_review_detail in hospital_feedback_review_details:
-            feedback_sk = hospital_feedback_review_detail.get('review',{}).get('id','')
-            feedback_text = hospital_feedback_review_detail.get('review',{}).get('survey_response',{}).get('review_text','')
-            feedback_reviewd_on = hospital_feedback_review_detail.get('review',{}).get('survey_response',{}).get('reviewed_on','')
-            feedback_for = hospital_feedback_review_detail.get('review',{}).get('review_for','')
-            feedback_name = hospital_feedback_review_detail.get('patient',{}).get('name','')
-            feeddback_practice_name = hospital_feedback_review_detail.get('review',{}).get('practice_name','')
+
+            hosp_feedback_details = api_data.get('feedback',{})
+            hospital_feedback_count = hosp_feedback_details.get('reviews_count','')
+            hospital_page_count = hosp_feedback_details.get('page_count','')
+            for p_c in range(1,hospital_page_count):
+                hospital_rev_link = 'https://www.practo.com/client-api/v1/feedback/clinicreviews?slug=%s&profile_type=hospital&page=%s&mr=true&show_feedback_summary_tags=true'%(hospital_slug,h_c)
+                yield Request(hospital_rev_link, callback=self.feedback,meta={'feedback_count':hospital_feedback_count,'dct_id':doc_id,'dct_url':doc_link})
+            if centers_data:
+                centers_url = 'https://www.practo.com/client-api/v1/practicegroups/'+str(centers_data)+'?offset=0&city=chennai&type=clinic&group_id='+str(centers_data)
+                yield Request(centers_url, callback=self.center_data, meta = {"hospital_meta": hospital_meta})
+            else :
+                yield hospital_meta
+                #self.got_page(sk_d, 1)
+                
+
+
+ 
+
+    def feedback(self,response):
+            tmp = json.loads(response.body)
+            feedback_count = response.meta.get('feedback_count','')
+            dct_id = response.meta.get('dct_id','')
+            dct_url = response.meta.get('dct_url','')
+            total_pages = tmp.get('page_count','')
+            current_page = tmp.get('page','')
+            reviews_count = tmp.get('reviews_count','')
+            total_count = tmp.get('total_count','')
+            if not total_count:
+                total_count = feedback_count
+            review_nodes = tmp.get('reviews',{})
+            if review_nodes:
+                for nod in review_nodes:
+                    review_inner = nod.get('review',{})
+                    rev_sur = review_inner.get('survey_response',{})
+                    status = review_inner.get('status','')
+                    revi_id = str(review_inner.get('id',''))
+                    review_text = rev_sur.get('review_text','')
+                    revia_id = str(rev_sur.get('id',''))
+                    reviewd_on = rev_sur.get('reviewed_on','')
+                    rev_channe = rev_sur.get('channel','')
+                    review_source = rev_sur.get('source','')
+                    review_anony = rev_sur.get('anonymous','')
+                    review_unread = str(review_inner.get('unread',''))
+                    review_for = review_inner.get('review_for','')
+                    review_doc_id = str(review_inner.get('doctor_id',''))
+                    review_practice_id = str(review_inner.get('practice_id',''))
+                    review_practice_name = review_inner.get('practice_name','')
+                    review_like = review_inner.get('recommendation','').lower()
+                    review_view_count = review_inner.get('view_count','')
+                    review_publ_dur = review_inner.get('publish_time_duration','')
+                    revewi_status_mod = review_inner.get('status_modified_at','')
+                    review_cronfre = review_inner.get('cron_frequency','')
+                    review_reply_text = review_inner.get('review_reply',{}).get('reply_text','')
+                    patient_innter = nod.get('patient',{})
+                    review_name = patient_innter.get('name','')
+                    contexts_inner = nod.get('contexts',{})
+                    review_filter_type, review_filter_text = ['']*2
+                    if contexts_inner:
+                        review_filter_type = contexts_inner[0].get('type','')
+                        review_filter_text = contexts_inner[0].get('text','')
+                    helpful_inner = nod.get('found_helpful_data',{})
+                    helpful_overallcount = helpful_inner.get('review_total_count','')
+                    helpful_count = helpful_inner.get('review_yes_count','')
+                    practice_inner = nod.get('practice',{})
+                    practice_name = practice_inner.get('name','')
+                    practice_id = str(practice_inner.get('id',''))
+                    practice_locality = practice_inner.get('locality','')
+                    practice_city = practice_inner.get('city','')
+                    review_item = HospitalFeedback()
+                    review_item['sk'] = md5("%s%s%s%s%s%s"%(revi_id, revia_id, reviewd_on, review_doc_id, review_name, dct_id))
+                    review_item['feedback_count'] = normalize(str(feedback_count))
+                    review_item['hospital_id'] = normalize(dct_id)
+                    review_item['feedback_text'] = normalize(review_text)
+                    review_item['feedback_publish_date'] = normalize(reviewd_on)
+                    review_item['feedback_for'] = normalize(review_for)
+                    review_item['feedback_practice_name'] = normalize(review_practice_name)
+                    review_item['feedback_practice_locality'] = normalize(practice_locality)
+                    review_item['feedback_practice_city'] = normalize(practice_city)
+                    review_item['feedback_like'] = normalize(review_like)
+                    review_item['feedback_name'] = normalize(review_name)
+                    review_item['feedback_filters'] = normalize(review_filter_text)
+                    review_item['feedback_helpful_count'] = normalize(helpful_count)
+                    review_item['feedback_helpful_overallcount'] = normalize(helpful_overallcount)
+                    review_item['feedback_reply'] = normalize(review_reply_text)
+                    review_item['reference_url']= normalize(dct_url)
+                    yield review_item
 
     def center_data(self, response):
         jscsv_data = {}
         json21 =json.loads(response.body)
         other_cen = json21.get('clinics',[])
         y='<>'.join([i.get('name','') for i in other_cen])
+        hospital_meta.update({'other_centers':normalize(y)})
+        yield hospital_meta
 
