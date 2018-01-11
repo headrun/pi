@@ -12,7 +12,7 @@ class MahareraTerminal(JuicerSpider):
     def __init__(self, *args, **kwargs):
         super(MahareraTerminal, self).__init__(*args, **kwargs)
         self.domain = 'https://maharerait.mahaonline.gov.in'
-        self.con = MySQLdb.connect(host='localhost', user= 'root',passwd='',db="MAHARERA",charset="utf8",use_unicode=True)
+        self.con = MySQLdb.connect(host='localhost', user= 'root',passwd='hdrn59!',db="MAHARERA",charset="utf8",use_unicode=True)
         self.cur = self.con.cursor()
 
     def parse(self, response):
