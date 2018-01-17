@@ -1,7 +1,8 @@
-from generic_functions import *
 from fb_constants import *
 from fb_browse_queries import *
-
+import sys
+sys.path.append('/root/automation_pi/table_schemas')
+from generic_functions import *
 class Facebookbrowse(BaseSpider):
     name = "facebook_crawler"
     start_urls = ['https://www.facebook.com/login']
@@ -9,12 +10,14 @@ class Facebookbrowse(BaseSpider):
 
     def __init__(self, *args, **kwargs):
         super(Facebookbrowse, self).__init__(*args, **kwargs)
-        self.login = kwargs.get('login','anucherry1903')
+        self.login = kwargs.get('login','yagnasree@headrun.com')
+	self.modified_at_crawl  = kwargs.get('mpi', '')
 	self.domain = "https://mbasic.facebook.com"
 	self.con, self.cur = get_mysql_connection(DB_HOST, REQ_DB_NAME, '')
         self.about = '/about'
         self.likes = '?v=likes'
         self.following = '?v=following'
+	self.friends = '?v=friends'
 	self.cur.execute(get_qry_params)
 	self.profiles_list = [i for i in self.cur.fetchall()]
 	self.res_afterlogin = ''
@@ -36,13 +39,30 @@ class Facebookbrowse(BaseSpider):
 
     def parse(self, response):
         sel = Selector(response)
+	"""self.profiles_list = ['AravindRajanm']
         if self.profiles_list  :
-		login  = constants_dict[self.login] 
+		login  = ['yagnasree@headrun.com', 'yagna^123']#constants_dict[self.login] 
 		lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
 		lgnrnd = ''.join(sel.xpath('//input[@name="lgnrnd"]/@value').extract())
+		lgndim = ''.join(sel.xpath('//input[@name="lgndim"]/@value').extract())
+		lgnjs = ''.join(sel.xpath('//input[@name="lgnjs"]/@value').extract())
+		
+		data = {'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd, 'lgndim' : lgndim, 'lgnjs' : lgnjs, 'display' : ''}
+		data.update({'enable_profile_selector' : '', 'isprivate' : '', 'legacy_return' : '0', 'profile_selector_ids' : ''})
+		data.update({'return_session' : '', 'skip_api_login' : '', 'signed_next' :'', 'trynum' : '1', 'timezone' : '-330'})
+		data.update({'prefill_contact_point': login[0], 'prefill_source' : 'browser_dropdown', 'prefill_type' :'password', 'first_prefill_source' : ''})
+		data.update({'first_prefill_type' : 'contact_point', 'had_cp_prefilled' : 'true', 'had_password_prefilled' : 'true'})
 	      
 		return [FormRequest.from_response(response, formname = 'login_form',\
-				formdata={'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_redirect)]
+				formdata=data,callback=self.parse_redirect)]"""
+        if self.profiles_list  :
+                login  = constants_dict[self.login]
+                lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
+                lgnrnd = ''.join(sel.xpath('//input[@name="lgnrnd"]/@value').extract())
+
+                return [FormRequest.from_response(response, formname = 'login_form',\
+                                formdata={'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_redirect)]
+
 
     def parse_close(self, response):
 	sel = Selector(response)
@@ -55,7 +75,7 @@ class Facebookbrowse(BaseSpider):
             noti_xpath = 'Your account has been disabled'
             user = constants_dict[self.login][0]
             pwd = constants_dict[self.login][1]
-            self.send_mail(noti_xpath,user,pwd)
+            #self.send_mail(noti_xpath,user,pwd)
         yield Request('https://mbasic.facebook.com/support/?notif_t=feature_limits',callback=self.parse_next)
 
     def parse_next(self, response):
@@ -66,7 +86,7 @@ class Facebookbrowse(BaseSpider):
                     user = constants_dict[self.login][0]
                     pwd = constants_dict[self.login][1]
                     self.profiles_list = []
-                    self.send_mail(noti_xpath,user,pwd)
+                    #self.send_mail(noti_xpath,user,pwd)
 
         for profilei in self.profiles_list:
             sk = profilei[0]
@@ -77,22 +97,42 @@ class Facebookbrowse(BaseSpider):
 		continue
 	    vals = (sk, profilei[1], sk, profilei[1])
 	    self.cur.execute(qry_params, vals)
-	    self.cur.execute(update_get_params%(9,sk))
+	    #self.cur.execute(update_get_params%(9,sk))
+	    self.update_status(sk, 9, 'facebook_crawl', update_get_params)
             url_about = "%s%s"%(profile,self.about)
             url_following = "%s%s"%(profile,self.following)
             url1_aboutlikes = "%s%s"%(profile,self.likes)
+	    url_aboutfriends = "%s%s"%(profile,self.friends)
             list_of_pa = [(url_about,'about'),(profile,'about')]
-	    list_of_paothers = [(url_following,''), (url1_aboutlikes,'')]
+	    list_of_paothers = [(url_following,''), (url1_aboutlikes,''),(url_aboutfriends, ''),(url_about, '')]
             for urls in list_of_pa:
                 yield Request(urls[0], callback=self.parse_profile, meta={'sk':sk,"al":'',"see_more":'','profile':profile,"check_list":'','not_found':urls[1], 'email_address':email_address},dont_filter=True)
 
 	    for urls_ in list_of_paothers:
 		yield Request(urls_[0], callback=self.parse_likesdata, meta={'sk':sk,"al":'',"see_more":'','profile':profile,"checklist":'','not_found':urls[1], 'email_address':email_address},dont_filter=True)
 
+    def update_status(self, sk, crawl_status, table_name, update_qrys):
+        delete_query = 'DELETE FROM %s WHERE crawl_status=%s AND sk ="%s" and modified_at < "%s"' % (table_name, crawl_status, sk, self.modified_at_crawl)
+        execute_query(self.cur, delete_query)
+        bkup_query = 'select sk from %s where sk = "%s" group by sk  having count(sk)>1' % (table_name, sk)
+        try: self.cur.execute(update_qrys % (crawl_status, sk))
+        except: 
+                try:
+                        recs_ = fetchall(self.cur, bkup_query)
+                        if recs_:
+                                query2 = 'select max(modified_at) from %s where sk ="%s"'%(table_name, sk)
+                                recs_1 = fetchall(self.cur, query2)
+                                del_qu = "delete from %s where sk ='%s' and modified_at not like '%s'" % (table_name, sk, str(recs_1[0][0]))
+                                execute_query(self.cur, del_qu)
+                                self.cur.execute(update_qrys % (crawl_status, sk))
+                except: 
+                        pass
+
     def parse_profile(self, response):
         sel = Selector(response)
         sk = response.meta['sk']
-	if response.status != 200: self.cur.execute(update_get_params%(2,sk))
+	#if response.status != 200: self.cur.execute(update_get_params%(2,sk))
+	if response.status != 200: self.update_status(sk, 2, 'facebook_crawl', update_get_params)
         not_found = ''.join(sel.xpath('//title/text()').extract())
         if not response.meta['see_more'] and 'about' in response.meta['not_found']:
             if not  'page not found' in not_found.lower():
@@ -138,7 +178,9 @@ class Facebookbrowse(BaseSpider):
                 messenger = ''.join(sel.xpath('//div[contains(@title,"Messenger")]//td[@class]//text()').extract())
                 home_phone = ''.join(sel.xpath('//div[@title="Home"]//td[@class]//text()').extract())
                 no_of_friends = ''.join(sel.xpath('//a[contains(text(),"See all friends")]//text()').extract())
+                if not  no_of_friends : no_of_friends =  ''.join(sel.xpath('//a[contains(text(),"See All Friends")]//text()').extract())
                 if no_of_friends : no_of_friends = "".join(re.findall('(\d+)',no_of_friends))
+                
                 if name:
 		    #self.res_afterlogin = sel
                     name_vals = ('name', self.replacefun(name), sk)
@@ -146,7 +188,8 @@ class Facebookbrowse(BaseSpider):
                     if owner_id:
                         id_vals = ('profile_id', owner_id, sk)
                         self.cur.execute(updateqry_params% id_vals)
-			self.cur.execute(update_get_params%(1,sk))	
+			#self.cur.execute(update_get_params%(1,sk))	
+			self.update_status(sk, 1, 'facebook_crawl', update_get_params)
                     self.cur.execute(selectaux_params%sk)
                     aux_cu1 = self.cur.fetchall()
                     up_aux3 = json.loads(aux_cu1[0][0])
@@ -180,7 +223,9 @@ class Facebookbrowse(BaseSpider):
                     if home_phone: up_aux3.update({"home_phone":self.replacefun(home_phone)})
                     if other_names: up_aux3.update({"other_names":self.replacefun(other_names)})
                     self.cur.execute(updateqry_params%('aux_info', json.dumps(up_aux3,ensure_ascii=False, encoding="utf-8"),sk))
-		else: self.cur.execute(update_get_params%(2,sk))
+		else: 
+			#self.cur.execute(update_get_params%(2,sk))
+			self.update_status(sk, 2, 'facebook_crawl', update_get_params)
 
     def parse_likesdata(self, response):
 	sel = Selector(response)
@@ -188,7 +233,9 @@ class Facebookbrowse(BaseSpider):
         profile = response.meta['profile']
 	dic_to_limit = response.meta.get('dic_to_limit',{})
 
-	if response.status == 302: self.cur.execute(update_get_params%(2,sk))
+	if response.status == 302: 
+		#self.cur.execute(update_get_params%(2,sk))
+		self.update_status(sk, 2, 'facebook_crawl', update_get_params)
         others_list,clothing_list,activities_list, interests_list, music_list, books_list, movies_list, tvshow_list, favteams_list, favathe_list, friends_list, games_list, restaurants_list, websites_list, work_list, education_list, family_list,sports_list, inspirationalpeople_list, following_list = [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
         ab_list = []
         seetv_likes_list, seetv_watched_list, seemv_likes_list, seemv_watched_list, seebk_likes_list,television_list, reads_list = [],[],[],[],[],[],[]
@@ -202,6 +249,8 @@ class Facebookbrowse(BaseSpider):
                 ab_list = ["Other","Clothing","Activities",'Interests',"Music","Books","Movies","TV Shows","Favorite Teams","Favorite Athletes","Games","Restaurants","Websites","Favorite Sports","Films","TV Programmes","Inspirational People","Favourite teams","Favourite athletes", 'Inspirational people']
             elif 'followers' in response.url or 'following' in response.url:
                 ab_list = ["following"]
+	    elif 'friends' in response.url:
+		ab_list = ['Friends']
             else:
                 ab_list = ["work", 'education','family']
         else:
@@ -256,6 +305,15 @@ class Facebookbrowse(BaseSpider):
 		dic_to_limit.update({al:1})
 	    if al and dic_to_limit[al]<= 20:
 		nodes, nodes_xpath = [],''
+		if 'friends' in response.url:
+		    frd_ls = '<>'.join(response.xpath('//div[@id="root"]//table//td[not(img)]/a/text()').extract()).replace('Add Friend<>Message<>More<>','')
+		    if frd_ls=='Add Friend<>Message<>Follow<>More':frd_ls=''
+		    else:frd_ls =frd_ls
+		    if frd_ls:
+		    	dic_keys[al].append(frd_ls)
+		    see_more = 'https://mbasic.facebook.com'+''.join(sel.xpath('//div[@id="m_more_friends"]/a/@href').extract())
+		    if see_more:
+			yield Request(see_more,callback=self.parse_likesdata,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"checklist":check_list,'not_found':'', 'dic_to_limit':dic_to_limit},dont_filter=True)
 		if 'following' in response.url or 'following' in al:
 		    nodes = sel.xpath('//div[@id="root"]/div[not(@class)]/div')
 		    if not nodes: nodes = sel.xpath('//div[@id="root"]/div/div/div/div[@class]')
@@ -283,6 +341,9 @@ class Facebookbrowse(BaseSpider):
 				for alp in allphabets_string:
 					inner_node = node.xpath('.//div[@class="b%s"]/parent::div'%alp)
 					if inner_node: break
+					if not inner_node:
+						inner_node = node.xpath('.//div[@class="c%s"]/parent::div'%alp)
+						if inner_node: break
 
 			childs = inner_node.xpath('./div/child::*[local-name()!="br"]')
 		    above, below = ['']*2
@@ -317,6 +378,10 @@ class Facebookbrowse(BaseSpider):
 				    if 'Book' in check_list or 'read' in check:
 					dic_keys_books[al].append(tolist)
 			except: pass 
+		    if below and above =='':
+			tolist = ''
+			tolist = below
+			dic_keys[al].append(tolist)
 		    if 'Friends' not in al:
 			see_more = ''
 			if nodes_xpath == '//div[div[contains(text(),"%s")]]/table':
@@ -347,7 +412,7 @@ class Facebookbrowse(BaseSpider):
 				    yield Request(url_again, callback= self.parse_likesdata,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':'','dic_to_limit':dic_to_limit})
 			    else:
 				if 'mbasic' not in see_more:
-				    url_again = "%s%s"%("https://mbasic.facebook.com",see_more)
+				    url_again = "%s%s"%("https://mbasic.facebook.com","".join(see_more))
 				    yield Request(url_again, callback= self.parse_likesdata,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':'', 'dic_to_limit':dic_to_limit})
 			if not see_more:
 			    try: see_more = ''.join(sel.xpath('//a[span[contains(text(),"See more")]]/@href').extract()[0])
@@ -356,7 +421,7 @@ class Facebookbrowse(BaseSpider):
 			    if see_more: yield Request(url_again, callback= self.parse_likesdata,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':'', 'dic_to_limit':dic_to_limit})
 	
 
-	all_lists = [(others_list,'fb_others','others'),(clothing_list,'fb_clothing','clothing'), (activities_list,'fb_activities','activities'), (interests_list,'fb_interests', 'interests'), (music_list,'fb_music','music'), (books_list,'fb_books','book'), (movies_list,'fb_movies','movies'), (tvshow_list, 'fb_tvshows','tvshows'), (favteams_list,'fb_favaourite_athelets','atheletes'), (favathe_list,'fb_favourite_teams','teams'), (games_list,'fb_games','games'), (restaurants_list,'fb_restaurants','restaurants'), (websites_list,'fb_websites','websites'), (work_list,'fb_works','work'), (education_list,'fb_education','education'), (family_list,'fb_family','family'),(sports_list, 'fb_favourite_sports','sports'),(friends_list,'fb_friends','friends'),(inspirationalpeople_list,'fb_inspirational_people','inspirational_people'),(seetv_likes_list,'fb_tvshow_likes','tvshow_likes'), (seetv_watched_list,'fb_tvshows_watched','tvshow_watched'), (seemv_likes_list,'fb_movies_likes','movie_likes'), (seemv_watched_list,'fb_movies_watched','movie_watched'),(seebk_likes_list,'fb_book_likes','books_likes'), (reads_list,'fb_read_books','read_books'),(following_list,'fb_following','read_followers')]
+	all_lists = [(others_list,'fb_others','others'),(clothing_list,'fb_clothing','clothing'), (activities_list,'fb_activities','activities'), (interests_list,'fb_interests', 'interests'), (music_list,'fb_music','music'), (books_list,'fb_books','book'), (movies_list,'fb_movies','movies'), (tvshow_list, 'fb_tvshows','tvshows'), (favteams_list,'fb_favourite_teams','teams'), (favathe_list,'fb_favaourite_athelets','atheletes'), (games_list,'fb_games','games'), (restaurants_list,'fb_restaurants','restaurants'), (websites_list,'fb_websites','websites'), (work_list,'fb_works','work'), (education_list,'fb_education','education'), (family_list,'fb_family','family'),(sports_list, 'fb_favourite_sports','sports'),(friends_list,'fb_friends','friends'),(inspirationalpeople_list,'fb_inspirational_people','inspirational_people'),(seetv_likes_list,'fb_tvshow_likes','tvshow_likes'), (seetv_watched_list,'fb_tvshows_watched','tvshow_watched'), (seemv_likes_list,'fb_movies_likes','movie_likes'), (seemv_watched_list,'fb_movies_watched','movie_watched'),(seebk_likes_list,'fb_book_likes','books_likes'), (reads_list,'fb_read_books','read_books'),(following_list,'fb_following','read_followers')]
 	for alk in all_lists:
 	    if alk[0]:
 		keyf = "%s%s"%('aux_info_',alk[2])
