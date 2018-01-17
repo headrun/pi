@@ -10,13 +10,14 @@ class Facebookbrowse(BaseSpider):
 
     def __init__(self, *args, **kwargs):
         super(Facebookbrowse, self).__init__(*args, **kwargs)
-        self.login = kwargs.get('login','anucherry1903')
+        self.login = kwargs.get('login','yagnasree@headrun.com')
 	self.modified_at_crawl  = kwargs.get('mpi', '')
 	self.domain = "https://mbasic.facebook.com"
 	self.con, self.cur = get_mysql_connection(DB_HOST, REQ_DB_NAME, '')
         self.about = '/about'
         self.likes = '?v=likes'
         self.following = '?v=following'
+	self.friends = '?v=friends'
 	self.cur.execute(get_qry_params)
 	self.profiles_list = [i for i in self.cur.fetchall()]
 	self.res_afterlogin = ''
@@ -38,13 +39,30 @@ class Facebookbrowse(BaseSpider):
 
     def parse(self, response):
         sel = Selector(response)
+	"""self.profiles_list = ['AravindRajanm']
         if self.profiles_list  :
-		login  = constants_dict[self.login] 
+		login  = ['yagnasree@headrun.com', 'yagna^123']#constants_dict[self.login] 
 		lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
 		lgnrnd = ''.join(sel.xpath('//input[@name="lgnrnd"]/@value').extract())
+		lgndim = ''.join(sel.xpath('//input[@name="lgndim"]/@value').extract())
+		lgnjs = ''.join(sel.xpath('//input[@name="lgnjs"]/@value').extract())
+		
+		data = {'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd, 'lgndim' : lgndim, 'lgnjs' : lgnjs, 'display' : ''}
+		data.update({'enable_profile_selector' : '', 'isprivate' : '', 'legacy_return' : '0', 'profile_selector_ids' : ''})
+		data.update({'return_session' : '', 'skip_api_login' : '', 'signed_next' :'', 'trynum' : '1', 'timezone' : '-330'})
+		data.update({'prefill_contact_point': login[0], 'prefill_source' : 'browser_dropdown', 'prefill_type' :'password', 'first_prefill_source' : ''})
+		data.update({'first_prefill_type' : 'contact_point', 'had_cp_prefilled' : 'true', 'had_password_prefilled' : 'true'})
 	      
 		return [FormRequest.from_response(response, formname = 'login_form',\
-				formdata={'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_redirect)]
+				formdata=data,callback=self.parse_redirect)]"""
+        if self.profiles_list  :
+                login  = constants_dict[self.login]
+                lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
+                lgnrnd = ''.join(sel.xpath('//input[@name="lgnrnd"]/@value').extract())
+
+                return [FormRequest.from_response(response, formname = 'login_form',\
+                                formdata={'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd},callback=self.parse_redirect)]
+
 
     def parse_close(self, response):
 	sel = Selector(response)
@@ -84,8 +102,9 @@ class Facebookbrowse(BaseSpider):
             url_about = "%s%s"%(profile,self.about)
             url_following = "%s%s"%(profile,self.following)
             url1_aboutlikes = "%s%s"%(profile,self.likes)
+	    url_aboutfriends = "%s%s"%(profile,self.friends)
             list_of_pa = [(url_about,'about'),(profile,'about')]
-	    list_of_paothers = [(url_following,''), (url1_aboutlikes,'')]
+	    list_of_paothers = [(url_following,''), (url1_aboutlikes,''),(url_aboutfriends, ''),(url_about, '')]
             for urls in list_of_pa:
                 yield Request(urls[0], callback=self.parse_profile, meta={'sk':sk,"al":'',"see_more":'','profile':profile,"check_list":'','not_found':urls[1], 'email_address':email_address},dont_filter=True)
 
@@ -230,6 +249,8 @@ class Facebookbrowse(BaseSpider):
                 ab_list = ["Other","Clothing","Activities",'Interests',"Music","Books","Movies","TV Shows","Favorite Teams","Favorite Athletes","Games","Restaurants","Websites","Favorite Sports","Films","TV Programmes","Inspirational People","Favourite teams","Favourite athletes", 'Inspirational people']
             elif 'followers' in response.url or 'following' in response.url:
                 ab_list = ["following"]
+	    elif 'friends' in response.url:
+		ab_list = ['Friends']
             else:
                 ab_list = ["work", 'education','family']
         else:
@@ -284,6 +305,14 @@ class Facebookbrowse(BaseSpider):
 		dic_to_limit.update({al:1})
 	    if al and dic_to_limit[al]<= 20:
 		nodes, nodes_xpath = [],''
+		if 'friends' in response.url:
+		    frd_ls = '<>'.join(response.xpath('//div[@id="root"]//table//td[not(img)]/a/text()').extract()).replace('Add Friend<>Message<>More<>','')
+		    if frd_ls=='Add Friend<>Message<>Follow<>More':frd_ls=''
+		    else:frd_ls =frd_ls
+		    dic_keys[al].append(frd_ls)
+		    see_more = 'https://mbasic.facebook.com'+''.join(sel.xpath('//div[@id="m_more_friends"]/a/@href').extract())
+		    #if see_more:
+			#yield Request(see_more,callback=self.parse_likesdata,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"checklist":check_list,'not_found':'', 'dic_to_limit':dic_to_limit},dont_filter=True)
 		if 'following' in response.url or 'following' in al:
 		    nodes = sel.xpath('//div[@id="root"]/div[not(@class)]/div')
 		    if not nodes: nodes = sel.xpath('//div[@id="root"]/div/div/div/div[@class]')
@@ -311,6 +340,9 @@ class Facebookbrowse(BaseSpider):
 				for alp in allphabets_string:
 					inner_node = node.xpath('.//div[@class="b%s"]/parent::div'%alp)
 					if inner_node: break
+					if not inner_node:
+						inner_node = node.xpath('.//div[@class="c%s"]/parent::div'%alp)
+						if inner_node: break
 
 			childs = inner_node.xpath('./div/child::*[local-name()!="br"]')
 		    above, below = ['']*2
@@ -345,6 +377,10 @@ class Facebookbrowse(BaseSpider):
 				    if 'Book' in check_list or 'read' in check:
 					dic_keys_books[al].append(tolist)
 			except: pass 
+		    if below and above =='':
+			tolist = ''
+			tolist = below
+			dic_keys[al].append(tolist)
 		    if 'Friends' not in al:
 			see_more = ''
 			if nodes_xpath == '//div[div[contains(text(),"%s")]]/table':
@@ -384,7 +420,7 @@ class Facebookbrowse(BaseSpider):
 			    if see_more: yield Request(url_again, callback= self.parse_likesdata,meta={'sk':sk,"al":al,"see_more":'yes','profile':profile,"check_list":check_list,'not_found':'', 'dic_to_limit':dic_to_limit})
 	
 
-	all_lists = [(others_list,'fb_others','others'),(clothing_list,'fb_clothing','clothing'), (activities_list,'fb_activities','activities'), (interests_list,'fb_interests', 'interests'), (music_list,'fb_music','music'), (books_list,'fb_books','book'), (movies_list,'fb_movies','movies'), (tvshow_list, 'fb_tvshows','tvshows'), (favteams_list,'fb_favaourite_athelets','atheletes'), (favathe_list,'fb_favourite_teams','teams'), (games_list,'fb_games','games'), (restaurants_list,'fb_restaurants','restaurants'), (websites_list,'fb_websites','websites'), (work_list,'fb_works','work'), (education_list,'fb_education','education'), (family_list,'fb_family','family'),(sports_list, 'fb_favourite_sports','sports'),(friends_list,'fb_friends','friends'),(inspirationalpeople_list,'fb_inspirational_people','inspirational_people'),(seetv_likes_list,'fb_tvshow_likes','tvshow_likes'), (seetv_watched_list,'fb_tvshows_watched','tvshow_watched'), (seemv_likes_list,'fb_movies_likes','movie_likes'), (seemv_watched_list,'fb_movies_watched','movie_watched'),(seebk_likes_list,'fb_book_likes','books_likes'), (reads_list,'fb_read_books','read_books'),(following_list,'fb_following','read_followers')]
+	all_lists = [(others_list,'fb_others','others'),(clothing_list,'fb_clothing','clothing'), (activities_list,'fb_activities','activities'), (interests_list,'fb_interests', 'interests'), (music_list,'fb_music','music'), (books_list,'fb_books','book'), (movies_list,'fb_movies','movies'), (tvshow_list, 'fb_tvshows','tvshows'), (favteams_list,'fb_favourite_teams','teams'), (favathe_list,'fb_favaourite_athelets','atheletes'), (games_list,'fb_games','games'), (restaurants_list,'fb_restaurants','restaurants'), (websites_list,'fb_websites','websites'), (work_list,'fb_works','work'), (education_list,'fb_education','education'), (family_list,'fb_family','family'),(sports_list, 'fb_favourite_sports','sports'),(friends_list,'fb_friends','friends'),(inspirationalpeople_list,'fb_inspirational_people','inspirational_people'),(seetv_likes_list,'fb_tvshow_likes','tvshow_likes'), (seetv_watched_list,'fb_tvshows_watched','tvshow_watched'), (seemv_likes_list,'fb_movies_likes','movie_likes'), (seemv_watched_list,'fb_movies_watched','movie_watched'),(seebk_likes_list,'fb_book_likes','books_likes'), (reads_list,'fb_read_books','read_books'),(following_list,'fb_following','read_followers')]
 	for alk in all_lists:
 	    if alk[0]:
 		keyf = "%s%s"%('aux_info_',alk[2])
