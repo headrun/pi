@@ -1,0 +1,17 @@
+X-Xss-Protection: 0
+X-Content-Type-Options: nosniff
+Access-Control-Expose-Headers: X-FB-Debug, X-Loader-Length
+Expires: Sat, 01 Jan 2000 00:00:00 GMT
+Vary: Origin
+Vary: Accept-Encoding
+X-Fb-Debug: B54jMSFdlW5Ki1LCnirWWSxrcrofrNa0vcGbzrYorAfwD/GWJQB5At5q/RlaWu0kA1pYMlVZEm+yZggUlitKKQ==
+Date: Mon, 05 Feb 2018 12:51:54 GMT
+Access-Control-Allow-Credentials: true
+Pragma: no-cache
+Cache-Control: private, no-cache, no-store, must-revalidate
+Strict-Transport-Security: max-age=15552000; preload
+Access-Control-Allow-Origin: https://mbasic.facebook.com
+Access-Control-Allow-Methods: OPTIONS
+Content-Type: text/html; charset=utf-8
+X-Frame-Options: DENY
+Content-Encoding: gzip

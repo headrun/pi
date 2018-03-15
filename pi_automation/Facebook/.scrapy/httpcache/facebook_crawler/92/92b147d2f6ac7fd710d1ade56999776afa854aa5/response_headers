@@ -1,0 +1,15 @@
+Access-Control-Expose-Headers: X-FB-Debug, X-Loader-Length
+Set-Cookie: sb=DVJ4Wonk7spTuIkdhw4DYj1u; expires=Wed, 05-Feb-2020 12:46:05 GMT; Max-Age=63071999; path=/; domain=.facebook.com; secure; httponly
+Set-Cookie: c_user=100012731496202; expires=Sun, 06-May-2018 12:46:05 GMT; Max-Age=7775999; path=/; domain=.facebook.com; secure
+Set-Cookie: xs=4%3ADM10IGZHbeLkjQ%3A2%3A1517834766%3A2138%3A12312; expires=Sun, 06-May-2018 12:46:05 GMT; Max-Age=7775999; path=/; domain=.facebook.com; secure; httponly
+Set-Cookie: fr=0fHJSltJqMYhIMMNP.AWVPfOKIhT-y8AtEej9oYvlvu6o.BaeFH-.NC.AAA.0.0.BaeFIN.AWVsRS6m; expires=Sun, 06-May-2018 12:46:05 GMT; Max-Age=7775999; path=/; domain=.facebook.com; secure; httponly
+Set-Cookie: pl=n; expires=Sun, 06-May-2018 12:46:05 GMT; Max-Age=7775999; path=/; domain=.facebook.com; secure; httponly
+Strict-Transport-Security: max-age=15552000; preload
+Vary: Origin
+Location: https://www.facebook.com/mobileprotection?source=mobile_mirror_nux
+Access-Control-Allow-Credentials: true
+Date: Mon, 05 Feb 2018 12:46:06 GMT
+Access-Control-Allow-Origin: https://www.facebook.com
+Access-Control-Allow-Methods: OPTIONS
+Content-Type: text/html; charset=UTF-8
+X-Fb-Debug: B/cor+TRkGYsUfZ3BwQMpPwcmE91gku90jt2fHbrIHsx8iZNCRz3r8ociFZeZIOpCDrzPB/B7M814+gkGEdg5A==

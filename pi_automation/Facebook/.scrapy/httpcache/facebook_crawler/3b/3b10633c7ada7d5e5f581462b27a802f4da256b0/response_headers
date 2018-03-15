@@ -1,0 +1,18 @@
+X-Xss-Protection: 0
+X-Content-Type-Options: nosniff
+Access-Control-Expose-Headers: X-FB-Debug, X-Loader-Length
+Set-Cookie: fr=0fHJSltJqMYhIMMNP..BaeFH-.E7.AAA.0.0.BaeFH-.AWVECSCS; expires=Sun, 06-May-2018 12:45:50 GMT; Max-Age=7775999; path=/; domain=.facebook.com; secure; httponly
+Strict-Transport-Security: max-age=15552000; preload
+Vary: Origin
+Vary: Accept-Encoding
+X-Fb-Debug: 5ksugF7bHQrXVHkbKYYfTNzSAoB3Mnbh2Qjy/K9oaHLSLi0WP/zaqcvOX+CIyrV6HTXfpRhTq7dGG/CLoZr3Kw==
+Access-Control-Allow-Origin: https://www.facebook.com
+Access-Control-Allow-Credentials: true
+Pragma: no-cache
+Cache-Control: private, no-cache, no-store, must-revalidate
+Date: Mon, 05 Feb 2018 12:45:51 GMT
+X-Frame-Options: DENY
+Access-Control-Allow-Methods: OPTIONS
+Content-Type: text/html; charset=UTF-8
+Expires: Sat, 01 Jan 2000 00:00:00 GMT
+Content-Encoding: gzip

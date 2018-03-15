@@ -1,0 +1,31 @@
+20180112T003838.97: sam_fb_browse.py: 37:         spider_closed: INFO: Message - Logout Successfully
+20180112T011200.526: sam_fb_browse.py: 37:         spider_closed: INFO: Message - Logout Successfully
+20180112T012132.178: sam_fb_browse.py: 37:         spider_closed: INFO: Message - Logout Successfully
+20180112T033354.649: sam_fb_browse.py: 38:         spider_closed: INFO: Message - Logout Successfully
+20180112T033749.124: sam_fb_browse.py: 38:         spider_closed: INFO: Message - Logout Successfully
+20180112T042745.6: sam_fb_browse.py: 38:         spider_closed: INFO: Message - Logout Successfully
+20180112T043500.66: sam_fb_browse.py: 38:         spider_closed: INFO: Message - Logout Successfully
+20180112T044008.581: sam_fb_browse.py: 38:         spider_closed: INFO: Message - Logout Successfully
+20180112T044722.639: sam_fb_browse.py: 38:         spider_closed: INFO: Message - Logout Successfully
+20180112T053619.191: sam_fb_browse.py: 38:         spider_closed: INFO: Message - Logout Successfully
+20180112T055942.366: sam_fb_browse.py: 355:         parse_likesdata: ERROR: Error: Traceback (most recent call last):
+  File "/root/automation_pi/Facebook/Facebook/spiders/sam_fb_browse.py", line 355, in parse_likesdata
+    above, below = ['']*2
+AttributeError: 'NoneType' object has no attribute 'replace'
+
+20180112T055942.367: sam_fb_browse.py: 355:         parse_likesdata: INFO: Message - https://mbasic.facebook.com/rahul.koul.984/about
+20180112T060155.531: sam_fb_browse.py: 38:         spider_closed: INFO: Message - Logout Successfully
+20180112T061126.879: sam_fb_browse.py: 440:         parse_likesdata: ERROR: Error: Traceback (most recent call last):
+  File "/root/automation_pi/Facebook/Facebook/spiders/sam_fb_browse.py", line 430, in parse_likesdata
+    up_aux1 = json.loads(aux_cu[0][0].replace('\\',''))
+AttributeError: 'NoneType' object has no attribute 'replace'
+
+20180112T061126.880: sam_fb_browse.py: 441:         parse_likesdata: INFO: Message - https://mbasic.facebook.com/rahul.koul.984/about
+20180112T061333.602: sam_fb_browse.py: 38:         spider_closed: INFO: Message - Logout Successfully
+20180112T062440.180: sam_fb_browse.py: 355:         parse_likesdata: ERROR: Error: Traceback (most recent call last):
+  File "/root/automation_pi/Facebook/Facebook/spiders/sam_fb_browse.py", line 355, in parse_likesdata
+    if len(childs)>1:
+AttributeError: 'NoneType' object has no attribute 'replace'
+
+20180112T062440.180: sam_fb_browse.py: 355:         parse_likesdata: INFO: Message - https://mbasic.facebook.com/rahul.koul.984/about
+20180112T062640.762: sam_fb_browse.py: 38:         spider_closed: INFO: Message - Logout Successfully
