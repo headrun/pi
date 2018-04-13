@@ -41,8 +41,8 @@ parser.add_argument('-l', '--limit', metavar='N', type=int, default=1000,
 parser.add_argument('-n', '--name', required=True, metavar='screen_name',
                     help='target screen_name')
 
-parser.add_argument('-e', '--email', required=True, metavar='emailid',help='target emailid')
-parser.add_argument('-sk', '--sk', required=True, metavar='emailid',help='target emailid')
+parser.add_argument('-e', '--email', default='', metavar='emailid',help='target emailid')
+parser.add_argument('-sk', '--sk', required=True, metavar='sk',help='target emailid')
 
 parser.add_argument('-f', '--filter', help='filter by source (ex. -f android will get android tweets only)')
 
@@ -376,19 +376,16 @@ def main():
             except Exception as e:print e
             ret_user.append(data)
     import md5
-    import pdb;pdb.set_trace()
     ret_user = '<>'.join(ret_user)
     sk = args.sk
     vals = (args.sk,args.name,name,normalize(description),location,tweets,following,followers,\
            likes,image,listed_count,timezone,lang,verified,screen_url,args.email,'',\
            detected_has,mentioned_user_name,no_of_RTs,ret_user,detected_domain,\
            detected_sou,detected_las,avg_tweets_per_day)
-
     screen_name = args.name
     cur.execute(twitter_qry,vals)
-    #import pdb;pdb.set_trace()
     #cur.execute(twitter_update_qry % screen_name)
-    Login().update_status(screen_name, 1, 'twitter_crawl', twitter_update_qry)
+    Login().update_status(sk, 1, 'twitter_crawl', twitter_update_qry)
     con.commit()
     #con.close()
 
