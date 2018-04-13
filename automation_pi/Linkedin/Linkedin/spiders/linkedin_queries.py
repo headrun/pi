@@ -85,7 +85,7 @@ header2_params = ['Linkedin', 'linkedin_firstName', 'linkedin_middleName', 'link
             'linkedin_additionalInfo_maritalStatus']
 original_url_list_params = {"https://www.linkedin.com/pub/hanafiah-hasni/5b/590/a75":"https://www.linkedin.com/in/hanafiah-hasni-a755905b","https://www.linkedin.com/pub/aaron-chong/3a/7a2/12":"https://www.linkedin.com/in/aaron-chong-0127a23a","https://www.linkedin.com/pub/alex-arroza-cpa-cisa-crisc/3/451/75b":"https://www.linkedin.com/in/alex-arroza-75b4513","https://www.linkedin.com/pub/japrin-thomas/3a/952/79a":"https://www.linkedin.com/in/japrin-thomas-79a9523a","https://www.linkedin.com/pub/ilyani-zahari/16/293/276":"https://www.linkedin.com/in/ilyanizahari","https://www.linkedin.com/pub/anwar-pazikadin/44/889/941":"https://www.linkedin.com/in/anwar-pazikadin-94188944","https://www.linkedin.com/pub/karthikeyan-vasudevan/23/39/5a0":"https://www.linkedin.com/in/karthikeyan-vasudevan-5a003923","https://www.linkedin.com/in/aajay-girit-b858154b":"https://www.linkedin.com/in/dr-aajay-girit-b858154b"}
 update_get_params = "update linkedin_crawl set crawl_status=%s where sk ='%s' and date(modified_at) >= '2017-04-21'"
-get_qry_params = "select sk, url,meta_data from linkedin_crawl where crawl_status=0 limit 1"#need to keep 30
+get_qry_params = "select sk, url,meta_data from linkedin_crawl where crawl_status=0 limit 10"#need to keep 30
 meat_headers = {
         'Accept-Encoding': 'gzip, deflate, sdch',
         'Accept-Language': 'en-US,en;q=0.8',

@@ -51,7 +51,7 @@ class Facebookgetcrawl(object):
                                 rows = fetchall(self.cur, self.zero_queryi % (recs_allow[0]))
                                 if not rows: break
                                 check_inprocess = 'yes'
-                                cmd = scrapy_run_cmd % (random.choice(constants_dict.keys()), recs_allow[0])
+                                cmd = scrapy_run_cmd_fb % (random.choice(constants_dict.keys()), recs_allow[0])
 				print cmd
                                 try: os.system(cmd)
 				except : check_inprocess = ''
