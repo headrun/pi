@@ -45,7 +45,6 @@ class Voyagerapi(Voyagerapiitems):
 
         def checking_for_limit(self, account_mail, logind_date, sk_login_self, command_prxy):
                 count_from_ = fetchall(self.cur, "select count from linkedin_loginlimit where sk = '%s' and login_date='%s' and proxy_ip='%s'" % (sk_login_self, logind_date, command_prxy))
-                import pdb;pdb.set_trace()
                 if count_from_ and count_from_[0][0] < 9000:
                         return count_from_[0][0], sk_login_self
                 else:   
@@ -382,6 +381,43 @@ class Voyagerapi(Voyagerapiitems):
                         end_year, end_month, start_year, start_month = self.get_start_end_date(time_period)
                 start_date = '-'.join([start_year, start_month]).strip('-').strip()
                 end_date = '-'.join([end_year, end_month]).strip('-').strip()
+                """if not end_year:
+			end_year = str(datetime.datetime.now().date().year)
+		if not end_month:
+			end_month = str(datetime.datetime.now().date().month)
+		start_month = start_month.zfill(2)
+		end_month = end_month.zfill(2)
+		final_msg = ''
+		if start_year and start_month:
+			if start_month == "00":
+				start_month = "01"
+				end_month = "01"
+			if end_month == "00":
+				end_month = "01"
+			full_e = datetime.datetime.strptime("%s%s%s" % (end_year, end_month, '01'), "%Y%m%d")
+			full_start = datetime.datetime.strptime("%s%s%s" % (start_year, start_month, '01'), "%Y%m%d")
+			realative_data = relativedelta.relativedelta(full_e, full_start)
+			yrs = realative_data.years
+			months = realative_data.months
+			msg = 'year'
+			msgq = 'month'
+			if yrs > 1:
+				msg = 'years'
+			if months >1:
+				msgq = 'months'
+			if months < 12:
+				months = months+1
+			else:
+				yrs = yrs+1
+				months = 0
+			yrs_msg = "%s%s%s" % (str(yrs), ' ', msg)
+			months_msg = "%s%s%s" % (str(months), ' ',msgq)
+			if months == 0:
+				months_msg = ''
+			if yrs == 0:
+				yrs_msg = ''
+                        import pdb;pdb.set_trace()
+			final_msg = ("%s%s%s" % (yrs_msg, ' ', months_msg)).strip()"""
                 exp_company_logo = data_elements.get('company',{}).get('miniCompany',{}).get('logo',{}).get('com.linkedin.voyager.common.MediaProcessorImage',{}).get('id','')
                 if exp_company_logo:
                         exp_company_logo = "%s%s"%("https://media.licdn.com/media", exp_company_logo)

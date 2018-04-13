@@ -180,6 +180,7 @@ class Voyagerapiitems(scrapy.Spider):
 
         def get_experiences_item(self, sk, pos_fmt_location, pos_position_id, pos_company_id, pos_startdate_iso, pos_summary, pos_company_name, pos_cpny_url, pos_title, pos_enddate_iso, pos_media_image, pos_fmt_duration):
                 linkedin_epx_ = Linkedinexperiences()
+                
                 linkedin_epx_['sk']= md5("%s%s%s%s%s%s"%(sk, pos_fmt_location, pos_position_id, pos_company_id, pos_startdate_iso, pos_summary))
                 linkedin_epx_['profile_sk'] = normalize(sk)
                 linkedin_epx_['exp_location'] = normalize(pos_fmt_location)
@@ -314,5 +315,46 @@ class Voyagerapiitems(scrapy.Spider):
                 else:
                         return ''
 
+        """def cal_exp_duration(self) :
+        	 if time_period:
+		                        end_year, end_month, start_year, start_month = self.get_start_end_date(time_period)
+                			start_date = '-'.join([start_year, start_month]).strip('-').strip()
+			                end_date = '-'.join([end_year, end_month]).strip('-').strip()
+		if not end_year:
+			end_year = str(datetime.datetime.now().date().year)
+		if not end_month:
+			end_month = str(datetime.datetime.now().date().month)
+		start_month = start_month.zfill(2)
+		end_month = end_month.zfill(2)
+		final_msg = ''
+		if start_year and start_month:
+			if start_month == "00":
+				start_month = "01"
+				end_month = "01"
+			if end_month == "00":
+				end_month = "01"
+			full_e = datetime.datetime.strptime("%s%s%s" % (end_year, end_month, '01'), "%Y%m%d")
+			full_start = datetime.datetime.strptime("%s%s%s" % (start_year, start_month, '01'), "%Y%m%d")
+			realative_data = relativedelta.relativedelta(full_e, full_start)
+			yrs = realative_data.years
+			months = realative_data.months
+			msg = 'year'
+			msgq = 'month'
+			if yrs > 1:
+				msg = 'years'
+			if months >1:
+				msgq = 'months'
+			if months < 12:
+				months = months+1
+			else:
+				yrs = yrs+1
+				months = 0
+			yrs_msg = "%s%s%s" % (str(yrs), ' ', msg)
+			months_msg = "%s%s%s" % (str(months), ' ',msgq)
+			if months == 0:
+				months_msg = ''
+			if yrs == 0:
+				yrs_msg = ''
+			final_msg = ("%s%s%s" % (yrs_msg, ' ', months_msg)).strip()"""
 
 

@@ -28,7 +28,7 @@ from scrapy.http import Request, FormRequest
 from scrapy.xlib.pydispatch import dispatcher
 from scrapy.pipelines.images import ImagesPipeline
 from scrapy import signals
-sys.path.append('/root/pi_automation/table_schemas')
+sys.path.append('/root/automation_pi/table_schemas')
 from generic_functions import LINKEDIN_DB
 from pi_db_operations import mails_dict_ln, ips_list_ln, login_cmds_ip_ln, dic_ln, sender_mail_pi, sender_pwd_pi
 
@@ -36,7 +36,7 @@ from pi_db_operations import mails_dict_ln, ips_list_ln, login_cmds_ip_ln, dic_l
 
 DB_PASSWD = 'root'
 DB_HOST = 'localhost'
-DB_NAME_REQ = 'Test_PI'
+DB_NAME_REQ = LINKEDIN_DB
 DB_USERNAME = 'root'
 MYSQL_CONNECT_TIMEOUT_VALUE = 30
 BATCH_SIZE = 2000

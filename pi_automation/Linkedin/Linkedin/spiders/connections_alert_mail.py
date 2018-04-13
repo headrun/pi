@@ -13,7 +13,7 @@ class Connectionsalert(object):
 		account_c = commands.getstatusoutput("grep -l closed *.log")
 		os.chdir(real_path)
 		sender_mail = sender_mail_pi
-		receivers_mail_list = ['anushab@notemonk.com']
+		receivers_mail_list = ['kiranmayi@notemonk.com']
 		sender, receivers  = sender_mail, ','.join(receivers_mail_list)
 		msg = MIMEMultipart('alternative')
 		msg['Subject'] = 'Alert mail for security challenges'

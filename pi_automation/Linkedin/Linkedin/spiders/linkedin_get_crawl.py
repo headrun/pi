@@ -5,7 +5,7 @@ import sys
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
-sys.path.append('/root/pi_automation/table_schemas')
+sys.path.append('/root/automation_pi/table_schemas')
 from to_udrive import *
 from generic_functions import *
 from pi_db_operations import *
@@ -50,7 +50,7 @@ class Linkedingetcrawl(object):
                                 cmd = random.choice(login_cmds_ip) % (recs_allow[0])
                                 os.system(cmd)
 				file("linkedin_command","ab+").write("%s\n" %cmd)
-                        """if check_inprocess and recs_allow:
+                        if check_inprocess and recs_allow:
 				variable_grp = self.grp_tt_qury % recs_allow[0]
 				variable_tcgrp = fetchmany(self.cur, variable_grp)
 				if variable_tcgrp:
@@ -97,7 +97,7 @@ class Linkedingetcrawl(object):
 							if int(new_limit.split(',')[0])>int(total_counts):
 								break
 					self.alert_mail(success_count, faliure_count, email_from_list, file_ids_limit, 'again')
-                                	execute_query(self.cur, self.update_pi_crawl % recs_allow[2])"""
+                                	execute_query(self.cur, self.update_pi_crawl % recs_allow[2])
 
 
     def alert_mail(self, avai, unava, email_from_list, file_ids_limit, again):

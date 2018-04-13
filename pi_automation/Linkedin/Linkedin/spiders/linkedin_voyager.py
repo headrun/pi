@@ -15,7 +15,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
                 self.modified_at_crawl  = kwargs.get('mpi', '')
                 self.end_modified_at_crawl = kwargs.get('epi', '')
                 self.con, self.cur = get_mysql_connection(DB_HOST, DB_NAME_REQ, '')
-                get_query_param = 'select sk, url, meta_data from linkedin_crawl where crawl_status=0 and (modified_at >= "%s")' % (self.modified_at_crawl)
+                get_query_param = 'select sk, url, meta_data from linkedin_crawl where crawl_status=0 and (modified_at >= "%s") order by rand() limit 15 ' % (self.modified_at_crawl)
                 self.cur.execute(get_query_param)
                 self.profiles_list = [i
                     for i in self.cur.fetchall()
@@ -38,7 +38,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 			login_account = mails_dict[self.login]
 			account_mail, account_password = login_account
 			yes_s, skf_login_self = self.checking_for_limit(account_mail, logind_date, sk_login_self, command_prxy)
-			if  skf_login_self:
+			if skf_login_self:
 				login_account = mails_dict[skf_login_self]
 				account_mail, account_password = login_account
 				if account_mail and self.profiles_list:
@@ -50,18 +50,11 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 		cv = requests.get('https://www.linkedin.com/logout/').text
 		#yield Request('https://www.linkedin.com/logout/', callback=self.close_yield)
 		close_mysql_connection(self.con, self.cur)
-                if self.profiles_list:
-                    final_sks_list = [pfl[0] for pfl in self.profiles_list]
-                    cmd = 'python linkedin_voyager_denormalization.py -s %s'% ",".join(final_sks_list)
-                    os.system(cmd)
-
 
 	def parse_next(self, response):
                 sel = Selector(response)
 		command_prxy = response.meta.get('command_prxy','')
-                import pdb;pdb.set_trace()
                 count_from_ = response.meta.get('count_from_', '')
-            
                 logind_date = response.meta.get('logind_date', '')
                 sk_login_self = response.meta.get('sk_login_self', '')
                 for li in self.profiles_list:
@@ -85,7 +78,6 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 			given_key = meta_data.get('key','')
 			if not given_key:
 				given_key = meta_data.get('keys','')
-                          
         	        sk, profile_url, m_data = li
 			meta_data = {}
                 	try: meta_data = json.loads(m_data)
@@ -111,7 +103,6 @@ class Linkedinpremiumapivoyager(Voyagerapi):
 
 	def parse_correct(self, response):
                 sel = Selector(response)
-                import pdb;pdb.set_trace()
 		m_data = response.meta.get('m_data','')
 		given_key = response.meta.get('given_key','')
 		command_prxy = response.meta.get('command_prxy','')
