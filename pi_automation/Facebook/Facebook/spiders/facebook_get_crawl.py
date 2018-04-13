@@ -23,7 +23,7 @@ class Facebookgetcrawl(object):
 	self.update_pi_crawl = fb_update_pi_crawl
 	self.grp_tt_qury = fb_grp_tt_qury
 	self.grp_tt_qury1 = fb_grp_tt_qury1
-	
+	self.status_qry = "select count(*),crawl_status from facebook_crawl where date(modified_at)>='%s' group by crawl_status having count(sk)>=1" 
 
     def __del__(self):
         close_mysql_connection(self.con, self.cur)
@@ -38,9 +38,9 @@ class Facebookgetcrawl(object):
 
 
     def main(self):
-        import pdb;pdb.set_trace()
         email_from_list = self.email_dev_list
         check_inprocess = ''
+        import pdb;pdb.set_trace()
         if len(sys.argv) == 2 and sys.argv[1] == 'prod':
                 email_from_list = self.email_prod_list
         recs_allows = fetchall(self.cur, self.facebook_taken_qry)
@@ -53,46 +53,26 @@ class Facebookgetcrawl(object):
                                 if not rows: break
                                 check_inprocess = 'yes'
                                 cmd = scrapy_run_cmd_fb % (random.choice(constants_dict.keys()), recs_allow[0])
-				print cmd
                                 try: os.system(cmd)
 				except : check_inprocess = ''
-                        """if check_inprocess and recs_allow:
-				variable_agrp_rec = fetchmany(self.cur, self.grp_tt_qury % recs_allow[0])
-				variable_tgrp_rec = fetchmany(self.cur, self.grp_tt_qury1 % recs_allow[0])
-				if variable_agrp_rec:
-					variable_agrp_rec = variable_agrp_rec[0][0]
-				else: variable_agrp_rec = '0'
-				if variable_tgrp_rec:
-					variable_tgrp_rec = variable_tgrp_rec[0][0]
-				else: variable_tgrp_rec = '0'
-				variable_ugrp_rec = int(variable_tgrp_rec) - int(variable_agrp_rec)
-				if variable_agrp_rec or variable_tgrp_rec or variable_ugrp_rec:
-					self.alert_mail(variable_tgrp_rec, variable_agrp_rec, variable_ugrp_rec, email_from_list, '', '', '')
-					facebook_file_name = 'facebook_data_on_%s.xlsx' % str(datetime.datetime.now())
-					cmd1 = 'python xlsheet.py "%s" "%s"' % (recs_allow[0], facebook_file_name)
-					print cmd1
-					os.system(cmd1)"""
-                                	#execute_query(self.cur, self.update_pi_crawl % recs_allow[2])
-					#file_id = Googleupload().main('Facebook', email_from_list, facebook_file_name)
-					#self.alert_mail(variable_tgrp_rec, variable_agrp_rec, variable_ugrp_rec, email_from_list, 'again', file_id, facebook_file_name)
-					#self.mv_file(facebook_file_name)
+                data = fetchall(self.cur, self.status_qry % (recs_allow[1]))
+                if data :
+                            import pdb;pdb.set_trace()
+                            ava = int(data[0][0])
+                            not_avai = int(data[1][0])
+                            total = not_avai + ava
+                            self.alert_mail(ava,not_avai,total)
 
-    def alert_mail(self, totalc, avai, unava, email_from_list, again, file_id, facebook_file_name):
+    def alert_mail(self, ava, not_avai, total):
         sender_mail = sender_mail_pi
-        receivers_mail_list = email_from_list
+        receivers_mail_list = ['anushab@headrun.net']
         sender, receivers  = sender_mail, ','.join(receivers_mail_list)
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = 'Test mail: Final stats for Facebook'
-        mas = '<h3>Runs are completed, Please find stats for facebook<h3></br>'
-        mas += '<p>Total : %s</p>' % str(totalc)
-        mas += '<p>Available : %s</p>' % str(avai)
-        mas += '<p>UnAvailable : %s</p>' % str(unava)
-	if not again:
-	        mas += '<p>[Note: Sheet runs are in progress]</p>'
-	else:
-	        mas += '<p>File name : %s</p>'% str(facebook_file_name)
-        	mas += '<p>File is uploaded in Linkedin [sub-folder] of  PositiveIntegers [folder] in google drive of %s</p>' % sender_mail_pi
-	        mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+        msg['Subject'] = ' Runs are Done and below are the data stats for facebook'
+        mas = '<h4>Stats for Facebook<h4></br>'
+        mas += '<p>Total : %s</p>' % str(total)
+        mas += '<p>Available : %s</p>' % ava
+        mas += '<p>UnAvailable : %s</p>' % not_avai
         msg['From'] = sender
         msg['To'] = receivers
         tem = MIMEText(''.join(mas), 'html')

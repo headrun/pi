@@ -17,8 +17,8 @@ class Facebookbrowse(BaseSpider):
         self.about = '/about'
         self.likes = '?v=likes'
         self.following = '?v=following'
-	self.friends = '?v=friends'
-	self.cur.execute(get_qry_params)
+        self.counter = 1
+	#self.friends = '?v=friends'
 	self.profiles_list = [i for i in self.cur.fetchall()]
 	self.res_afterlogin = ''
 	self.cur_date = str(datetime.datetime.now().date())
@@ -28,6 +28,13 @@ class Facebookbrowse(BaseSpider):
         
     def spider_closed(self, spider):
 	close_mysql_connection(self.con, self.cur)
+        if self.profiles_list:
+                            for row in self.profiles_list :
+                                sk,pro_url,meta_data = row
+                                sno = json.loads(meta_data).get('sno','')
+                                cmd = 'python facebook_denormalisation_script.py -s %s -k %s'% (sk,sno)
+                                os.system(cmd)
+
 	if self.res_afterlogin:
 		login_url = self.res_afterlogin.xpath('//a[contains(@href,"/logout.php")]/@href').extract()
 		if login_url:
@@ -36,25 +43,15 @@ class Facebookbrowse(BaseSpider):
 			data = Selector(text=cv)
 			login_xpat = data.xpath('//a[contains(@href,"/login.php")]/@href')
 			if  login_xpat: self.log.info("Message - %s" %("Logout Successfully"))
+                        if self.profiles_list:
+                            for row in self.profiles_list :
+                                sk,pro_url,meta_data = row
+                                sno = json.loads(meta_data).get('sno','')
+                                cmd = 'python facebook_denormalization.py -s %s -k %s'% (sk,sno)
+                                os.system(cmd)
 
     def parse(self, response):
         sel = Selector(response)
-	"""self.profiles_list = ['AravindRajanm']
-        if self.profiles_list  :
-		login  = ['yagnasree@headrun.com', 'yagna^123']#constants_dict[self.login] 
-		lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
-		lgnrnd = ''.join(sel.xpath('//input[@name="lgnrnd"]/@value').extract())
-		lgndim = ''.join(sel.xpath('//input[@name="lgndim"]/@value').extract())
-		lgnjs = ''.join(sel.xpath('//input[@name="lgnjs"]/@value').extract())
-		
-		data = {'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd, 'lgndim' : lgndim, 'lgnjs' : lgnjs, 'display' : ''}
-		data.update({'enable_profile_selector' : '', 'isprivate' : '', 'legacy_return' : '0', 'profile_selector_ids' : ''})
-		data.update({'return_session' : '', 'skip_api_login' : '', 'signed_next' :'', 'trynum' : '1', 'timezone' : '-330'})
-		data.update({'prefill_contact_point': login[0], 'prefill_source' : 'browser_dropdown', 'prefill_type' :'password', 'first_prefill_source' : ''})
-		data.update({'first_prefill_type' : 'contact_point', 'had_cp_prefilled' : 'true', 'had_password_prefilled' : 'true'})
-	      
-		return [FormRequest.from_response(response, formname = 'login_form',\
-				formdata=data,callback=self.parse_redirect)]"""
         if self.profiles_list  :
                 login  = constants_dict[self.login]
                 lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
@@ -75,7 +72,7 @@ class Facebookbrowse(BaseSpider):
             noti_xpath = 'Your account has been disabled'
             user = constants_dict[self.login][0]
             pwd = constants_dict[self.login][1]
-            #self.send_mail(noti_xpath,user,pwd)
+            self.send_mail(noti_xpath,user,pwd)
         yield Request('https://mbasic.facebook.com/support/?notif_t=feature_limits',callback=self.parse_next)
 
     def parse_next(self, response):
@@ -86,10 +83,11 @@ class Facebookbrowse(BaseSpider):
                     user = constants_dict[self.login][0]
                     pwd = constants_dict[self.login][1]
                     self.profiles_list = []
-                    #self.send_mail(noti_xpath,user,pwd)
+                    self.send_mail(noti_xpath,user,pwd)
 
         for profilei in self.profiles_list:
             sk = profilei[0]
+
             meta_data = json.loads(profilei[2])
 	    profile = meta_data.get('mbasic_url','')
 	    email_address = meta_data.get('email_address','')
@@ -102,9 +100,10 @@ class Facebookbrowse(BaseSpider):
             url_about = "%s%s"%(profile,self.about)
             url_following = "%s%s"%(profile,self.following)
             url1_aboutlikes = "%s%s"%(profile,self.likes)
-	    url_aboutfriends = "%s%s"%(profile,self.friends)
+	    #url_aboutfriends = "%s%s"%(profile,self.friends)
             list_of_pa = [(url_about,'about'),(profile,'about')]
-	    list_of_paothers = [(url_following,''), (url1_aboutlikes,''),(url_aboutfriends, ''),(url_about, '')]
+	    #list_of_paothers = [(url_following,''), (url1_aboutlikes,''),(url_aboutfriends, ''),(url_about, '')]
+            list_of_paothers = [(url_following,''), (url1_aboutlikes,''),(url_about, '')]
             for urls in list_of_pa:
                 yield Request(urls[0], callback=self.parse_profile, meta={'sk':sk,"al":'',"see_more":'','profile':profile,"check_list":'','not_found':urls[1], 'email_address':email_address},dont_filter=True)
 
@@ -131,6 +130,7 @@ class Facebookbrowse(BaseSpider):
     def parse_profile(self, response):
         sel = Selector(response)
         sk = response.meta['sk']
+        if response.status !=200 : self.counter+=1
 	#if response.status != 200: self.cur.execute(update_get_params%(2,sk))
 	if response.status != 200: self.update_status(sk, 2, 'facebook_crawl', update_get_params)
         not_found = ''.join(sel.xpath('//title/text()').extract())
@@ -230,6 +230,7 @@ class Facebookbrowse(BaseSpider):
     def parse_likesdata(self, response):
 	sel = Selector(response)
 	sk = response.meta['sk']
+        if response.status !=200 : self.counter+=1
         profile = response.meta['profile']
 	dic_to_limit = response.meta.get('dic_to_limit',{})
 
@@ -333,7 +334,6 @@ class Facebookbrowse(BaseSpider):
 			pr_desc = '<>'.join(val)
 			lt.append('%s%s%s'%(year,':-',pr_desc))
 		    dic_keys[al].append(' , '.join(lt))
-		    import pdb;pdb.set_trace()
 		if 'following' in response.url or 'following' in al:
 		    follow_lst = '<>'.join(sel.xpath('//div[@id="root"]//div/img/../div/a/span/text()').extract())
 		    if follow_lst:
@@ -501,7 +501,7 @@ class Facebookbrowse(BaseSpider):
         from email import encoders
         import smtplib,ssl
         sender  = 'facebookdummyfb01@gmail.com'
-        receivers_mail_list = ['kiranmayi@notemonk.com','anushab@notemonk.com','aravind@headrun.com']
+        receivers_mail_list = ['kiranmayi@notemonk.com','anushab@notemonk.com']
         sender, receivers = sender, ','.join(receivers_mail_list)
         msg = MIMEMultipart('alternative')
         msg['Subject'] = "Security elert mail for facebook on %s"%str(datetime.datetime.now().date())
