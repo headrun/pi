@@ -15,6 +15,12 @@ from juicer.items import *
 from datetime import timedelta
 from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
+from to_udrive import *
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.base import MIMEBase
+from email import encoders
+import smtplib,ssl
 
 class PaytmBrowse(JuicerSpider):
     name = 'paytm_new_browse'
@@ -30,9 +36,9 @@ class PaytmBrowse(JuicerSpider):
         self.meta_query = 'insert into Movie_sessions(sk,session_id,Movie_code,theater_name,provider_name,address,latitude,longitude,multiple_ticket,audi,real_show_time,free_seating,token_fee_only,token_fee_pickup_time,grouped_seats,max_tickets,seats_avail,seats_unavail,seats_total,ticket_type,ticket_price,crawler_starttime,reference_url,created_at,modified_at)values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now()) on duplicate key update modified_at = now()'
         self.select_qry = 'select session_id,Movie_code,theater_name,provider_name,address,latitude,longitude,multiple_ticket,audi,real_show_time,free_seating,token_fee_only,token_fee_pickup_time,grouped_seats,max_tickets,seats_avail,seats_unavail,seats_total,ticket_type,ticket_price,crawler_starttime,reference_url from Movie_sessions where crawler_starttime="%s"'
         self.movie_query = 'select Movie_code,Movie_title,image_url,censor,genres,content,duration,trailor_url,language,opening_date,reference_url from Movie where crawler_starttime = "%s"'
-
-        self.excel_file_name1 = 'paytm_session_data_ON_%s.csv'% datetime.datetime.now()
-        self.excel_file_name = 'paytm_Movie_data_ON_%s.csv' % datetime.datetime.now()
+        self.crawler_start_time  = str(datetime.datetime.now() + timedelta(hours=9,minutes=34)).split('.')[0]
+        self.excel_file_name1 = 'paytm_session_data_ON_%s.csv'% self.crawler_start_time
+        self.excel_file_name = 'paytm_Movie_data_ON_%s.csv'% self.crawler_start_time
         self.oupf = open(self.excel_file_name, 'ab+')
         self.oupf1 = open(self.excel_file_name1, 'ab+')
         self.todays_movieef  = csv.writer(self.oupf)
@@ -44,7 +50,6 @@ class PaytmBrowse(JuicerSpider):
         self.url = []
         self.del_qry = 'delete from Movie_sessions'
         self.del_qry2 = 'delete from Movie'
-        self.crawler_start_time = self.crawler_start_time = str(datetime.datetime.now() - timedelta(hours=14,minutes=27)).split('.')[0]
         dispatcher.connect(self.spider_closed, signals.spider_closed)
                
     def parse(self,response):
@@ -67,7 +72,8 @@ class PaytmBrowse(JuicerSpider):
                 yield Request(movie_link,callback=self.parse_availability, meta={'movie_id':movie,'ref_url':main_url,'date':str(date),'count':count},dont_filter=True)
 
     def spider_closed(self, spider):
-        crawler_end_time = str(datetime.datetime.now() - timedelta(hours=14,minutes=27)).split('.')[0]
+        crawler_end_time =  str(datetime.datetime.now() + timedelta(hours=9,minutes=34)).split('.')[0]
+    
         self.cur.execute(self.movie_query % self.crawler_start_time)
         data_ = self.cur.fetchall()
         for row_ in data_ :
@@ -86,7 +92,11 @@ class PaytmBrowse(JuicerSpider):
         self.oupf.close()
         self.oupf1.close()
         if size > 0  :
-            self.send_mail()
+            email_from_list = ['anusha.boyina19@gmail.com']
+            files = [self.excel_file_name1,self.excel_file_name]
+            for file_ in files :
+                file_id = Googleupload().main('paytm', email_from_list, file_)
+                self.alert_mail(email_from_list,file_id, file_)
         self.cur.close()
         self.conn.close()
 
@@ -306,4 +316,25 @@ class PaytmBrowse(JuicerSpider):
             s.ehlo()
             s.login(sender_mail,sender_pass)
             s.sendmail(sender_mail, receivers, msg.as_string())
-            s.quit()	
+            s.quit()
+
+    def alert_mail(self, email_from_list, file_id, paytm_file_name):
+        sender_mail = 'positiveintegersproject@gmail.com'
+        receivers_mail_list = email_from_list
+        sender, receivers  = sender_mail, ','.join(receivers_mail_list)
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = 'paytm session data on %s' % self.crawler_start_time
+        mas = '<p>File name : %s</p>'% str(paytm_file_name)
+        mas += '<p>File is uploaded in paytm [sub-folder] of paytm_session_data [folder] in google drive of %s</p>' % sender_mail
+        mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+        msg['From'] = sender
+        msg['To'] = receivers
+        tem = MIMEText(''.join(mas), 'html')
+        msg.attach(tem)
+        s = smtplib.SMTP('smtp.gmail.com:587')
+        s.ehlo()
+        s.starttls()
+        s.login(sender_mail, 'integers')
+        s.sendmail(sender, receivers_mail_list, msg.as_string())
+        s.quit()
+	
