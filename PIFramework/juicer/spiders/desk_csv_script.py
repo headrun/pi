@@ -1,4 +1,39 @@
-from juicer.utils import *
+import os, sys, datetime, subprocess, MySQLdb, codecs, json
+import optparse, logging, logging.handlers
+import xlwt, csv
+import re
+
+def xcode(text, encoding='utf8', mode='strict'):
+    return text.encode(encoding, mode) if isinstance(text, unicode) else text
+
+def compact(text, level=0):
+    if text is None: return ''
+
+    if level == 0:
+        text = text.replace("\n", " ")
+        text = text.replace("\r", " ")
+    compacted = re.sub("\s\s(?m)", " ", text)
+    if compacted != text:
+        compacted = compact(compacted, level+1)
+
+    return compacted.strip()
+
+def clean(text):
+    if not text: return text
+
+    value = text
+    value = re.sub("&amp;", "&", value)
+    value = re.sub("&lt;", "<", value)
+    value = re.sub("&gt;", ">", value)
+    value = re.sub("&quot;", '"', value)
+    value = re.sub("&apos;", "'", value)
+
+    return value
+
+def normalize(text):
+    return clean(compact(xcode(text)))
+
+
 
 class Deskcsv(object):
 
@@ -21,8 +56,8 @@ class Deskcsv(object):
 		self.todays_excel_file = todays_excel_file
 		self.header_params = ['id', 'filter_id', 'filter_name', 'assigned_group', 'active_at', 'active_attachments_count', 'active_notes_count', 'blurb', 'changed_at', 'label_ids', 'labels', 'language', 'locked_until', 'priority', 'opened_at', 'received_at', 'resolved_at', 'route_status', 'status', 'subject', 'type', 'updated_at', 'created_at', 'custom_fields', 'description', 'external_id', 'first_opened_at', 'first_resolved_at', 'has_failed_interactions', 'has_pending_interactions', 'customer_url', 'customer_id', 'customer_company_link', 'customer_twitter_user', 'customer_access_company_cases', 'customer_access_private_portal', 'customer_addresses', 'customer_avatar', 'customer_background', 'customer_company', 'customer_company_name', 'customer_created_at', 'customer_custom_fields', 'customer_display_name', 'customer_emails', 'customer_external_id', 'customer_first_name', 'customer_label_ids', 'customer_language', 'customer_last_name', 'customer_locked_until', 'customer_phone_numbers', 'customer_title', 'customer_uid', 'customer_updated_at']
 		self.todays_excel_file.writerow(self.header_params)
-		self.query1 = 'select * from desk_cases order by filter_name'
-		self.query2 = 'select * from desk_customer where customer_link = "%s"'
+		self.query1 = 'select * from desk_cases  where date(modified_at)="2018-05-14"'
+		self.query2 = 'select * from desk_customer where customer_link = "%s" and date(modified_at)="2018-05-14"'
 
 
 	def main(self):
@@ -46,8 +81,15 @@ class Deskcsv(object):
 			else:
 				inner_records = ['' for i in range(24)]
 			values_final.extend(inner_records)
-			values_final = [normalize(i) for i in values_final]
-			self.todays_excel_file.writerow(values_final)
+                        values_final_ = []
+			for i in values_final :
+                            if i==None :
+                                i = ''
+                                values_final_.append(i)
+                            else :
+                                 values_final_.append(normalize(i))
+			try : self.todays_excel_file.writerow(values_final_)
+                        except : print "Found error while writing into sheet"
 
 if __name__ == '__main__':
     Deskcsv().main()
