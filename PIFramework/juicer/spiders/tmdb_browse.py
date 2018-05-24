@@ -44,7 +44,7 @@ class Baby(JuicerSpider):
             adult = result.get('adult','')
             if id_ :
         	credits_link = "https://api.themoviedb.org/3/movie/%s?api_key=ddbd4a97b535574e0c4a405cee1be8d4&append_to_response=credits"%id_
-        	self.get_page('tmdb_movie_termianl', credits_link, id_, meta_data={'movie_id':id_,'movie_title':title,'reference_url':response.url})
+        	self.get_page('tmdb_movie_terminal', credits_link, id_, meta_data={'movie_id':id_,'movie_title':title,'reference_url':response.url})
 
     def parse_cast(self,response):
         sel = Selector(response)

@@ -16,8 +16,8 @@ class ExcelGenIOC():
 
         self.header_params = ['movie_id','title','popularity','poster_path','genres_name','vote_average','imdb_id','languages','collection_name','collection_id','coll_poster_path','coll_backdrop_path','production_country','budget','homepage','overview','production_company_name','production_country','production_company_logo','tagline','release_date','adult','spoken_languages','vote_count','runtime','revenue', 'cast_count', 'crew_count', 'reference_url']
         self.header_params1 =  ['Crew_id','movie_id','movie_title','credit_id','name','gender','aka','place_of_birth','death_day','biography','crew_job','cast_character','cast_order', 'Department', 'profile_path','popularity','Adult','Imdb_id','Homepage','reference_url']
-        self.excel_file_name1 = 'TMDB_CREW_DATA_Sheet2_%s.csv'%str(datetime.datetime.now().date())
-        self.excel_file_name = 'TMDB_MOVIE_DATA_ON_%s.csv'%str(datetime.datetime.now().date())
+        self.excel_file_name1 = 'TMDB_CREW_DATA_Sheet1_final_%s.csv'%str(datetime.datetime.now().date())
+        self.excel_file_name = 'TMDB_MOVIE_DATA_ON_final_%s.csv'%str(datetime.datetime.now().date())
         oupf = open(self.excel_file_name, 'wb+')
         oupf1 = open(self.excel_file_name1, 'wb+')
         self.todays_excel_file  = csv.writer(oupf)
@@ -35,41 +35,42 @@ class ExcelGenIOC():
 
 
     def excel_generation(self):
-                query = 'select sk,title,popularity,poster_path,genres_name,vote_average,imdb_id,languages,collection_name,collection_id,coll_poster_path,coll_backdrop_path,aux_info,budget,homepage,overview,production_com_name,production_country,production_company_logo,tagline,release_date,adult,spoken_languages,vote_count,runtime,revenue, cast_count, crew_count, reference_url from Movie'
+                query = 'select sk,title,popularity,poster_path,genres_name,vote_average,imdb_id,languages,collection_name,collection_id,coll_poster_path,coll_backdrop_path,aux_info,budget,homepage,overview,production_com_name,production_country,production_company_logo,tagline,release_date,adult,spoken_languages,vote_count,runtime,revenue, cast_count, crew_count, reference_url from Movie '
                 self.cur.execute(query)
                 rows = self.cur.fetchall()
                 for row in rows :
                     movie_id,title,popularity,poster_path,genres_name,vote_average,imdb_id,languages,collection_name,collection_id,coll_poster_path,coll_backdrop_path,production_country,budget,homepage,overview,production_company_name,production_country,production_company_logo,tagline,release_date,adult,spoken_languages,vote_count,runtime,revenue, cast_count, crew_count, reference_url = row
+                    if '.jpg' in coll_poster_path:
+                        coll_poster_path = "https://image.tmdb.org/t/p/w600_and_h900_bestv2" + coll_poster_path
+                        print coll_poster_path
                     values = [ movie_id,title,popularity,poster_path,genres_name,vote_average,imdb_id,languages,collection_name,collection_id,coll_poster_path,coll_backdrop_path,production_country,budget,homepage,overview,production_company_name,production_country,production_company_logo,tagline,release_date,adult,spoken_languages,vote_count,runtime,revenue, cast_count, crew_count, reference_url]
+              
                     self.todays_excel_file.writerow(values)
-         
-                query2 = 'select rank, role, role_title from ProgramCrew  limit 100000,150000'
-                import json
-                self.cur.execute(query2)
-                data = self.cur.fetchall()
-                count = 1
-                for _row in data:
-                    crew_sk, role, meta_data = _row
-                    count = count + 1
-                    try : meta = json.loads(meta_data.replace("\\", r"\\"))
-                    except : print crew_sk
-                    cast_id = meta.get('cast_id','')
-                    cast_character = meta.get('character','')
-                    cast_order = meta.get('order','')
-                    crew_job = meta.get('job','')
-                    department = meta.get('department','')
-                    crew_qry = 'select sk,movie_id,movie_title,credit_id,name,gender,aka,birth_place,death_date,biography,profile_path,popularity,adult,imdb_id,homepage,reference_url from Crew where sk = %s' %crew_sk
-                    self.cur.execute(crew_qry)
-                    #import pdb;pdb.set_trace()
-                    try :crew_data = self.cur.fetchall()[0]
-                    except : print "No_data"
-                    crew_data = list(crew_data)
-                      
-                    sk,movie_id,movie_title,credit_id,name,gender,aka,place_of_birth,death_day,biography,profile_path,popularity,adult,imdb_id,homepage,reference_url = crew_data
-                    vals = [sk,movie_id,movie_title,credit_id,name,gender,aka,place_of_birth,death_day,biography,crew_job,cast_character,cast_order, department, profile_path,popularity,adult,imdb_id,homepage,reference_url]
-                    if sk :
-                        self.todays_excel_file1.writerow(vals)
-                        print count
+                    """query2 = 'select rank, role, role_title, program_sk from ProgramCrew where program_sk=%s'%movie_id
+                    import json
+                    self.cur.execute(query2)
+                    data = self.cur.fetchall()
+                    for _row in data:
+                        crew_sk, role, meta_data, movie_id = _row
+                        try : meta = json.loads(meta_data)
+                        except : 
+                            print meta_data
+                            continue
+                        cast_id = meta.get('cast_id','')
+                        cast_character = meta.get('character','')
+                        cast_order = meta.get('order','')
+                        crew_job = meta.get('job','')
+                        department = meta.get('department','')
+                        crew_qry = 'select sk,credit_id,name,gender,aka,birth_place,death_date,biography,profile_path,popularity,adult,imdb_id,homepage,reference_url from Crew where sk = %s' %crew_sk
+                        self.cur.execute(crew_qry)
+                        try :crew_data = self.cur.fetchall()[0]
+                        except :continue
+                        crew_data = list(crew_data)
+                       
+                        sk,credit_id,name,gender,aka,place_of_birth,death_day,biography,profile_path,popularity,adult,imdb_id,homepage,reference_url = crew_data
+                        vals = [sk,movie_id,title,credit_id,name,gender,aka,place_of_birth,death_day,biography,crew_job,cast_character,cast_order, department, profile_path,popularity,adult,imdb_id,homepage,reference_url]
+                        if sk :
+                            self.todays_excel_file1.writerow(vals)"""
 
 
                         

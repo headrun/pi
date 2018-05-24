@@ -42,9 +42,6 @@ class ExcelGenIOC():
                 for _row in rows:
                    
                     address_original, formatted_address,geometry_bounds_ne_lat,geometry_bounds_ne_lng,geometry_bounds_sw_lat, geometry_bounds_sw_lng,location_lat, location_lng,location_type, viewport_ne_lat,viewport_ne_lng, viewport_sw_lat,viewport_sw_lng,partial_match, place_id, types,status,reference_url,long_name,short_name,component_type,mobile_no = _row
-		    #new_address  = new_address.decode('string_escape')
-                    #old_address = old_address.decode('string_escape')
-		    #address = address.decode('string_escape')
                     address_original = address_original.decode('string_escape')
                     values = [mobile_no,address_original, formatted_address, geometry_bounds_ne_lat, \
 			      geometry_bounds_ne_lng, geometry_bounds_sw_lat, geometry_bounds_sw_lng, location_lat,\

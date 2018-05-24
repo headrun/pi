@@ -1,39 +1,48 @@
 import json
 import MySQLdb
-from scrapy.selector import Selector
-from scrapy.spider import BaseSpider
-from scrapy.http import Request, FormRequest 
-con = MySQLdb.connect(host='localhost', user= 'root',passwd='root',db="urlqueue_dev",charset="utf8",use_unicode=True)
-cur = con.cursor()
-import md5
+from juicer.utils import *
 
+#con = MySQLdb.connect(host='localhost', user= 'root', db="AGENTS",charset="utf8",use_unicode=True)
+#cur = con.cursor()
 
-class JUSTDIAL(BaseSpider):
-		name        = 'justdail_agent'
-		start_urls  =  ['https://www.justdial.com/Chennai/doctors']
+links = ['http://www.justdial.com/%s/Estate-Agents']
 
-	        def parse(self,response):
-			sel  = Selector(response)
-			agents_nodes = sel.xpath('//div//ul//li//span[@class="jcn"]//a//@href').extract()
+class JUSTDIAL(JuicerSpider):
+		name        = 'justdail_agent_browse'
+		start_urls  =  ['https://www.justdial.com/Trichy/Ophthalmologists/nct-10343851']
+                handle_httpstatus_list = [404, 302, 303, 403, 500]
+
+			
+		def parse(self,response):
+                        import pdb;pdb.set_trace()
+
+		def parse_cities(self,response):
+			sel			 = HTML(response)
+			city		 = response.meta['city']
+
+			print city
+			agents_nodes = sel.select('//section[@class="jbbg"]//section[@class="jrcl "]//aside[@class="compdt"]//span[@class="jcn "]//a/@href')
+			if not agents_nodes:
+				agents_nodes = sel.select('//section[@class="jgbg"]//section[@class="jrcl "]//aside[@class="compdt"]//span[contains(@class,"jcn")]//a/@href')
+
 			for agent in agents_nodes:
-			    link = "".join(agent)
-			    yield Request(link, callback = self.parse_agent, meta = {'city' : response.url.split('/')[3],'url':response.url})
-                        for i in range(1,55) : 
-                            req_link = response.url+'/page-%s'%i
-                            yield Request(req_link, callback = self.nav_parse, meta = {'city' : req_link.split('/')[3],'url':req_link})
-				
-		def parse_agent(self, response):
-			sel = Selector(response)
-			sk = md5.md5(response.url.split('/')[4]+response.meta['city']).hexdigest()
-                        meta_data = ({'city': response.meta['city'],'reference_url':response.meta['url']})
-			query = 'insert into justdail_crawl(sk, url, crawl_type, content_type,related_type,crawl_status,meta_data,created_at, modified_at) values ( %s, %s, %s, %s, %s, %s, %s, now(), now()) on duplicate key update modified_at = now()'
-			values = (sk, response.url,'','','',0,json.dumps(meta_data))
-			cur.execute(query, values)
-			con.commit()
+				link = textify(agent)
+				yield Request(link, callback = self.parse_agent, meta = {'city' : response.meta['city']}, priority=1)
 
-                def nav_parse(self,response):
-                        sel  = Selector(response)
-                        agents_nodes = sel.xpath('//div//ul//li//span[@class="jcn"]//a//@href').extract()
-                        for agent in agents_nodes:
-                            link = "".join(agent)
-                            yield Request(link, callback = self.parse_agent, meta = {'city' : response.url.split('/')[3],'url':response.url})
+			"""if self.crawl_type == "keepup":	
+				for i in range(1,50):
+					link = "%s/page-%s" %(response.meta['org_link'], i)
+					yield Request(link, callback = self.parse_cities, meta = {'org_link' : response.meta['org_link'],
+																			  'page' : i,
+																			  'city' : response.meta['city'] },
+																			   priority = 1)"""
+			
+		def parse_agent(self, response):
+				sel = HTML(response)
+				title 	=  textify(sel.select('//section[@class="jbbg jddtl"]//section[@class="jcar_wrp"]//h1//span[@title]/@title'))
+				ph_nume = textify(sel.select('//section[@class="jbbg jddtl"]//a[@class="tel"]//text()'))
+				sk = response.url.split("/")[4]
+				print "%s <> %s <> %s <> %s" %(title, ph_nume, sk, response.meta['city'])
+				query = 'insert into justdial_agents_full(sk, agency_name, city, phone_number, address, reference_url, created_at, modified_at) values ( %s, %s, %s, %s, %s, %s, now(), now()) on duplicate key update modified_at = now()'
+				values = (sk, title, response.meta['city'], ph_nume, '', response.url)
+				cur.execute(query, values)

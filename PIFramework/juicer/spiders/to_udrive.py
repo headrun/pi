@@ -26,7 +26,7 @@ class Googleupload(object):
 			file_nam_split = file_nam_split.split('.csv')[0]
 		elif '.xls' in file_name:
 			file_nam_split = file_nam_split.split('.xls')[0]
-		dic_folder_ids = {'paytm_session_data':'10lUW0_WV_zNKqKULe-Gfj4gtglqDTy71','paytm':'1btTwrYeyK006KLMb-TPciLPJx-wgHP16','bookmyshow':'1-tZnz2XAygWbIC1U6gRHe6oYDLEAeGgh','ticketnew':'1CXbD6A-1drsGmdiDUScA80lh068mE2ZD'}
+		dic_folder_ids = {'paytm_session_data':'10lUW0_WV_zNKqKULe-Gfj4gtglqDTy71','Paytm_Availability':'1L__3wr88i3IjrX2ByDt2OZYkqOAno6K6','Bookmyshow_Availability':'1-tZnz2XAygWbIC1U6gRHe6oYDLEAeGgh','Ticketnew_Availability':'1CXbD6A-1drsGmdiDUScA80lh068mE2ZD','paytm':'1btTwrYeyK006KLMb-TPciLPJx-wgHP16'}
 		credentials = self.get_credentials()
 		http = credentials.authorize(httplib2.Http())
 		drive_service =  discovery.build('drive', 'v2', http=http,cache_discovery=False)

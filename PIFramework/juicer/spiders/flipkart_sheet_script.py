@@ -10,8 +10,8 @@ class Flipkartcsv(object):
 	def __init__(self, *args, **kwargs):
 		self.db_name = 'FLIPKART'
 		self.con, self.cur = get_mysql_connection('localhost', self.db_name, '')
-		self.excel_file_name = 'flipkart_products_reviews_%s.csv' % str(datetime.datetime.now().date())
-		self.excel_file_name2 = 'flipkart_products_relatedsellers_%s.csv' % str(datetime.datetime.now().date())
+		self.excel_file_name = 'flipkart_clothing_electronics_products_reviews_%s.csv' % str(datetime.datetime.now().date())
+		self.excel_file_name2 = 'flipkart_clothing_electronics_products_relatedsellers_%s.csv' % str(datetime.datetime.now().date())
 		four_sheets = [self.excel_file_name, self.excel_file_name2]
 		for fil_nam in 	four_sheets:
 			self.if_file_exists(fil_nam)

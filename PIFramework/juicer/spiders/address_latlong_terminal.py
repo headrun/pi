@@ -22,13 +22,8 @@ class AddressLatLongTerminal(JuicerSpider):
     def parse(self, response):
         sel = Selector(response)
         sk = response.meta['sk']
-        #import pdb;pdb.set_trace()
-        #address_new =  response.meta['data']['addess_new']
         old_address = response.meta['data']['full_address']
-        #key_value = response.meta['data']['sk']
         mobile_no = response.meta['data']['s_no']
-        #status =  response.meta['data']['availability']
-        #yield Request(response.url, self.parse_data,meta={'sk' : sk, 'key_value': key_value,'address_new' :address_new,'old_address' : old_address} ,  dont_filter=True) 
         yield Request(response.url,self.parse_data,meta={'sk' : sk, 'count': mobile_no,'full_address': old_address},dont_filter=True) 
    
     def parse_data(self,response):
@@ -46,13 +41,8 @@ class AddressLatLongTerminal(JuicerSpider):
         else :
             add_types = ''
      
-        #address_new = response.meta['address_new']
         mobile_no = response.meta['count']
         old_address = response.meta['full_address']
-        """try : 
-            address_new = MySQLdb.escape_string(address_new)
-        except : 
-            address_new = address_new.encode('utf8')"""
         try : old_address = MySQLdb.escape_string(old_address)
         except : old_address= old_address.encode('utf8')
         status = data['status']

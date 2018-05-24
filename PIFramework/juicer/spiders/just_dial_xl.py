@@ -15,7 +15,7 @@ class ExcelGenIOC():
     def __init__(self):
         self.load_dict = {}
         self.today_date = datetime.datetime.now().date()
-        self.excel_file_name = 'just_dial.xls' 
+        self.excel_file_name = 'just_dialnew_1-50.xls' 
 
     def xcode(self, text, encoding='utf8', mode='strict'):
         return text.encode(encoding, mode) if isinstance(text, unicode) else text
@@ -25,10 +25,9 @@ class ExcelGenIOC():
         self.cur = self.conn.cursor()
 
     def excel_generation(self):
-                header = ['doctor_id', 'name', 'city', 'ref_url_city', 'photos', 'image', 'address','Category', 'payment_mode','rating_val','votes','telephone','time', 'year', 'available_services', 'buisness_info', 'place','website_link','doctor_availability','fee','experience','number_of_views','reviewed_by', 'reviewed_on','review','review_rating','reference_url','Main_url']
+                header = ['name', 'city', 'ref_url_city', 'photos', 'image', 'address','Category', 'payment_mode','rating_val','votes','telephone','time', 'year', 'available_services', 'buisness_info', 'place','website_link','doctor_availability','fee','experience','number_of_ratings','reviewed_by', 'reviewed_on','review','review_rating','reference_url','Main_url']
 
-                query = 'select sk, name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, place,website_link,book_appointment,fee,exp,number_of_ratings,reference_url,main_url from justdail_meta where date(modified_at)="2017-12-07"'
-
+                query = 'select sk,name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, place,website_link,book_appointment,fee,exp,number_of_ratings,reference_url,main_url from justdail_meta where date(modified_at)>="2018-01-24" limit 1,50'
                  
 		self.cur.execute(query)
 		rows = self.cur.fetchall()
@@ -50,7 +49,7 @@ class ExcelGenIOC():
                             for data_ in data :
 			        reviewed_by, reviewed_on,review,rating_value = data_
 
-			        values = [sk, name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, place,website_link,doctor_availability,fee,experience,number_of_ratings,reviewed_by, str(reviewed_on),review,rating_value,reference_url,main_url]
+			        values = [name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, place,website_link,doctor_availability,fee,experience,number_of_ratings,reviewed_by, str(reviewed_on),review,rating_value,reference_url,main_url]
 
 		                for col_count, value in enumerate(values):
 	                            todays_excel_sheet1.write(row_count, col_count, value)
@@ -59,7 +58,7 @@ class ExcelGenIOC():
                              
                              reviewed_by, reviewed_on,review,rating_value = '','','',''
 
-                             values = [sk, name,city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, place,website_link,doctor_availability,fee,experience,number_of_ratings,reviewed_by, reviewed_on, review, rating_value,reference_url, main_url]
+                             values = [name,city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode,rating_val,rating_count,telephone,time, year, available_services, buisness_info, place,website_link,doctor_availability,fee,experience,number_of_ratings,reviewed_by, reviewed_on, review, rating_value,reference_url, main_url]
 
                              for col_count, value in enumerate(values):
                                     todays_excel_sheet1.write(row_count, col_count, value)

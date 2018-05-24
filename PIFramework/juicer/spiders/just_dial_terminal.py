@@ -7,7 +7,7 @@ from ast import *
 import MySQLdb
 from generic_functions import *
 
-con = MySQLdb.connect(host='localhost', user= 'root',passwd='root',db="AGENTS",charset="utf8",use_unicode=True)
+con = MySQLdb.connect(host='localhost', user= 'root',passwd='root',db="AGENTS1",charset="utf8",use_unicode=True)
 cur = con.cursor()
 
 class Justdial(BaseSpider):
@@ -30,7 +30,7 @@ class Justdial(BaseSpider):
 	return cookies
 
     def start_requests(self):
-	select_qry = 'select url,meta_data from urlqueue_dev.justdail_crawl where crawl_status=0 limit 50'
+	select_qry = 'select url,meta_data,sk from urlqueue_dev.justdail_crawl where crawl_status=0 limit 1'
 	cur.execute(select_qry)
 	data = cur.fetchall()
 	for i in data :
@@ -38,17 +38,25 @@ class Justdial(BaseSpider):
 	    meta_data = json.loads(i[1])
 	    ref_url = meta_data['reference_url']
             city = meta_data['city']
-	    fee = meta_data['fee']
-	    exp = meta_data['exp']
-            yield Request(start_urls,self.parse,meta=({'ref_url':ref_url,'city':city,'fee':fee,'exp':exp}))
+	    #fee = meta_data['fee']
+	    #exp = meta_data['exp']
+	    distance = meta_data['distance']
+	    program_sk = i[2]
+            #yield Request(start_urls,self.parse,meta=({'ref_url':ref_url,'city':city,'fee':fee,'exp':exp,'program_sk':program_sk}))
+	    yield Request(start_urls,self.parse,meta=({'ref_url':ref_url,'city':city,'distance':distance,'program_sk':program_sk}))
 
     def parse(self, response):
         sel = Selector(response)
+	url = response.url
+	
         main_url = response.meta['ref_url']
         city = response.meta['city']
-        sk = response.url.split('/')[4]
-	fee = response.meta.get('fee','')
-	exp = response.meta.get('exp','')
+        #sk = response.url.split('/')[4]
+	sk = md5(normalize(url)+normalize(main_url))
+	program_sk=response.meta['sk']
+	#fee = response.meta.get('fee','')
+	#exp = response.meta.get('exp','')
+	distance = response.meta.get('distance','')
         ref_url_city = response.url.split('/')[3]
         name = ''.join(sel.xpath('//div[@class="tleorlp"]/h1/span[@class="item"]/span/text()').extract())
 	place = ''.join(response.xpath('//span[@class="lng_add"]//text()').extract()[0]).replace('\t','').replace('\n','')
@@ -62,19 +70,19 @@ class Justdial(BaseSpider):
         category = normalize("<>".join(sel.xpath('//span[@class="comp-text also-list showmore "]//a//text()').extract()))
         tel = "<>".join(sel.xpath('//div//ul[@id="comp-contact"]//div[@class="telCntct cmawht"]/a[@class="tel"]/text()').extract()).strip('<>')
 	days = sel.xpath('//div[@class="mreinfwpr"]//ul[@class="alstdul dn"]/li/span[@class="mreinflispn1 lng_commn"]/text()').extract()
-	timings = sel.xpath('//div[@class="mreinfwpr"]//ul[@class="alstdul dn"]/li/span[@class="mreinflispn2"]/text()').extract()
-        open_hours = '<>'.join(map(lambda a,b: a+':-'+b, days,timings))
+	timings = sel.xpath('//div[@class="mreinfwpr"]//ul[@class="alstdul dn"]/li/span[@class="mreinflispn2"]//text()').extract()
+        open_hours = '<>'.join(map(lambda a,b: normalize(a)+':-'+normalize(b), days,timings))
 	website_link = ''.join(sel.xpath('//span[@class="mreinfp comp-text"]/a/@href').extract())
         year = ''
         year = "".join(sel.xpath('//p[text()="Year Established"]/parent::div/ul/li/text()').extract())
         buisness_info = normalize("".join(sel.xpath('//div[@class="col-sm-12 businfo seoshow "]//text()').extract()))
-	book_appointment = ''.join(response.xpath('//section[@id="alldtlbtn"]/a//text()').extract()).replace('\n','').replace('\t','')
+	book_appointment = '<>'.join(response.xpath('//section[@id="alldtlbtn"]/a//text()').extract()).replace('\n','').replace('\t','')
 	number_of_ratings=''.join(response.xpath('//ul[@class="tabsCustom"]/li[contains(text(),"All Ratings")]/text()').extract()).replace('All Ratings','').replace('\n','').replace('\t','').replace('(','').replace(')','')
         patt_match = re.findall('\d{4}',year)
         if patt_match : year = "".join(year)
 	aux_info=''
-	meta_query = 'insert into justdail_meta(sk, name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode, rating_val, rating_count, telephone, time, year, available_services, buisness_info, aux_info,reference_url, main_url, place, website_link, book_appointment, fee, exp,number_of_ratings,created_at, modified_at) values ( %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now()) on duplicate key update modified_at = now(),place=%s,website_link=%s,book_appointment=%s,fee=%s,exp=%s,time=%s,image=%s,number_of_ratings=%s'
-	vals = (normalize(sk),normalize(name),normalize(city),str(ref_url_city),normalize(photo),normalize(images),normalize(address),normalize(category),normalize(payment_mode),str(rat_value),str(rat_votes),str(tel),str(open_hours),str(year),normalize(services),normalize(buisness_info),aux_info,normalize(response.url),normalize(main_url),normalize(place),normalize(website_link),normalize(book_appointment),normalize(fee),normalize(exp),normalize(number_of_ratings),normalize(place),normalize(website_link),normalize(book_appointment),normalize(fee),normalize(exp),normalize(open_hours),normalize(images),normalize(number_of_ratings))
+	meta_query = 'insert into justdail_meta(sk, name, city, ref_url_city, photos, image, address ,medicalspecialty, payment_mode, rating_val, rating_count, telephone, time, year, available_services, buisness_info, aux_info,reference_url, main_url, place, website_link, book_appointment, fee, exp,number_of_ratings,program_sk,created_at, modified_at) values ( %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now()) on duplicate key update modified_at = now(),place=%s,website_link=%s,book_appointment=%s,fee=%s,exp=%s,time=%s,image=%s,number_of_ratings=%s,program_sk=%s'
+	vals = (normalize(sk),normalize(name),normalize(city),str(ref_url_city),normalize(photo),normalize(images),normalize(address),normalize(category),normalize(payment_mode),str(rat_value),str(rat_votes),str(tel),str(open_hours),str(year),normalize(services),normalize(buisness_info),aux_info,normalize(response.url),normalize(main_url),normalize(place),normalize(website_link),normalize(book_appointment),normalize(fee),normalize(exp),normalize(number_of_ratings),normalize(program_sk),normalize(place),normalize(website_link),normalize(book_appointment),normalize(fee),normalize(exp),normalize(open_hours),normalize(images),normalize(number_of_ratings),normalize(program_sk))
         cur.execute(meta_query,vals)
         con.commit()
         up_qry = 'update urlqueue_dev.justdail_crawl set crawl_status=9 where crawl_status=0 and url="%s"' %str(response.url)
@@ -87,9 +95,10 @@ class Justdial(BaseSpider):
             rev_on = ''.join(node.xpath('./span[@class="dtyr ratx pull-right"]/text()').extract())
             rev_text = ''.join(node.xpath('.//div/p[@class="thr lng_commn"]/text()').extract())
             rev_query = 'insert into Reviews(sk, program_sk, reviewed_by, reviewed_on, review,rating_value,created_at, modified_at) values ( %s,%s, %s, %s, %s, %s, now(), now()) on duplicate key update modified_at = now(),rating_value=%s'
-            rev_sk = md5(rev_name+sk+rev_on+rev_text)
+            rev_sk = md5(rev_name+sk+rev_on+rev_text+normalize(sk))
             vals1 = (rev_sk,sk,rev_name,rev_on,rev_text,rev_rat,rev_rat)
             cur.execute(rev_query,vals1)
+	import pdb;pdb.set_trace()
         cookies = self.get_cookies(response.headers)
         headers = {
 	'accept-encoding': 'gzip, deflate, br',
@@ -101,9 +110,17 @@ class Justdial(BaseSpider):
     	'x-requested-with': 'XMLHttpRequest',
         }
         cid = ''.join(set(sel.xpath('//input[@name="docid"][@id="mpdocid"]/@value').extract()))
+	#img_url = 'https://www.justdial.com/functions/banner.php?paid=0&area=&docid=%s'%(cid)
+	#yield Request(img_url,callback=self.parse_img,headers=headers, method="GET", cookies=cookies,meta={"sk":sk})
         main_page = "https://www.justdial.com/functions/reviews_initial.php?ct=%s&cid=%s&tab=&city=Chennai&abgraph=0&pg_no=1" % (city,cid)
         yield Request(main_page, callback=self.parse_login, headers=headers, method="GET", cookies=cookies, \
 				meta={"main_url" :response.url, "headers":headers,"city":city,"rat_votes":str(rat_votes),"sk":sk})
+
+    '''def parse_img(self,response):
+	sel = Selector(response)
+	sk = response.meta.get('sk','')
+	img = '<>'.join(sel.xpath('//img//@src').extract()).replace('\\','').strip(' ')'''
+
     def parse_login(self, response):
 	data = json.loads(response.body)
 	js_revis = data.get('jsreviewdocids', '')
@@ -121,6 +138,7 @@ class Justdial(BaseSpider):
 	sel = Selector(response)
 	headers = response.meta.get('headers', '') 
 	sk = response.meta['sk']
+	import pdb;pdb.set_trace()
 	review_nodes = response.xpath('//div[@class="col-sm-12 allratingM"]/div[@class="allratR"]')
 	for node in review_nodes:
 	    rev_rat =[]
@@ -132,7 +150,7 @@ class Justdial(BaseSpider):
 	    rev_name = ''.join(node.xpath('./span[@class="fr"]/span[@class="rName"]/text()').extract())
 	    rev_date = ''.join(node.xpath('./span[@itemprop="datePublished"]//text()').extract())
 	    rev_text = ''.join(node.xpath('.//div[@itemprop="reviewBody"]/p/text()').extract())
-	    rev_sk = md5(normalize(rev_name)+normalize(rev_date)+normalize(rev_text))
+	    rev_sk = md5(normalize(rev_name)+normalize(rev_date)+normalize(rev_text)+normalize(sk))
 	    rev_query = 'insert into Reviews(sk, program_sk, reviewed_by, reviewed_on, review,rating_value,created_at, modified_at) values ( %s,%s, %s, %s, %s, %s, now(), now()) on duplicate key update modified_at = now(),rating_value=%s'
 	    vals = (rev_sk,sk,rev_name,rev_date,rev_text,rev_rat1,rev_rat1)
 	    cur.execute(rev_query,vals)

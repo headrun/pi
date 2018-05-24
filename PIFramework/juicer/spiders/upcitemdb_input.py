@@ -1,2 +1,2 @@
 #Need to add  Company names or brand names to crawl that particular brands
-Company_names = ['patanjali']
+Company_names = ['HINDUSTAN UNILEVER LTD', 'PROCTER & GAMBLE', 'RECKITT BENCKISER GROUP', 'ITC LIMITED', 'SVS', 'GLAXOSMITHKLINE CONSUMER HEALTHCARE LTD', 'HIMALAYA DRUG COMPANY', 'AGRO TECH FOODS LTD', 'JOHNSON & JOHNSON', 'PATANJALI AYURVED LIMITED']

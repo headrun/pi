@@ -36,7 +36,7 @@ class Bookmyshow(JuicerSpider):
 
     def parse(self, response):
         sel = Selector(response)
-        movies = sel.xpath('//div[@class="mv-row"]/div[@class="wow fadeIn movie-card-container"]')[0:1]
+        movies = sel.xpath('//div[@class="mv-row"]/div[@class="wow fadeIn movie-card-container"]')
         for movie in movies:
             url = ''.join(movie.xpath('.//div[@class="book-button"]/a/@href').extract())
 	    if url:
@@ -123,7 +123,7 @@ class Bookmyshow(JuicerSpider):
         if size > 0  :
             self.oupf.close()
             email_from_list = ['anusha.boyina19@gmail.com']
-            file_id = Googleupload().main('bookmyshow', email_from_list, self.excel_file_name)
+            file_id = Googleupload().main('Bookmyshow_Availability', email_from_list, self.excel_file_name)
         self.cur.close()
         self.conn.close()
 

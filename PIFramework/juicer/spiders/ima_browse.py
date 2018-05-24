@@ -1,4 +1,4 @@
-from juicer.utils import *
+"""from juicer.utils import *
 from juicer.items import *
 import requests
 import json
@@ -60,7 +60,7 @@ class ImaBrowse(JuicerSpider):
             for data_ in data : 
                 state,branch,la,first_name,last_name,district,city,pin = data_
                 values = [state,branch,la,first_name,last_name,district,city,pin]
-                self.todays_excel_file.writerow(values)
+                self.todays_excel_file.writerow(values)"""
 
      
                 

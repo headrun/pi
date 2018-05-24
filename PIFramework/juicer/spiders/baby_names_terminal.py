@@ -7,7 +7,7 @@ class BabyNamesTerminal(JuicerSpider):
     def __init__(self, *args, **kwargs):
 	super(BabyNamesTerminal, self).__init__(*args, **kwargs)
 	self.con = MySQLdb.connect(host='localhost', user= 'root',passwd='root',db="Baby_Names",charset="utf8",use_unicode=True)
-	self.cur = con.cursor()
+	self.cur = self.con.cursor()
 	
 
     def parse(self,response):

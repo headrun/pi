@@ -19,15 +19,15 @@ class BabyTerminal(JuicerSpider):
     def __init__(self, *args, **kwargs):
         super(BabyTerminal, self).__init__(*args, **kwargs)
         self.header_params = ['movie_id','title','original_title','popularity','poster_path','genres_id','genres_name','vote_average','imdb_id','languages','collection_name','collection_id','coll_poster_path','coll_backdrop_path','production_country','budget','homepage','overview','production_com_name','production_country','production_company_logo','tagline','release_date','adult','spoken_languages','vote_count','runtime','revenue','reference_url']
-        self.header_params1 =  ['Crew_id','movie_id','movie_title','credit_id','name','gender','aka','place_of_birth','death_day','biography','crew_job','cast_character','cast_order','profile_path','popularity','Adult','Imdb_id','Homepage','reference_url']
-        self.excel_file_name1 = 'TMDB_CREW_DATA_ON_%s.csv'%str(datetime.datetime.now().date())
-        self.excel_file_name = 'TMDB_MOVIE_DATA_ON_%s.csv'%str(datetime.datetime.now().date())
-        oupf = open(self.excel_file_name, 'ab+')
-        oupf1 = open(self.excel_file_name1, 'ab+')
-        self.todays_excel_file  = csv.writer(oupf)
-        self.todays_excel_file1  = csv.writer(oupf1)
-        self.todays_excel_file1.writerow(self.header_params1)
-        self.todays_excel_file.writerow(self.header_params)
+        #self.header_params1 =  ['Crew_id','movie_id','movie_title','credit_id','name','gender','aka','place_of_birth','death_day','biography','crew_job','cast_character','cast_order','profile_path','popularity','Adult','Imdb_id','Homepage','reference_url']
+        #self.excel_file_name1 = 'TMDB_CREW_DATA1_ON_%s.csv'%str(datetime.datetime.now().date())
+        #self.excel_file_name = 'TMDB_MOVIE_DATA1_ON_%s.csv'%str(datetime.datetime.now().date())
+        #oupf = open(self.excel_file_name, 'ab+')
+        #oupf1 = open(self.excel_file_name1, 'ab+')
+        #self.todays_excel_file  = csv.writer(oupf)
+        #self.todays_excel_file1  = csv.writer(oupf1)
+        #self.todays_excel_file1.writerow(self.header_params1)
+        #self.todays_excel_file.writerow(self.header_params)
                
     def parse(self,response):
         sel = Selector(response)
@@ -129,12 +129,13 @@ class BabyTerminal(JuicerSpider):
         cast_rank = 0
         for cast in casts :
             cast_id = cast.get('cast_id','')
-            character = cast.get('character','')
+            character = cast.get('character','').replace('"','\\"')
             credit_id = cast.get('credit_id','')
             gender = cast.get('gender','')
             id_ = cast.get('id','')
             name = cast.get('name','')
             order = cast.get('order','')
+         
             role_data = ({'cast_id':cast_id,'character':character,'order':order})
             profile_path = cast.get('profile_path','')
             if id_ : 
@@ -152,7 +153,7 @@ class BabyTerminal(JuicerSpider):
                 #self.get_page("tmdb_crew_terminal", cast_link, id_, meta_data={'movie_id':movie_id,'movie_title':org_title,"type":'cast','cast_character':character,'cast_order':order,'ref_url':response.url,'credit_id':credit_id})
         crews = credits.get('crew',[])
         movie_item['crew_count'] = str(len(crews))
-        #yield movie_item
+        yield movie_item
         #import pdb;pdb.set_trace()
         self.got_page(movie_id, 1)
         department,gender,job,name,id_='','','','',''

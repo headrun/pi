@@ -39,10 +39,8 @@ class AddressBrowse(JuicerSpider):
             self.get_page("address_latlong_terminal",url,sk,meta_data={'full_address':address_new,'s_no': mobile_no})
 
     def read(self):
-        import pdb;pdb.set_trace()
         files_list = glob.glob(address_processing_path+'/*.xlsx')
         for _file in files_list:
-                import pdb;pdb.set_trace()
                 if 'address_cleaned' in _file :continue
                 W = px.load_workbook(_file, use_iterators = True)
                 sheet_list = W.get_sheet_names()

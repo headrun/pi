@@ -56,7 +56,7 @@ class TicketNewBrowse(JuicerSpider):
         if size > 0  :
             self.oupf.close()
             email_from_list = ['anusha.boyina19@gmail.com']
-            file_id = Googleupload().main('ticketnew', email_from_list, self.excel_file_name)
+            file_id = Googleupload().main('Ticketnew_Availability', email_from_list, self.excel_file_name)
         self.cur.close()
         self.conn.close()
         
@@ -65,7 +65,7 @@ class TicketNewBrowse(JuicerSpider):
         sel = Selector(response)
         self.cur.execute(self.del_qry)
         self.conn.commit()
-        movie_links = sel.xpath('//div[@class="tn-movie tn-section-tile"]//a[contains(@href,"Online-Advance-Booking")]//@href').extract()[0:3] 
+        movie_links = sel.xpath('//div[@class="tn-movie tn-section-tile"]//a[contains(@href,"Online-Advance-Booking")]//@href').extract() 
         for movie in movie_links :
             yield Request(movie,callback=self.parse_availability)
 
