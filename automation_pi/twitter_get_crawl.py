@@ -17,7 +17,7 @@ class Login(object):
 	if len(sys.argv) == 2 and sys.argv[1] == 'prod':
 		email_from_list = email_prod_list
 	recs_allows = fetchall(self.cur, twitter_taken_qry)
-	if recs_allows:
+	if  recs_allows:
 		for recs_allow in recs_allows:
 			rows = fetchall(self.cur, self.select_qry % (recs_allow[0], recs_allow[1]))
 			execute_query(self.cur, update_twitter_pi_crawl % recs_allow[2])
@@ -26,16 +26,23 @@ class Login(object):
 				if not rows: break
 			        for row in rows:
 				    check_inprocess = 'yes'
-				    args_name,screen_url,email_id = row
+				    args_name,screen_url,aux_info = row
+                                    args_name = screen_url.split('/')[-1]
+			       	    try : email_id = json.loads(aux_info).get('email_address', '')
+                                    except : email_id = ''
 		        	    cmd = "python tweet_analyzer.py -n %s -e %s"%(args_name,email_id)
 				    if not email_id:
-					cmd = "python tweet_analyzer.py -n %s" % (args_name)
+				        cmd = "python tweet_analyzer.py -n %s" % (args_name)
 				    self.update_status(args_name, '9', 'twitter_crawl', self.update_qry)
         			    #self.cur.execute(self.update_qry % args_name)
 				    self.con.commit()
-		        	    os.system(cmd)
+		        	    try : os.system(cmd)
+                                    except : 
+					args_name = args_name.encode('utf-8')
+                                        cmd = "python tweet_analyzer.py -n %s" % (args_name)
 			if check_inprocess and recs_allow:
 				cmd1 = 'python twitter_xlsheet.py -d %s -m %s -p %s' % (DB_NAME_REQ, recs_allow[0].replace(' ','#'), ','.join(email_from_list))
+				print cmd1
 				os.system(cmd1)
 				execute_query(self.cur, update_twitter_sheet_pi_crawl % recs_allow[2])
 

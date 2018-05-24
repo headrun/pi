@@ -37,7 +37,7 @@ class Piparsing(object):
 					row_check = 0
 					email_address, linkedin_profile, ida,\
 					firstname, lastname, key_,snoa,\
-					twitter_profile, facebook_profile = ['']*9
+					twitter_profile, facebook_profile,srno1,payer1 = ['']*11
 					for row in sheet_.iter_rows():
 						if row_check > 0:
 							row_check += 1
@@ -62,8 +62,12 @@ class Piparsing(object):
 								twitter_profile = counter
 							elif 'facebook' in lower_head:
 								facebook_profile = counter
-							elif 's.no' in lower_head:
+							elif 's.no.' in lower_head:
 								snoa = counter
+							elif 'sno' in lower_head:
+								srno1 = counter
+							elif 'payer' in lower_head:
+								payer1 = counter
 							counter += 1
 						break
 					m = 0
@@ -75,7 +79,6 @@ class Piparsing(object):
 							temp_rows.append(i.value)
 						final_indents.append(temp_rows)
 					empty_dic = {}
-					#present_date = re.sub('\.(.*)','', str(datetime.datetime.now()))
 					for row in final_indents:
 						row = map(lambda x_inner: '' if x_inner == None else x_inner, row)
 						row_check = range(len(row))
@@ -101,6 +104,12 @@ class Piparsing(object):
 						if snoa != '' and snoa in row_check:
 							snoaf = normalize(str(row[snoa]))
 							meta_date_from_browse.update({"sno":snoaf})
+						if srno1  != '' and srno1 in row_check:
+							srno_f = normalize(str(row[srno1]))
+							meta_date_from_browse.update({"srno":srno_f})
+						if payer1 != '' and payer1 in row_check:
+							payer_f = normalize(str(row[payer1]))
+							meta_date_from_browse.update({"payer":payer_f})
                                                 if linkedin_profile != '' and linkedin_profile in row_check:
                                                         linkedin_profilef = normalize(str(row[linkedin_profile].encode('utf-8')))
                                                         meta_date_from_browse.update({"linkedin_url":linkedin_profilef})

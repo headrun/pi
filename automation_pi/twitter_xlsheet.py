@@ -23,17 +23,18 @@ class Tixlsfile(object):
 	self.modified_at_cmd = self.modified_at_cmd.replace('#', ' ')
         self.row_count = 1
         self.db_list = self.db_list.split(',')
-        self.selectqry =  'select screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day from Twitter_latest where modified_at >= "%s"' % self.modified_at_cmd
-	self.selectqry2 = 'select sk, url, meta_data from twitter_crawl where modified_at >= "%s" and crawl_status != 1;' % self.modified_at_cmd
+        self.selectqry =  'select screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day from Twitter_latest where modified_at = "%s"' % self.modified_at_cmd
+
+	self.selectqry2 = 'select sk, url, meta_data from twitter_crawl where modified_at = "%s" and crawl_status != 1;'%self.modified_at_cmd
+
         self.excel_file_name = 'twitter_data_on_%s.xls'%str(datetime.datetime.now())
 	self.excel_file_name = self.excel_file_name.replace(' ','_')
         self.todays_excel_file = xlwt.Workbook(encoding="utf-8")
         self.todays_excel_sheet1 = self.todays_excel_file.add_sheet("sheet1")
-        header_params = ['id', 'sno', 'screen_name','name','description','location','tweets','following','followers','likes','image','listsi','timezone','language','is_verified','twitter_url','email_id','top_10_hashtags','top_5_mentioned_users','retweeted_percentage','retweeted_users', 'Most_referenced_domains','detected_sources', 'detected_languages', 'Avg_no_of_tweets_per_day','Status']
+        header_params = ['id', 'sno', 'payer','screen_name','name','description','location','tweets','following','followers','likes','image','listsi','timezone','language','is_verified','twitter_url','email_id','top_10_hashtags','top_5_mentioned_users','retweeted_percentage','retweeted_users', 'Most_referenced_domains','detected_sources', 'detected_languages', 'Avg_no_of_tweets_per_day','Status']
         for i, row in enumerate(header_params):
             self.todays_excel_sheet1.write(0, i, row)
         self.main()
-
 
     def close_sql_connection(self, conn, cursor):
         if cursor: cursor.close()
@@ -48,13 +49,17 @@ class Tixlsfile(object):
             for record in records:
                 screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day = record
 		sno_given1 = fetchmany(cur2_, 'select meta_data from twitter_crawl where sk = "%s"' % screen_name)
-		id_value, sno_given = ['']*2
+		id_value, sno_given,payer = ['']*3
 		if sno_given1:
-			sno_given = json.loads(sno_given1[0][0]).get('sno','')
-			id_value = json.loads(sno_given1[0][0]).get('id', '')
+			try:
+				#sno_given = json.loads(sno_given1[0][0]).get('sno','')
+				sno_given = json.loads(sno_given1[0][0]).get('srno','')
+				payer = json.loads(sno_given1[0][0]).get('payer','')
+				id_value = json.loads(sno_given1[0][0]).get('id', '')
+			except: pass
 		else:
 			sno_given = ''
-                values = [id_value, sno_given, screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day,'DataAvailable']
+                values = [id_value, sno_given, payer,screen_name,name,description,location,tweets,following,followers,likes,image,lists,timezone,language,is_verified,twitter_url,email_id,top_10_hashtags,top_5_mentioned_users,retweeted_percentage,retweeted_users, Most_referenced_domains,detected_sources, detected_languages, Avg_no_of_tweets_per_day,'DataAvailable']
                 for col_count, value in enumerate(values):
                     try : 
                         value = str(value)

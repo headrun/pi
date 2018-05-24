@@ -38,7 +38,7 @@ class Pimail(object):
 			if mail_from in mailids_from_list:
 				subject = mail['Subject']
 				date_time = mail['Date']
-				if 'profiles' in subject.lower():
+				if 'profiles' in subject.lower() or "Run the crawler for FB" in subject.lower():
 				    check_true = 'yes'
 				    for part in mail.walk():
 					    if part.get_content_maintype() == 'multipart':

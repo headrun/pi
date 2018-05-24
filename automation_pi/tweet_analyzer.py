@@ -41,7 +41,8 @@ parser.add_argument('-l', '--limit', metavar='N', type=int, default=1000,
 parser.add_argument('-n', '--name', required=True, metavar='screen_name',
                     help='target screen_name')
 
-parser.add_argument('-e', '--email', required=True, metavar='emailid',help='target emailid')
+parser.add_argument('-e', '--email', default='', metavar='emailid',help='target emailid')
+
 
 parser.add_argument('-f', '--filter', help='filter by source (ex. -f android will get android tweets only)')
 
@@ -375,12 +376,23 @@ def main():
             except Exception as e:print e
             ret_user.append(data)
     import md5
+    if args.email=='None':args.email=''
     ret_user = '<>'.join(ret_user)
     sk = md5.md5(screen_url).hexdigest()
-    vals = (sk,args.name,name,normalize(description),location,tweets,following,followers,\
+    '''vals = (sk,args.name,name,normalize(description),location,tweets,following,followers,\
            likes,image,listed_count,timezone,lang,verified,screen_url,args.email,'',\
            detected_has,mentioned_user_name,no_of_RTs,ret_user,detected_domain,\
-           detected_sou,detected_las,avg_tweets_per_day)
+           detected_sou,detected_las,avg_tweets_per_day)'''
+    vals = (sk,args.name,normalize(name),normalize(description),location,tweets,following,followers,\
+	    likes,image,listed_count,timezone,lang,verified,screen_url,args.email,'',\
+	    detected_has,mentioned_user_name,no_of_RTs,ret_user,detected_domain,\
+	    detected_sou,detected_las,avg_tweets_per_day,\
+	    sk,args.name,normalize(name),normalize(description),location,tweets,following,followers,\
+	    likes,image,listed_count,timezone,lang,verified,normalize(screen_url),args.email,'',\
+	    detected_has,mentioned_user_name,no_of_RTs,ret_user,detected_domain,\
+	    detected_sou,detected_las,avg_tweets_per_day)
+    print vals
+ 	
 
     screen_name = args.name
     cur.execute(twitter_qry,vals)
