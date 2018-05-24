@@ -17,8 +17,9 @@ class Facebookbrowse(BaseSpider):
         self.about = '/about'
         self.likes = '?v=likes'
         self.following = '?v=following'
-	self.friends = '?v=friends'
+	#self.friends = '?v=friends'
 	self.cur.execute(get_qry_params)
+        #import pdb;pdb.set_trace()
 	self.profiles_list = [i for i in self.cur.fetchall()]
 	self.res_afterlogin = ''
 	self.cur_date = str(datetime.datetime.now().date())
@@ -55,6 +56,7 @@ class Facebookbrowse(BaseSpider):
 	      
 		return [FormRequest.from_response(response, formname = 'login_form',\
 				formdata=data,callback=self.parse_redirect)]"""
+	#import pdb;pdb.set_trace()
         if self.profiles_list  :
                 login  = constants_dict[self.login]
                 lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
@@ -99,15 +101,20 @@ class Facebookbrowse(BaseSpider):
 	    self.cur.execute(qry_params, vals)
 	    #self.cur.execute(update_get_params%(9,sk))
 	    self.update_status(sk, 9, 'facebook_crawl', update_get_params)
-            url_about = "%s%s"%(profile,self.about)
-            url_following = "%s%s"%(profile,self.following)
-            url1_aboutlikes = "%s%s"%(profile,self.likes)
-	    url_aboutfriends = "%s%s"%(profile,self.friends)
+	    if 'profile.php' not in profilei[1]:
+            	url_about = "%s%s"%(profile,self.about)
+            	url_following = "%s%s"%(profile,self.following)
+            	url1_aboutlikes = "%s%s"%(profile,self.likes)
+	    else:
+	    	id_ = ''.join(re.findall('id=(\d+)',profilei[1]))
+	    	url_about = 'https://mbasic.facebook.com/profile.php?v=about&id=%s'%id_
+	    	url_following = 'https://mbasic.facebook.com/profile.php?v=following&id=%s'%id_
+	    	url1_aboutlikes = 'https://mbasic.facebook.com/profile.php?v=likes&id=%s'%id_
+	    #url_aboutfriends = "%s%s"%(profile,self.friends)
             list_of_pa = [(url_about,'about'),(profile,'about')]
-	    list_of_paothers = [(url_following,''), (url1_aboutlikes,''),(url_aboutfriends, ''),(url_about, '')]
+	    list_of_paothers = [(url_following,''), (url1_aboutlikes,''),(url_about, '')]
             for urls in list_of_pa:
                 yield Request(urls[0], callback=self.parse_profile, meta={'sk':sk,"al":'',"see_more":'','profile':profile,"check_list":'','not_found':urls[1], 'email_address':email_address},dont_filter=True)
-
 	    for urls_ in list_of_paothers:
 		yield Request(urls_[0], callback=self.parse_likesdata, meta={'sk':sk,"al":'',"see_more":'','profile':profile,"checklist":'','not_found':urls[1], 'email_address':email_address},dont_filter=True)
 
@@ -181,10 +188,10 @@ class Facebookbrowse(BaseSpider):
                 if not  no_of_friends : no_of_friends =  ''.join(sel.xpath('//a[contains(text(),"See All Friends")]//text()').extract())
                 if no_of_friends : no_of_friends = "".join(re.findall('(\d+)',no_of_friends))
                 
-                if name:
+                if name and name != 'Content Not Found':
 		    #self.res_afterlogin = sel
                     name_vals = ('name', self.replacefun(name), sk)
-                    self.cur.execute(updateqry_params% name_vals)
+		    self.cur.execute(updateqry_params% name_vals)
                     if owner_id:
                         id_vals = ('profile_id', owner_id, sk)
                         self.cur.execute(updateqry_params% id_vals)
@@ -519,7 +526,7 @@ class Facebookbrowse(BaseSpider):
         s.starttls()
         s.ehlo()
         s.login(sender, '01123123')
-        s.sendmail(sender, receivers_mail_list, msg.as_string())
+        #s.sendmail(sender, receivers_mail_list, msg.as_string())
 
         
         
