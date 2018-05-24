@@ -40,23 +40,6 @@ class Facebookbrowse(BaseSpider):
 
     def parse(self, response):
         sel = Selector(response)
-	"""self.profiles_list = ['AravindRajanm']
-        if self.profiles_list  :
-		login  = ['yagnasree@headrun.com', 'yagna^123']#constants_dict[self.login] 
-		lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
-		lgnrnd = ''.join(sel.xpath('//input[@name="lgnrnd"]/@value').extract())
-		lgndim = ''.join(sel.xpath('//input[@name="lgndim"]/@value').extract())
-		lgnjs = ''.join(sel.xpath('//input[@name="lgnjs"]/@value').extract())
-		
-		data = {'email': login[0],'pass':login[1],'lsd':lsd, 'lgnrnd':lgnrnd, 'lgndim' : lgndim, 'lgnjs' : lgnjs, 'display' : ''}
-		data.update({'enable_profile_selector' : '', 'isprivate' : '', 'legacy_return' : '0', 'profile_selector_ids' : ''})
-		data.update({'return_session' : '', 'skip_api_login' : '', 'signed_next' :'', 'trynum' : '1', 'timezone' : '-330'})
-		data.update({'prefill_contact_point': login[0], 'prefill_source' : 'browser_dropdown', 'prefill_type' :'password', 'first_prefill_source' : ''})
-		data.update({'first_prefill_type' : 'contact_point', 'had_cp_prefilled' : 'true', 'had_password_prefilled' : 'true'})
-	      
-		return [FormRequest.from_response(response, formname = 'login_form',\
-				formdata=data,callback=self.parse_redirect)]"""
-	#import pdb;pdb.set_trace()
         if self.profiles_list  :
                 login  = constants_dict[self.login]
                 lsd = ''.join(sel.xpath('//input[@name="lsd"]/@value').extract())
@@ -77,7 +60,7 @@ class Facebookbrowse(BaseSpider):
             noti_xpath = 'Your account has been disabled'
             user = constants_dict[self.login][0]
             pwd = constants_dict[self.login][1]
-            #self.send_mail(noti_xpath,user,pwd)
+            self.send_mail(noti_xpath,user,pwd)
         yield Request('https://mbasic.facebook.com/support/?notif_t=feature_limits',callback=self.parse_next)
 
     def parse_next(self, response):
@@ -88,7 +71,7 @@ class Facebookbrowse(BaseSpider):
                     user = constants_dict[self.login][0]
                     pwd = constants_dict[self.login][1]
                     self.profiles_list = []
-                    #self.send_mail(noti_xpath,user,pwd)
+                    self.send_mail(noti_xpath,user,pwd)
 
         for profilei in self.profiles_list:
             sk = profilei[0]
@@ -99,7 +82,6 @@ class Facebookbrowse(BaseSpider):
 		continue
 	    vals = (sk, profilei[1], sk, profilei[1])
 	    self.cur.execute(qry_params, vals)
-	    #self.cur.execute(update_get_params%(9,sk))
 	    self.update_status(sk, 9, 'facebook_crawl', update_get_params)
 	    if 'profile.php' not in profilei[1]:
             	url_about = "%s%s"%(profile,self.about)
@@ -195,7 +177,6 @@ class Facebookbrowse(BaseSpider):
                     if owner_id:
                         id_vals = ('profile_id', owner_id, sk)
                         self.cur.execute(updateqry_params% id_vals)
-			#self.cur.execute(update_get_params%(1,sk))	
 			self.update_status(sk, 1, 'facebook_crawl', update_get_params)
                     self.cur.execute(selectaux_params%sk)
                     aux_cu1 = self.cur.fetchall()
@@ -231,7 +212,6 @@ class Facebookbrowse(BaseSpider):
                     if other_names: up_aux3.update({"other_names":self.replacefun(other_names)})
                     self.cur.execute(updateqry_params%('aux_info', json.dumps(up_aux3,ensure_ascii=False, encoding="utf-8"),sk))
 		else: 
-			#self.cur.execute(update_get_params%(2,sk))
 			self.update_status(sk, 2, 'facebook_crawl', update_get_params)
 
     def parse_likesdata(self, response):
@@ -241,7 +221,6 @@ class Facebookbrowse(BaseSpider):
 	dic_to_limit = response.meta.get('dic_to_limit',{})
 
 	if response.status == 302: 
-		#self.cur.execute(update_get_params%(2,sk))
 		self.update_status(sk, 2, 'facebook_crawl', update_get_params)
         others_list,clothing_list,activities_list, interests_list, music_list, books_list, movies_list, tvshow_list, favteams_list, favathe_list, friends_list, games_list, restaurants_list, websites_list, work_list, education_list, family_list,sports_list, inspirationalpeople_list, following_list,lifeevents_list,quotes_list,about_list,liveplaces_list = [],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[],[]
         ab_list = []
