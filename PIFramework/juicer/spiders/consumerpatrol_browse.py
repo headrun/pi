@@ -1,6 +1,6 @@
 from juicer.utils import *
 from juicer.items import *
-import dateparser
+#import dateparser
 
 class Consumerpatrolbrowse(JuicerSpider):
     name = "consumerpatrol_browse"

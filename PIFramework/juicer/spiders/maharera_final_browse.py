@@ -6,7 +6,7 @@ from maharera_insertqueries import *
 
 
 class MahareraTerminal(JuicerSpider):
-    name='maharerait_browse'
+    name='maharera_browse_crawl1'
     start_urls=['https://maharerait.mahaonline.gov.in/SearchList/Search']
 
     def __init__(self, *args, **kwargs):
@@ -37,8 +37,8 @@ class MahareraTerminal(JuicerSpider):
             sr_no,proj_name,promoter_name,last_modified,view_details = data
             if view_link :
                 view_link = self.domain + "".join(view_link)
-                main_values = (normalize(proj_name),normalize(proj_name),normalize(promoter_name),normalize(last_modified),normalize(view_link),'NA',normalize(response.url))
-                #self.cur.execute(mainpage_metaquery,main_values)
+                main_values = (normalize(proj_name),normalize(promoter_name),normalize(last_modified),normalize(view_link),'NA',normalize(response.url))
+                self.cur.execute(mainpage_metaquery,main_values)
                 self.con.commit()
                 yield FormRequest(view_link, dont_filter = True, callback = self.parse_meta,meta={'sk':proj_name})
  
@@ -71,7 +71,7 @@ class MahareraTerminal(JuicerSpider):
         documents = normalize("<>".join(sel.xpath('//div[@id="DivDocument"]//table//tr//td//span//text()').extract()))
         aux_info=''
         if program_sk:
-            values = (normalize(program_sk),normalize(program_sk),information_type,organization_name,organization_type,desc_other_type_org,past_exp,org_add_block_number,org_add_build_name,org_add_street_name,org_add_company_locality,org_add_company_landmark,org_add_company_state,org_add_division,org_add_district,org_add_taluka,org_add_village,org_add_pincode,org_contact_office_number,org_contact_website_url,fsi_built_area_proposed,fsi_built_area_approved,fsi_totalfsi,documents,normalize(response.url),aux_info)
+            values = (normalize(program_sk),information_type,organization_name,organization_type,desc_other_type_org,past_exp,org_add_block_number,org_add_build_name,org_add_street_name,org_add_company_locality,org_add_company_landmark,org_add_company_state,org_add_division,org_add_district,org_add_taluka,org_add_village,org_add_pincode,org_contact_office_number,org_contact_website_url,fsi_built_area_proposed,fsi_built_area_approved,fsi_totalfsi,documents,normalize(response.url),aux_info)
             self.cur.execute(mahameta_query,values)
             self.con.commit()
         org_project_name = normalize(extract_data(sel, '//div[@class="form-group"]/div[label[contains(text(),"  Project Name")]]/following-sibling::div[1]/text()'))
@@ -163,9 +163,8 @@ class MahareraTerminal(JuicerSpider):
             if not compliant_no : continue
             compliant_name = normalize("".join(compliant_nodes.xpath('./td[2]//text()').extract()))
             compliant_sk = md5(normalize(program_sk)+compliant_no+compliant_name)
-            aux_inf = ''
             if compliant_sk and compliant_no:
-                values10 = (normalize(compliant_sk),normalize(program_sk),compliant_no,compliant_name,normalize(response.url),aux_inf)
+                values10 = (normalize(compliant_sk),normalize(program_sk),compliant_no,compliant_name,normalize(response.url))
                 self.cur.execute(compliant_metaquery, values10)
                 self.con.commit()
 
@@ -179,9 +178,8 @@ class MahareraTerminal(JuicerSpider):
             agreement =  normalize("".join(pro_node.xpath('./td[4]//text()').extract()))
             office_num =  normalize("".join(pro_node.xpath('./td[5]//text()').extract()))
             other_det =  normalize("".join(pro_node.xpath('./td[6]//text()').extract()))
-            pro_sk =  md5(normalize(program_sk)+pro_project_name+pro_promoter_name)
-            aux_in = ''
-            qry_values = (normalize(pro_sk),normalize(program_sk),pro_project_name,pro_promoter_name,land_owner_type,agreement,str(office_num),other_det,normalize(response.url),aux_in)
+            pro_sk =  md5(normalize(program_sk)+pro_project_name+pro_promoter_name)   
+            qry_values = (normalize(pro_sk),normalize(program_sk),pro_project_name,pro_promoter_name,land_owner_type,agreement,str(office_num),other_det,normalize(response.url))
             self.cur.execute(promoter_det_metaquery,qry_values)
             self.con.commit() 
 	rows_dict = {}

@@ -33,7 +33,6 @@ class UpcitemdbTerminal(JuicerSpider):
 	    #sk = '8904109465338'
             search_keyword = response.url.split('/')[-1]
 	    #search_keyword = 'PATANJALI AYURVED LIMITED'
-            import pdb;pdb.set_trace()
 	    dict1 = {}
 	    list1 = []
 	    aux_info = {}

@@ -4,7 +4,7 @@ import csv
 
 class Mahareracsv(object):
     def __init__(self, *args, **kwargs):
-        self.con = MySQLdb.connect(host = 'localhost', user = 'root', passwd = '', db = 'MAHARERA', charset = 'utf8', use_unicode = True)
+        self.con = MySQLdb.connect(host = 'localhost', user = 'root', passwd = 'root', db = 'MAHARERA', charset = 'utf8', use_unicode = True)
         self.cur = self.con.cursor()
         self.columns_query = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "MAHARERA" and table_name = "%s"'
         self.main()

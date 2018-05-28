@@ -1,6 +1,6 @@
 from juicer.utils import *
 from juicer.items import *
-import dateparser
+#import dateparser
 
 class Consumercourtreviews(JuicerSpider):
     name = 'consumercourt_review_terminal'
@@ -35,6 +35,10 @@ class Consumercourtreviews(JuicerSpider):
             author_title = extract_data(nd, './/span[@class="usertitle"]//text()')
             post_title = extract_data(nd, './/h2[contains(@class,"posttitle")]/text()').replace(u'\xc2\xa0','').replace(u'\xa0','').replace(u'\xf0\x9f\x92\x99','').replace(u'\U0001f499','').replace(u'\U0001f917','').replace(u'\U0001f44d','').replace(u'\U0001f4f6','')
             post_text = extract_data(nd, './/blockquote[contains(@class,"postcontent")]//text()',' ')
+            if  'apollo' not in post_text.lower(): continue
+            if  'apollo hospital' not in post_text.lower(): continue
+            print 'yes'
+
             reputation_image = extract_data(nd, './/span[@class="postbit_reputation"]/img[@class="repimg"]/@src')
             if reputation_image:
                 if 'http' not in reputation_image: reputation_image = "{}{}".format(self.domain, reputation_image)

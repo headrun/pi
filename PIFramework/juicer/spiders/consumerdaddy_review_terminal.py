@@ -1,6 +1,6 @@
 from juicer.utils import *
 from juicer.items import *
-import dateparser
+#import dateparser
 
 class Consumderdaddyreviews(JuicerSpider):
     name = 'consumerdaddy_review_terminal'

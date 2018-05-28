@@ -1,4 +1,4 @@
-"""from juicer.utils import *
+from juicer.utils import *
 from juicer.items import *
 import requests
 import json
@@ -49,8 +49,8 @@ class ImaBrowse(JuicerSpider):
         range_value = length/25000
         for i in range(0,range_value):
             link = "http://www.ima-india.org/demomembership/ima-member-sys-encr/server_processing.php?draw=20&columns[0][data]=0&columns[0][name]=&columns[0][searchable]=true&columns[0][orderable]=true&columns[0][search][value]=&columns[0][search][regex]=false&columns[1][data]=1&columns[1][name]=&columns[1][searchable]=true&columns[1][orderable]=true&columns[1][search][value]=&columns[1][search][regex]=false&columns[2][data]=2&columns[2][name]=&columns[2][searchable]=true&columns[2][orderable]=true&columns[2][search][value]=&columns[2][search][regex]=false&columns[3][data]=3&columns[3][name]=&columns[3][searchable]=true&columns[3][orderable]=true&columns[3][search][value]=&columns[3][search][regex]=false&columns[4][data]=4&columns[4][name]=&columns[4][searchable]=true&columns[4][orderable]=true&columns[4][search][value]=&columns[4][search][regex]=false&columns[5][data]=5&columns[5][name]=&columns[5][searchable]=true&columns[5][orderable]=true&columns[5][search][value]=&columns[5][search][regex]=false&columns[6][data]=6&columns[6][name]=&columns[6][searchable]=true&columns[6][orderable]=true&columns[6][search][value]=&columns[6][search][regex]=false&columns[7][data]=7&columns[7][name]=&columns[7][searchable]=true&columns[7][orderable]=true&columns[7][search][value]=&columns[7][search][regex]=false&order[0][column]=6&order[0][dir]=asc&start=%s&length=%s&search[value]=%s&search[regex]=false&_=1512385551483"%(start_value,length,city)
-             start_value = int(start_value) + 25000
-             yield Request(link,callback=self.parse_nav,meta={'start_value':start_value,'length':length}) 
+            start_value = int(start_value) + 25000
+            yield Request(link,callback=self.parse_nav,meta={'start_value':start_value,'length':length}) 
 
     def parse_nav(self,response):
         sel = Selector(response)
@@ -60,7 +60,7 @@ class ImaBrowse(JuicerSpider):
             for data_ in data : 
                 state,branch,la,first_name,last_name,district,city,pin = data_
                 values = [state,branch,la,first_name,last_name,district,city,pin]
-                self.todays_excel_file.writerow(values)"""
+                self.todays_excel_file.writerow(values)
 
      
                 

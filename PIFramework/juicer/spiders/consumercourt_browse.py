@@ -1,6 +1,6 @@
 from juicer.utils import *
 from juicer.items import *
-import dateparser
+#import dateparser
 
 class Consumercourtbrowse(JuicerSpider):
     name = "consumercourt_browse"
@@ -75,5 +75,6 @@ class Consumercourtbrowse(JuicerSpider):
         next_page = extract_data(sel,'//div[@id="below_searchresults"]//a[@rel="next"]/@href')
         if next_page:
             next_page_url = "{}{}".format(self.domain, next_page)
-            if next_page_url: yield Request(next_page_url, callback=self.parse, meta={"browse":browse})
+            print next_page_url
+            if next_page_url: yield Request(next_page_url, callback=self.parse, meta={"browse":browse},dont_filter=True)
 

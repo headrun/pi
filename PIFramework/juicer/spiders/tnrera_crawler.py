@@ -10,7 +10,6 @@ class TnreraBrowse(JuicerSpider):
      
 
     def parse(self, response):
-        import pdb;pdb.set_trace()
         sel = Selector(response)
         nodes = sel.xpath('//div[@class="row"]//ul//li/div[@class="rImage"]')
         for node in nodes :

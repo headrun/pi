@@ -1,13 +1,14 @@
 from juicer.utils import *
 
-class Juicecomk(JuicerSpider):
-    name = 'complaintsboard_browse'
-    start_urls = []
+class ComplaintsBoardComBrowse(JuicerSpider):
+    name = 'complaintsboardcom_browse'
+    handle_httpstatus_list = [301]
+
     def __init__(self, *args, **kwargs):
-        super(Juicecomk, self).__init__(*args, **kwargs)
+        super(ComplaintsBoardComBrowse, self).__init__(*args, **kwargs)
         self.search_url = "https://www.complaintsboard.com/?search="
         self.domain = "https://www.complaintsboard.com"
-        self.browse_list = 'apollo hospitals'
+        self.browse_list = 'apollo+hospitals'
         self.browse_list =  kwargs.get('search', self.browse_list)
         self.browse_list = self.browse_list.split(',')
         for br in self.browse_list:
@@ -22,7 +23,6 @@ class Juicecomk(JuicerSpider):
         for nd in nodes:
             review = extract_data(nd, './/td[@class="complaint"]//a/@href')
             review_title = extract_data(nd, './/td[@class="complaint"]//a//text()')
-            print review
             if not review: continue
             if '#' in review: review = review.split('#')[0]
             if 'http' not in review.encode('utf8'): review = "{}{}".format(self.domain, review.encode('utf8'))

@@ -37,6 +37,7 @@ class Complaintboardbrowse(JuicerSpider):
             if post_date: aux_info.update({"post_date": post_date})
             if author_name: aux_info.update({"author_name": author_name})
             if author_url: aux_info.update({"author_url":author_url})
+            print review
             self.get_page('complaintboard_review_terminal',review, sk, aux_info)
         next_page = extract_data(sel, '//div[@class="pagelinks"]/a[contains(text(),"Next")]/@href')
         if next_page:
