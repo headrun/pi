@@ -146,7 +146,6 @@ class Practohospitals(JuicerSpider):
             doc_years_experience = str(hnd.get('doctor','').get('experience_years', ''))
             if not doc_years_experience:
                 doc_years_experience = str(hnd.get('experience_year', ''))
-            #dct_photo = hnd.get('profile_photo', {}).get('photo_url', '')
             dct_specialization = hnd.get('doctor','').get('specializations',[])
             doc_specialities = '<>'.join([spe.get('subspecialization',{}).get('subspecialization','') for spe in dct_specialization])
             doc_rating = str(hnd.get('doctor','').get('recommendation',{}).get('patient_experience_score',''))
@@ -158,7 +157,6 @@ class Practohospitals(JuicerSpider):
                     doc_votes= doc_votes+' '+'votes'
                 else :
                     doc_votes =''
-            #dct_services = '<>'.join([ser.get('service', {}).get('name', '') for ser in hnd.get('services', [])])
             pics = ''
             pics = hnd.get('doctor','').get('photos', [])
             pics= '<>'.join([i.get('photo_url', '') for i in pics])

@@ -7,7 +7,6 @@ sys.setdefaultencoding('utf-8')
 
 class LybratedoctorsTerminal(JuicerSpider):
     name = 'lybrate_doctorsapi_terminal'
-    #start_urls = ['https://www.lybrate.com/hyderabad/doctor/dr-shaivalini-obstetrician']
 
     def __init__(self, *args, **kwargs):
         super(LybratedoctorsTerminal, self).__init__(*args, **kwargs)
@@ -18,9 +17,6 @@ class LybratedoctorsTerminal(JuicerSpider):
     def parse(self, response):
         sel = Selector(response)
         aux_infos = {}
-        print response.url
-        #doc_id = 'dr-shaivalini-obstetrician'
-        #feedback_count = '14'
         doc_id = response.meta['sk']
         rating = response.meta['data']['rating']
         specialization = response.meta['data']['specialization']
@@ -68,7 +64,6 @@ class LybratedoctorsTerminal(JuicerSpider):
             if aux_infos:
                 doctor_meta['aux_info'] = json.dumps(aux_infos)
             yield doctor_meta
-            print "1"
         main_nodes = response.xpath('//div[@itemprop="memberOf"]')
         for main_node in main_nodes:
             hsp_timesch = []
@@ -178,7 +173,6 @@ class LybratedoctorsTerminal(JuicerSpider):
             doctor_hospital['hospital_longitude'] = normalize(lon)
             doctor_hospital['reference_url'] = normalize(response.url)
             yield doctor_hospital
-            print '2'
             self.got_page(doc_id, 1)
 
         nodes = response.xpath('//div[@itemprop="review"]')
@@ -200,7 +194,6 @@ class LybratedoctorsTerminal(JuicerSpider):
                 if aux_info1:
                     review_item['aux_info'] = json.dumps(aux_info1)
                 yield review_item
-                print '3'
 
 
 

@@ -25,8 +25,6 @@ class Practodoctorsinfote(JuicerSpider):
         except:
             jscsv_data = {}
         if jscsv_data:
-            print response.url
-            #dct_id = response.meta['sk']
             profile_payload = jscsv_data.get('analyticsData', {}).get('profilePayload', {})
             dct_id = str(profile_payload.get('id', ''))
             dct_profile = str(profile_payload.get('public_profile_url', ''))
@@ -126,7 +124,6 @@ class Practodoctorsinfote(JuicerSpider):
                 doctor_meta['reference_url'] = normalize(response.url)
                 doctor_meta['aux_info'] = json.dumps({"city": (city_browse)})
                 yield doctor_meta
-                print '1'
             hos_parit_link = response.url.split('/doctor')[0]
             hospital_nodes = profile_payload.get('relations', [])
             for hnd in hospital_nodes:
@@ -260,79 +257,6 @@ class Practodoctorsinfote(JuicerSpider):
                 doctor_hospital['hospital_longitude'] = normalize(hsp_map_longitude)
                 doctor_hospital['reference_url'] = normalize(response.url)
                 yield doctor_hospital
-                print '2'
         self.got_page(sk_d, 1)
 
-    '''def parse_feedback(self, response):
-        if 'https://www.practo.com/ie/unsupported' not in response.url:
-            tmp = json.loads(response.body)
-            feedback_count = response.meta.get('feedback_count','')
-            dct_id = response.meta.get('dct_id','')
-            dct_url = response.meta.get('dct_url','')
-            feedback_id = response.meta.get('feedback_id','')
-            total_pages = tmp.get('page_count','')
-            current_page = tmp.get('page','')
-            reviews_count = tmp.get('reviews_count','')
-            total_count = tmp.get('total_count','')
-            review_nodes = tmp.get('reviews',{})
-            if review_nodes:
-                for nod in review_nodes:
-                    review_inner = nod.get('review',{})
-                    rev_sur = review_inner.get('survey_response',{})
-                    status = review_inner.get('status','')
-                    revi_id = str(review_inner.get('id',''))
-                    review_text = rev_sur.get('review_text','')
-                    revia_id = str(rev_sur.get('id',''))
-                    reviewd_on = rev_sur.get('reviewed_on','')
-                    rev_channe = rev_sur.get('channel','')
-                    review_source = rev_sur.get('source','')
-                    review_anony = rev_sur.get('anonymous','')
-                    review_unread = str(review_inner.get('unread',''))
-                    review_for = review_inner.get('review_for','')
-                    review_doc_id = str(review_inner.get('doctor_id',''))
-                    review_practice_id = str(review_inner.get('practice_id',''))
-                    review_practice_name = review_inner.get('practice_name','')
-                    review_like = review_inner.get('recommendation','').lower()
-                    review_view_count = review_inner.get('view_count','')
-                    review_publ_dur = review_inner.get('publish_time_duration','')
-                    revewi_status_mod = review_inner.get('status_modified_at','')
-                    review_cronfre = review_inner.get('cron_frequency','')
-                    review_reply_text = review_inner.get('review_reply',{}).get('reply_text','')
-                    patient_innter = nod.get('patient',{})
-                    review_name = patient_innter.get('name','')
-                    contexts_inner = nod.get('contexts',{})
-                    review_filter_type, review_filter_text = ['']*2
-                    if contexts_inner:
-                        review_filter_type = contexts_inner[0].get('type','')
-                        review_filter_text = contexts_inner[0].get('text','')
-                    helpful_inner = nod.get('found_helpful_data',{})
-                    helpful_overallcount = helpful_inner.get('review_total_count','')
-                    helpful_count = helpful_inner.get('review_yes_count','')
-                    practice_inner = nod.get('practice',{})
-                    practice_name = practice_inner.get('name','')
-                    practice_id = str(practice_inner.get('id',''))
-                    practice_locality = practice_inner.get('locality','')
-                    practice_city = practice_inner.get('city','')
-                    review_item = DoctorFeedback()
-                    review_item['sk'] = md5("%s%s%s%s%s%s"%(revi_id, revia_id, reviewd_on, review_doc_id, review_name, dct_id))
-                    review_item['feedback_count'] = normalize(str(feedback_count))
-                    review_item['doctor_id'] = normalize(dct_id)
-                    review_item['feeback_text'] = normalize(review_text)
-                    review_item['feedback_publish_date'] = normalize(reviewd_on)
-                    review_item['feedback_for'] = normalize(review_for)
-                    review_item['feedback_practice_name'] = normalize(review_practice_name)
-                    review_item['feedback_practice_locality'] = normalize(practice_locality)
-                    review_item['feedback_practice_city'] = normalize(practice_city)
-                    review_item['feedback_like'] = normalize(review_like)
-                    review_item['feedback_name'] = normalize(review_name)
-                    review_item['feedback_filters'] = normalize(review_filter_text)
-                    review_item['feedback_helpful_count'] = normalize(helpful_count)
-                    review_item['feedback_helpful_overallcount'] = normalize(helpful_overallcount)
-                    review_item['feedback_reply'] = normalize(review_reply_text)
-                    review_item['reference_url']= normalize(dct_url)
-                    yield review_item
-            if total_pages != current_page and total_pages >= current_page:
-                feedback_url = "%s%s%s%s"%((self.feedjson1 % str(feedback_id)), self.feedjson2,  str(int(current_page)+1), (self.feedjson3 % str(feedback_id)))
-                print feedback_url
-                yield Request(feedback_url,callback=self.parse_feedback, meta={"dct_id":dct_id,"dct_url":dct_url, "feedback_id":str(feedback_id), 'feedback_count':feedback_count})'''
 

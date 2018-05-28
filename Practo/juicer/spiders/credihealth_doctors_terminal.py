@@ -5,10 +5,6 @@ import re
 
 class CredicoctorsTerminal(JuicerSpider):
     name = 'credihealth_doctors_terminal'
-    #name = 'doctors_browse'
-    #start_urls = ['https://www.credihealth.com/doctor/yogaraj-s-neurologist/overview']
-    #start_urls = ['https://www.credihealth.com/doctor/c-sankarabharathi-paediatric-surgeon/overview']
-    #start_urls = ['https://www.credihealth.com/doctor/w-s-manjula-dental-surgeon/overview']
     handle_http_status_list = ['302', '504','403','404']
     def __init__(self, *args, **kwargs):
         super(CredicoctorsTerminal, self).__init__(*args, **kwargs)

@@ -9,7 +9,6 @@ sys.setdefaultencoding('utf-8')
 class LybrateDoctors(JuicerSpider):
     name = 'lybrate_doctorsapi_browse'
     handle_http_status_list = ['302', '500', '403']
-    #start_urls = ['https://www.lybrate.com/get/ba/doctors/facet/v2?ampPage=false&cityName=warangal&currentLocation=false&ffR=false&find=&isClinicSearch=false&isHospitalSearch=false&near=&page=2&seoRequest=false&sortBy=BMS&source=FNB&totalPages=&zipSearch=false']
     def __init__(self, *args, **kwargs):
         super(LybrateDoctors, self).__init__(*args, **kwargs)
         self.domain = "https://www.lybrate.com/"
@@ -31,8 +30,6 @@ class LybrateDoctors(JuicerSpider):
             yield Request(next_page, callback=self.parse_next,meta={"city_url":city_url})
 
     def parse_next(self,response):
-        print response.url
-        import pdb;pdb.set_trace()
         city_url = response.meta['city_url']
         main_data = json.loads(response.body)
         doc_meta = main_data.get('profileDTOs', [])
@@ -150,12 +147,10 @@ class LybrateDoctors(JuicerSpider):
                 doc_booking_type = 'Not Available'
             doc_id = md5(normalize(username))
             if username and main_link:
-                print main_link
                 self.get_page('lybrate_doctorsapi_terminal', main_link, doc_id,meta_data={"name":name,"qualification":qua,
                                 "specialization":spe,"years_of_experience":exp,"rating":rat,"vote_count":popu,"feedback_count":feed_co,
                                 "doctor_image":image,"city":reg, "cli_lat":cli_lat,"cli_lon":cli_lon,
                                 "clinic_address":clinic_address,"clic_location":cli_cityna, "cli_images":cli_images})
-            #doc_id = md5(normalize(username))
             doctor_listing = DoctorInfo()
             doctor_listing['doctor_id'] = normalize(doc_id)
             doctor_listing['doctor_name'] = str(name)
