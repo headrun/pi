@@ -26,7 +26,7 @@ def move_file(source, dest=PROCESSED_QUERY_FILES_PATH):
     os.system(cmd)
 
 def load_data_files(queries_file):
-    connection = MySQLdb.connect(host='localhost', user='root', passwd = 'hdrn59!',  db='PRACTO')
+    connection = MySQLdb.connect(host='localhost', user='root', passwd = 'root',  db='PRACTO')
     connection.set_character_set('utf8')
     cursor = connection.cursor()
     #query_files = [queries_file] if queries_file else glob("%s/*_out_*.queries" % (PROCESSING_QUERY_FILES_PATH))

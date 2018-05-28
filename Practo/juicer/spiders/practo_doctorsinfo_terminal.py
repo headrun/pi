@@ -2,15 +2,15 @@ from juicer.utils import *
 from practo_doctorsinfo_xpaths import *
 from juicer.items import *
 
-class Practodoctorsinfot(JuicerSpider):
+class Practodoctorsinfote(JuicerSpider):
     name = 'practo_doctorsinfo_terminal'
-    handle_http_status_list = ['302', '504']
+    handle_http_status_list = ['500','302', '504','403','404','410']
     def __init__(self, *args, **kwargs):
-        super(Practodoctorsinfot, self).__init__(*args, **kwargs)
+        super(Practodoctorsinfote, self).__init__(*args, **kwargs)
         self.domain = "https://www.practo.com"
         self.pattern1 = re.compile(r'\((.*?)\)')
         self.pattern2 = re.compile('(.*) (.*)')
-        self.week_list = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
+        self.week_list = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
         self.feedjson1 = "https://www.practo.com/client-api/v1/feedback/doctorreviews?profile_id=%s"
         self.feedjson2 = "&profile_type=doctor&page="
         self.feedjson3 = "&mr='true'&show_recommended_reviews='true'&doctor_id=%s"
@@ -25,6 +25,7 @@ class Practodoctorsinfot(JuicerSpider):
         except:
             jscsv_data = {}
         if jscsv_data:
+            print response.url
             #dct_id = response.meta['sk']
             profile_payload = jscsv_data.get('analyticsData', {}).get('profilePayload', {})
             dct_id = str(profile_payload.get('id', ''))
@@ -95,7 +96,8 @@ class Practodoctorsinfot(JuicerSpider):
             feedback_count = str(jscsv_data.get('feedback_reducer', {}).get('reviews_count', ''))
             doc_id_feedback = dct_id
             if feedback_count and doc_id_feedback and feedback_count != '0':
-                feedback_url = "%s%s%s%s"%((self.feedjson1 % str(doc_id_feedback)), self.feedjson2, '1', (self.feedjson3 % str(doc_id_feedback)))
+                #feedback_url = "%s%s%s%s"%((self.feedjson1 % str(doc_id_feedback)), self.feedjson2, '1', (self.feedjson3 % str(doc_id_feedback)))
+                feedback_url=''
                 if feedback_url:
                     yield Request(feedback_url,callback=self.parse_feedback, meta={"dct_id":dct_id,"dct_url":response.url, "feedback_id":str(doc_id_feedback), 'feedback_count':feedback_count})
             sk_d = response.meta.get('sk','')
@@ -124,6 +126,7 @@ class Practodoctorsinfot(JuicerSpider):
                 doctor_meta['reference_url'] = normalize(response.url)
                 doctor_meta['aux_info'] = json.dumps({"city": (city_browse)})
                 yield doctor_meta
+                print '1'
             hos_parit_link = response.url.split('/doctor')[0]
             hospital_nodes = profile_payload.get('relations', [])
             for hnd in hospital_nodes:
@@ -182,7 +185,7 @@ class Practodoctorsinfot(JuicerSpider):
                             hsp_timesch.append("%s%s%s" % (toada, ' ', toalid))
                 hsp_timesch = '<>'.join(hsp_timesch)
                 #final_set = {'Mo':[], 'Tu':[], 'We':[], 'Th':[], 'Fr':[], 'Sa':[], 'Su':[]}
-                final_set = {'MON':[], 'TUE':[], 'WED':[], 'THU':[], 'FRI':[], 'SAT':[], 'SUN':[]}
+                final_set = {'Mon':[], 'Tue':[], 'Wed':[], 'Thu':[], 'Fri':[], 'Sat':[], 'Sun':[]}
                 if hsp_timesch:
                     hso_timesc_list = hsp_timesch.split('<>')
                     for sc in hso_timesc_list:
@@ -242,13 +245,13 @@ class Practodoctorsinfot(JuicerSpider):
                 doctor_hospital['hospital_name'] =  normalize(hsp_name)
                 doctor_hospital['hospital_rating'] = normalize(str(hsp_star_rat))
                 doctor_hospital['hospital_address'] = normalize(hsp_address)
-                doctor_hospital['hospital_monday_timing'] = normalize('<>'.join(final_dict.get('MON',[])))
-                doctor_hospital['hospital_tuesday_timing'] = normalize('<>'.join(final_dict.get('TUE',[])))
-                doctor_hospital['hospital_wednesday_timing'] =  normalize('<>'.join(final_dict.get('WED',[])))
-                doctor_hospital['hospital_thursday_timing'] = normalize('<>'.join(final_dict.get('THU',[])))
-                doctor_hospital['hospital_friday_timing'] = normalize('<>'.join(final_dict.get('FRI',[])))
-                doctor_hospital['hospital_saturday_timing'] = normalize('<>'.join(final_dict.get('SAT',[])))
-                doctor_hospital['hospital_sunday_timing'] = normalize('<>'.join(final_dict.get('SUN',[])))
+                doctor_hospital['hospital_monday_timing'] = normalize('<>'.join(final_dict.get('Mon',[])))
+                doctor_hospital['hospital_tuesday_timing'] = normalize('<>'.join(final_dict.get('Tue',[])))
+                doctor_hospital['hospital_wednesday_timing'] =  normalize('<>'.join(final_dict.get('Wed',[])))
+                doctor_hospital['hospital_thursday_timing'] = normalize('<>'.join(final_dict.get('Thu',[])))
+                doctor_hospital['hospital_friday_timing'] = normalize('<>'.join(final_dict.get('Fri',[])))
+                doctor_hospital['hospital_saturday_timing'] = normalize('<>'.join(final_dict.get('Sat',[])))
+                doctor_hospital['hospital_sunday_timing'] = normalize('<>'.join(final_dict.get('Sun',[])))
                 doctor_hospital['hospital_consultation_fee'] = normalize(hsp_consultation_fee)
                 doctor_hospital['hospital_practo_gurantee'] = normalize(hsp_practo_gura)
                 doctor_hospital['hospital_photos'] = normalize(hsp_photos)
@@ -257,9 +260,10 @@ class Practodoctorsinfot(JuicerSpider):
                 doctor_hospital['hospital_longitude'] = normalize(hsp_map_longitude)
                 doctor_hospital['reference_url'] = normalize(response.url)
                 yield doctor_hospital
+                print '2'
         self.got_page(sk_d, 1)
 
-    def parse_feedback(self, response):
+    '''def parse_feedback(self, response):
         if 'https://www.practo.com/ie/unsupported' not in response.url:
             tmp = json.loads(response.body)
             feedback_count = response.meta.get('feedback_count','')
@@ -330,5 +334,5 @@ class Practodoctorsinfot(JuicerSpider):
             if total_pages != current_page and total_pages >= current_page:
                 feedback_url = "%s%s%s%s"%((self.feedjson1 % str(feedback_id)), self.feedjson2,  str(int(current_page)+1), (self.feedjson3 % str(feedback_id)))
                 print feedback_url
-                yield Request(feedback_url,callback=self.parse_feedback, meta={"dct_id":dct_id,"dct_url":dct_url, "feedback_id":str(feedback_id), 'feedback_count':feedback_count})
+                yield Request(feedback_url,callback=self.parse_feedback, meta={"dct_id":dct_id,"dct_url":dct_url, "feedback_id":str(feedback_id), 'feedback_count':feedback_count})'''
 

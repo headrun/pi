@@ -19,10 +19,10 @@ class PractoHospcsv(object):
         self.tableschema = 'INSERT INTO practo_hospital_table ('
         self.na = 'practo_hospital_table'
         self.tables_file = self.get_tables_file()
-        self.query1 = 'select * from %s'
+        self.query1 = 'select * from %s where date(modified_at)>="2017-12-15"'
         self.query2 = 'select * from %s where %s = "%s"'
         self.columns_query = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "PRACTO" and table_name = "%s"'
-        self.max_count_query = "select count(*)  from %s group by hospital_id order by count(*) desc limit 1"
+        self.max_count_query = "select count(*)  from %s where date(modified_at)>= '2017-12-15' group by hospital_id order by count(*) desc limit 1"
         doct_info_columns = fetchmany(self.cur, self.columns_query%('HospitalInfo'))
         doc_info_list = list(doct_info_columns)
         self.doc_info_uplist = list(chain.from_iterable(doc_info_list))[:-3]
@@ -68,6 +68,7 @@ class PractoHospcsv(object):
 
 
     def send_csv(self):
+        count_check = 0
         records = fetchall(self.cur, self.query1%('HospitalInfo'))
         for inde, rec in enumerate(records):
             info_rec = list(rec)[:-2]
@@ -82,6 +83,8 @@ class PractoHospcsv(object):
             info_rec[-1] = phone_no
             info_rec.extend([extension])
             print info_rec[0], '>>>>'
+            count_check += 1
+            print count_check
             #if '316500' in info_rec[0]  or '555819' in info_rec[0]: continue
             if inde == 0:
                 self.headerlisting.extend(self.doc_info_uplist)
@@ -131,6 +134,7 @@ class PractoHospcsv(object):
                 self.tables_file.write('%s\n%s\n' %(final_qryto, tuple(final_table_values)))
                 self.tables_file.flush()
                 del orig_vals[-14:]
+            print doctor_meta_id
         self.close_all_opened_query_files()
 
 

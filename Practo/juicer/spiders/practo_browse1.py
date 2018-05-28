@@ -5,7 +5,7 @@ from scrapy.http import FormRequest
 import requests
 
 class Practo(JuicerSpider):
-    name = 'practo_browse'
+    name = 'practo_browse1'
     handle_http_status_list = ['302']
 
     def __init__(self, *args, **kwargs):
@@ -63,7 +63,10 @@ class Practo(JuicerSpider):
         city_url = response.url
         import pdb;pdb.set_trace()
         if '/ie/unsupported' not in city_url:
-            nodes = get_nodes(sel, doc_nodes)
+            nodes = response.xpath('//div[@data-qa-id="doctor_listing_cards"]//div[@class="c-card"]')
+            for node in nodes :
+                import pdb;pdb.set_trace()
+            '''nodes = get_nodes(sel, doc_nodes)
             for nd in nodes:
                 details_nodes = nd.xpath(details_block)
                 doctor_photos = extract_data(nd, doctor_photos_xpath)
@@ -136,7 +139,7 @@ class Practo(JuicerSpider):
                 doctor_listing['reference_url'] = normalize(city_url)
                 if aux_infos:
                     doctor_listing['aux_info'] = json.dumps(aux_infos)
-                yield doctor_listing
+                yield doctor_listing'''
 
             next_page = extract_data(sel, next_page_xpath)
             #if 'page=%s'%self.pageend in response.url: next_page = ''

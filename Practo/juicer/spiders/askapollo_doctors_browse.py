@@ -26,16 +26,18 @@ class Askapollobrowse(JuicerSpider):
 
             address = extract_data(node, './/div[@class="DrProfileContent"]/div[@class="DrProfileContentInner dr-info"]/h5/span[@itemprop="addressLocality"]/text()')
             doc_booking_type = extract_data(node, './/div[@class="DrProfileContent"]//div[@class="DoctorProfileBtn"]/div/a/text()')
+            doc_id = extract_data(node, './/div[@class="DrProfileContent"]//div[@class="DoctorProfileBtn"]/div/a/@onclick')
+            doctor_id = ''.join(re.findall('(\d+)',doc_id))
+            doc_pne = extract_data(node, './/div[@class="DrProfileContent"]//div[@class="DoctorProfileBtn"]/div/span/a/strong/text()')
             time_slot1 = node.xpath('.//div[@class="DrProfileContent"]/div[@class="DrProfileContentInner dr-info"]//span[@class="date"]/span[contains(@id, "MainContent_rptSearchResult_lblDayWithTimeDetails")]/text()').extract()
             time_slot2 = node.xpath('.//div[@class="DrProfileContent"]/div[@class="DrProfileContentInner dr-info"]//span[@class="date"]/div/span[contains(@id, "MainContent_rptSearchResult_lblMoreDays")]/text()').extract()
             time_slot1.extend(time_slot2)
             time_slots = time_slot1
             sch_slot = '<>'.join(set(time_slots)).replace('|',':-')
-            sk = normalize(md5(normalize(doc_name)+normalize(doc_link)+normalize(doc_photo)))
-            if doc_name:
-                self.get_page('askapollo_doctors_terminal', doc_link, sk, meta_data={'doc_photo':normalize(doc_photo),"doc_name":normalize(doc_name),
+            if doctor_id and doc_name:
+                self.get_page('askapollo_doctors_terminal', doc_link, doctor_id, meta_data={'doc_photo':normalize(doc_photo),"doc_name":normalize(doc_name),
                                 "doc_exp":normalize(doc_exp),"doc_feed":normalize(doc_feed),"dct_hsp":normalize(dct_hsp),
-                                "address":normalize(address),"doc_spe":normalize(doc_spe),
+                                "address":normalize(address),"doc_spe":normalize(doc_spe),"doc_pne":normalize(doc_pne),
                                 "doc_booking_type":normalize(doc_booking_type),"sch_slot":normalize(sch_slot),"ref_url":normalize(ref_url)})
             for i in range(1, 90):
                 next_page = 'https://www.askapollo.com/physical-appointment/doctorsearch/chennai?page='+str(i)

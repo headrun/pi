@@ -25,9 +25,9 @@ class ExcelGenIOC():
         self.cur = self.conn.cursor()
 
     def excel_generation(self):
-        header = ['doctor_id','doctor_name','doctor_profile_link','qualification','years_of_experience','specialization','address','schedule_timeslot','doctor_image','clinic_names','booking_type','reference_url']
+        header = ['doctor_id','doctor_name','doctor_profile_link','years_of_experience','recomandations','specialization','address','schedule_timeslot','doctor_image','clinic_names','booking_type','reference_url','phone_number']
 
-        query = "select doctor_id, doctor_name, doctor_profile_link, qualification, years_of_experience, specialization, address,schedule_timeslot,doctor_image,clinic_names,booking_type,reference_url from DoctorInfo where date(modified_at)>='2017-11-23'"
+        query = "select doctor_id, doctor_name, doctor_profile_link,years_of_experience,recomandations, specialization, address,schedule_timeslot,doctor_image,clinic_names,booking_type,reference_url,phone_number from DoctorInfo where date(modified_at)>='2017-11-28'"
 
         self.cur.execute(query)
         rows = self.cur.fetchall()
@@ -39,9 +39,9 @@ class ExcelGenIOC():
             todays_excel_sheet1.write(0, i, row)
 
         for _row in rows:
-            doctor_id, doctor_name, doctor_profile_link, qualification, years_of_experience, specialization, address,schedule_timeslot,doctor_image,clinic_names,booking_type,reference_url = _row
+            doctor_id, doctor_name, doctor_profile_link,years_of_experience, recomandations,specialization, address,schedule_timeslot,doctor_image,clinic_names,booking_type,reference_url,phone_number = _row
 
-            values = [doctor_id, doctor_name, doctor_profile_link, qualification, years_of_experience, specialization, address,schedule_timeslot,doctor_image,clinic_names,booking_type,reference_url]
+            values = [doctor_id, doctor_name, doctor_profile_link,years_of_experience, recomandations,specialization, address,schedule_timeslot,doctor_image,clinic_names,booking_type,reference_url,phone_number]
 
             for col_count, value in enumerate(values):
                 todays_excel_sheet1.write(row_count, col_count, value)

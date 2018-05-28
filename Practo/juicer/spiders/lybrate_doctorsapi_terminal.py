@@ -40,8 +40,6 @@ class LybratedoctorsTerminal(JuicerSpider):
         past_exp = '<>'.join(set(sel.xpath('//div[contains(@id, "experience")]//text()').extract())).replace('\t','').replace('\n','')
         desc = normalize('.'.join(response.xpath('//div[@itemprop="description"]//text()').extract()))
         language = '<>'.join(set(sel.xpath('//div[contains(@id, "language")]//text()').extract())).replace('\t','').replace('\n','')
-        if language:
-            aux_infos.update({"language_spoken":language})
         prof_mem = '<>'.join(set(sel.xpath('//div[contains(@id, "professional")]//text()').extract())).replace('\t','').replace('\n','')
         award = '<>'.join(set(sel.xpath('//div[contains(@id, "award")]//text()').extract())).replace('\t','').replace('\n','')
         services = extract_data(sel, '//div[@itemprop="makesOffer"]/div//h3[@itemprop="name"]/text()','<>')
@@ -54,7 +52,7 @@ class LybratedoctorsTerminal(JuicerSpider):
             doctor_meta['qualification'] = normalize(qualification)
             doctor_meta['specialization'] = normalize(specialization)
             doctor_meta['years_of_experience'] = str(years_of_experience)
-            doctor_meta['medical_registration_verified'] =''
+            doctor_meta['languages_spoken'] = normalize(language)
             doctor_meta['rating'] = str(rating)
             doctor_meta['vote_count'] =  normalize(str(vote_count))
             doctor_meta['summary'] = normalize(desc)

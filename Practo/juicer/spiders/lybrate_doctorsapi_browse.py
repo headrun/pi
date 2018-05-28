@@ -21,10 +21,7 @@ class LybrateDoctors(JuicerSpider):
         self.pageend = kwargs.get('end', '')
         self.particular_city = kwargs.get('city','')
         if self.particular_city:
-            #self.start_urls = ['https://www.lybrate.com/%s/doctors'%self.particular_city]
             self.start_urls = ['https://www.lybrate.com/get/ba/doctors/facet/v2?ampPage=false&cityName=%s&currentLocation=false&ffR=false&find=&isClinicSearch=false&isHospitalSearch=false&near=&page=1&seoRequest=false&sortBy=BMS&source=FNB&totalPages=&zipSearch=false'%self.particular_city]
-        #else:
-            #self.start_urls = ['https://www.lybrate.com/india']
 
     def parse(self,response):
         reg = self.particular_city
@@ -35,6 +32,7 @@ class LybrateDoctors(JuicerSpider):
 
     def parse_next(self,response):
         print response.url
+        import pdb;pdb.set_trace()
         city_url = response.meta['city_url']
         main_data = json.loads(response.body)
         doc_meta = main_data.get('profileDTOs', [])
@@ -88,7 +86,9 @@ class LybrateDoctors(JuicerSpider):
             spe = doc_info.get('specialityName','')
             if spe: spe= spe.replace(', ','<>')
             else: spe=''
-            name = doc_info.get('name','')
+            name1 = str(doc_info.get('name',''))
+            prefix = str(doc_info.get('namePrefix', ''))
+            name = prefix+' '+name1
             sub_spe = '<>'.join(doc_info.get('subSpecialities',[]))
             exp = doc_info.get('experience','')
             image = doc_info.get('profilePicUrl','')
@@ -137,14 +137,27 @@ class LybrateDoctors(JuicerSpider):
             reg = self.particular_city
             #city_url = self.domain+reg+'/doctors?page=2'
             currency = normalize(u'\u20b9')
+            doc_avai = str(doc_info.get('callAvailable',''))
+            doc_appointavai = str(doc_info.get('appointmentAvailable',''))
+            doc_booking_type = ''
+            if doc_avai=='True' and doc_appointavai=='True':
+                doc_booking_type = 'Available On Call/Book Appointment'
+            if doc_avai=='False' and doc_appointavai=='True':
+                doc_booking_type = 'Appointment Available'
+            if doc_avai=='True' and doc_appointavai=='False':
+                doc_booking_type = 'Call Available'
+            if doc_avai=='False' and doc_appointavai=='False':
+                doc_booking_type = 'Not Available'
+            doc_id = md5(normalize(username))
             if username and main_link:
                 print main_link
-                self.get_page('lybrate_doctorsapi_terminal', main_link, username,meta_data={"name":name,"qualification":qua,
+                self.get_page('lybrate_doctorsapi_terminal', main_link, doc_id,meta_data={"name":name,"qualification":qua,
                                 "specialization":spe,"years_of_experience":exp,"rating":rat,"vote_count":popu,"feedback_count":feed_co,
                                 "doctor_image":image,"city":reg, "cli_lat":cli_lat,"cli_lon":cli_lon,
                                 "clinic_address":clinic_address,"clic_location":cli_cityna, "cli_images":cli_images})
+            #doc_id = md5(normalize(username))
             doctor_listing = DoctorInfo()
-            doctor_listing['doctor_id'] = str(username)
+            doctor_listing['doctor_id'] = normalize(doc_id)
             doctor_listing['doctor_name'] = str(name)
             doctor_listing['doctor_profile_link'] = str(main_link)
             doctor_listing['qualification'] = str(qua)
@@ -154,8 +167,8 @@ class LybrateDoctors(JuicerSpider):
             doctor_listing['rating'] = str(rat)
             doctor_listing['vote_count'] = str(popu)
             doctor_listing['feedback_count'] = str(feed_co)
-            doctor_listing['location'] = normalize(clinic_address)
-            doctor_listing['address'] = str(reg)
+            doctor_listing['location'] = normalize(reg)
+            doctor_listing['address'] = str(clinic_address)
             doctor_listing['consultation_fee'] = str(cli_cha)
             doctor_listing['schedule_timeslot'] = normalize(hsp_timesch1)
             doctor_listing['doctor_image'] = str(image)
@@ -165,7 +178,7 @@ class LybrateDoctors(JuicerSpider):
             doctor_listing['location_longitude'] = str(cli_lon)
             doctor_listing['region'] = str(reg)
             doctor_listing['fee_currency'] = str(currency)
-            #doctor_listing['booking_type'] = str(doc_booking_type)
+            doctor_listing['booking_type'] = str(doc_booking_type)
             doctor_listing['reference_url'] = str(city_url)
             if aux_infos:
                 doctor_listing['aux_info'] = json.dumps(aux_infos)

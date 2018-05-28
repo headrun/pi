@@ -22,7 +22,7 @@ import commands
 
 
 DB_USERNAME = 'root'
-DB_PASSWD = 'hdrn59!'
+DB_PASSWD = 'root'
 MYSQL_CONNECT_TIMEOUT_VALUE = 30
 BATCH_SIZE = 1000
 

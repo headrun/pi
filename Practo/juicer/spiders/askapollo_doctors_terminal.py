@@ -18,9 +18,10 @@ class Askapolloterminal(JuicerSpider):
         doc_exp = response.meta['data']['doc_exp']
         dct_hsp = response.meta['data']['dct_hsp']
         doc_feed = response.meta['data']['doc_feed']
+        phone_number = response.meta['data']['doc_pne']
         aux_info1 = {}
         doc_photo = response.meta['data']['doc_photo']
-        if '/defaultprofilepic2.jpg' in doc_photo:
+        if '/defaultprofilepic' in doc_photo:
             doc_photo1 = ''
         else:
             doc_photo1 = 'https://www.askapollo.com/physical-appointment'+normalize(doc_photo).replace('..','')
@@ -41,30 +42,29 @@ class Askapolloterminal(JuicerSpider):
             cer_profmem = '<>'.join(response.xpath('//div[@class="curriculam-Vitae"]/div[@id="MainContent_pnlMemberships"]/div[@class="personal-list"]/span[@id="MainContent_lblMembership"]/table//tr//p//text()').extract()).replace('\t','').replace('\n','').replace('\r','').encode('utf8')
         medical_con_reg = extract_data(sel, '//div[@class="curriculam-Vitae"]//div[@class="personal-list"]//span[@id="MainContent_lblRegistrations"]//text()')
         special_int = '<>'.join(sel.xpath('//div[@class="curriculam-Vitae"]//div[@class="personal-list"]//span[@id="MainContent_lblSpecialInterests"]/ul/li//text()').extract()).replace('\n','').replace('\t','').replace('\r','').replace(', ','<>').encode('utf8')
-        doctor_links = '<>'.join(sel.xpath('//div[@class="col-md-6"]/div[@id="MainContent_pnlDoctorLinks"]/span/a/@href').extract())
-        if doctor_links:
-            aux_info1.update({"doctor_links":normalize(doctor_links)})
-        city_speciality_links = '<>'.join(sel.xpath('//div[@class="col-md-6"]/div[@id="MainContent_pnlCitySpecialistLinks"]/span/a/@href').extract())
-        if city_speciality_links:
-            aux_info1.update({"city_speciality_links":normalize(city_speciality_links)})
+        doctor_lin = sel.xpath('//div[@class="col-md-6"]/div[@id="MainContent_pnlDoctorLinks"]/span/a/@href').extract()
+        doctor_text = sel.xpath('//div[@class="col-md-6"]/div[@id="MainContent_pnlDoctorLinks"]/span/a/text()').extract()
+        doctors_link = map(lambda a, b: a +', '+ b, doctor_text, doctor_lin)
+        doctors_link1='<>'.join(list(set(doctors_link)))
+        city_speciality_links = sel.xpath('//div[@class="col-md-6"]/div[@id="MainContent_pnlCitySpecialistLinks"]/span/a/@href').extract()
+        city_speciality_text = sel.xpath('//div[@class="col-md-6"]/div[@id="MainContent_pnlCitySpecialistLinks"]/span/a/text()').extract()
+        city_specialist_links = map(lambda x, y: x +', '+ y, city_speciality_text,city_speciality_links)
+        city_specialist_links1 = '<>'.join(list(set(city_specialist_links)))
+
         services = '<>'.join(sel.xpath('//div[@class="col-md-6"]/div[@id="MainContent_pnlSpecialityServices"]//table[@id="dlSpecialityServices"]//tr/td/a/text()').extract())
-        other_popular_hyper_locations = '<>'.join(sel.xpath('//div[@class="col-md-6"]/div[@id="MainContent_pnlPopularHyperLocations"]//table[@id="MainContent_dlPopularHyperLocations"]//tr/td/a/text()').extract())
-        if other_popular_hyper_locations:
-            aux_info1.update({"other_popular_hyper_locations":normalize(other_popular_hyper_locations)})
+        other_popular_hyper_locations_text = sel.xpath('//div[@class="col-md-6"]/div[@id="MainContent_pnlPopularHyperLocations"]//table[@id="MainContent_dlPopularHyperLocations"]//tr/td/a/text()').extract()
+        other_popular_hyper_locations_link = sel.xpath('//div[@class="col-md-6"]/div[@id="MainContent_pnlPopularHyperLocations"]//table[@id="MainContent_dlPopularHyperLocations"]//tr/td/a/@href').extract()
+        popular_hyper_locations = map(lambda a1, b1: a1 +', '+ b1, other_popular_hyper_locations_text,other_popular_hyper_locations_link)
+        popular_hyper_locations1 = '<>'.join(list(set(popular_hyper_locations)))
         popular_treatments = '<>'.join(sel.xpath('//table[@id="MainContent_dlPopularTreatments"]//tr/td/a/text()').extract())
-        if popular_treatments:
-            aux_info1.update({"popular_treatments":normalize(popular_treatments)})
-        searched_localities = '<>'.join(response.xpath('//table[@id="MainContent_dlHyperLocations"]//tr/td/a/text()').extract())
-        if searched_localities:
-            aux_info1.update({"searched_localities":normalize(searched_localities)})
+        searched_localities_text = sel.xpath('//table[@id="MainContent_dlHyperLocations"]//tr/td/a/text()').extract()
+        searched_localities_links = sel.xpath('//table[@id="MainContent_dlHyperLocations"]//tr/td/a/@href').extract()
+        most_searched_localities = map(lambda x1, y1: x1 +', '+ y1, searched_localities_text,searched_localities_links)
+        most_searched_localities1 = '<>'.join(list(set(most_searched_localities)))
         special_treatments = '<>'.join(sel.xpath('//table[@id="MainContent_dlSpecialtyTreatments"]//tr/td/a/text()').extract())
-        if special_treatments:
-            aux_info1.update({"special_treatments":normalize(special_treatments)})
         other_desc1 = '.'.join(sel.xpath('//div[@class="content-block dr-profile"]//span[@id="MainContent_lblSpecialityContent"]//text()').extract()).encode('utf8')
         other_desc2 = '.'.join(sel.xpath('//div[@class="content-block dr-profile"]//span[@id="MainContent_lblBoilerContent"]//text()').extract()).encode('utf8')
         other_desc = other_desc1+other_desc2
-        if other_desc:
-            aux_info1.update({"Other_description":normalize(other_desc)})
         aux_info2 = {}
         days = ''.join(response.xpath('//div[@class="col-sm-8 dr-info"]//ul[@class="quick-info"]//li/span[@id="MainContent_lblAvaliableDayNameShortForm"]/text()').extract())
         timings = ''.join(response.xpath('//div[@class="col-sm-8 dr-info"]//ul[@class="quick-info"]//li/span[@id="MainContent_lblAvailableTime"]/text()').extract())
@@ -72,10 +72,10 @@ class Askapolloterminal(JuicerSpider):
         if doc_id and doc_name:
             doctor_listing = DoctorInfo()
             doctor_listing.update({"doctor_id":normalize(doc_id), "doctor_name":normalize(doc_name), "doctor_profile_link" : normalize(response.url),
-                                    "qualification":normalize(qualification), "years_of_experience":normalize(doc_exp), 
+                                    "years_of_experience":normalize(doc_exp), "recomandations":normalize(doc_feed),
                                     "specialization": normalize(doc_spe), "address": normalize(address),
                                     "schedule_timeslot":normalize(sch_slot),"doctor_image":normalize(doc_photo1),"clinic_names":normalize(dct_hsp),
-                                    "booking_type":normalize(doc_booking_type),"reference_url":normalize(ref_url)})
+                                    "booking_type":normalize(doc_booking_type),"reference_url":normalize(ref_url), "phone_number":normalize(phone_number)})
             if aux_info2:
                 doctor_listing.update({"aux_info":json.dumps(aux_info2)})
             yield doctor_listing
@@ -87,9 +87,12 @@ class Askapolloterminal(JuicerSpider):
                         "services":normalize(services),"awards_recognitions":normalize(awards_ach),"summary":normalize(summary),
                         "clinic_names": normalize(dct_hsp),"time_schedule":normalize(time_schedule),
                         "memeberships":normalize(cer_profmem),"experience":normalize(work_exp),"medical_council_registration":normalize(medical_con_reg),
-                        "recommendations":normalize(doc_feed),"doctor_image":normalize(doc_photo1),"reference_url":normalize(response.url)})
+                        "recommendations":normalize(doc_feed),"doctor_image":normalize(doc_photo1),"doctor_links":normalize(doctors_link1),
+                        "city_specialist_links":normalize(city_specialist_links1),"popular_hyper_locations":normalize(popular_hyper_locations1),
+                        "most_searched_localities":normalize(most_searched_localities1),"popular_treatments":normalize(popular_treatments),
+                        "treatments":normalize(special_treatments),"other_description":normalize(other_desc),"reference_url":normalize(response.url)})
             if aux_info1:
-                doctor_meta.update({"aux_info":json.dumps(aux_info1)})
+                doctor_listing.update({"aux_info":json.dumps(aux_info1)})
             yield doctor_meta
         #self.got_page(doc_id, 1)
         nodes = response.xpath('//div[@id="pnlFeedabckDetail"]//td[@class="DataList"]')

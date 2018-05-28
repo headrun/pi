@@ -1,4 +1,4 @@
-from juicer.utils import *
+"""from juicer.utils import *
 from juicer.items import HospitalInfo
 from practo_hospitals_xpaths import *
 import requests
@@ -64,6 +64,7 @@ class Practohospitals(JuicerSpider):
 
     def parse_cities(self, response):
         sel = Selector(response)
+        import pdb;pdb.set_trace()
         url = response.meta.get('url','')
         city_url = response.url
         if '/ie/unsupported' not in city_url:
@@ -144,5 +145,5 @@ class Practohospitals(JuicerSpider):
         hospital_item['reference_url']               = normalize(response_url)
         if aux_infos:
             hospital_item['aux_info']                    = normalize(json.dumps(aux_infos))
-        return hospital_item
+        return hospital_item"""
 

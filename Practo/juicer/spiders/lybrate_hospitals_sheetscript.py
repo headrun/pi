@@ -1,10 +1,10 @@
 from linkedin_functions import *
 
-class Medecurecsv(object):
+class PractoHospcsv(object):
     def __init__(self, *args, **kwargs):
-        self.con, self.cur = get_mysql_connection('localhost', 'MEDECURE', '')
-        self.excel_file_name = 'doctor_listing_%s.csv'%str(datetime.datetime.now().date())
-        self.excel_file_name1 = 'doctor_profile_%s.csv'%str(datetime.datetime.now().date())
+        self.con, self.cur = get_mysql_connection('localhost', 'LYBRATE', '')
+        self.excel_file_name = 'hospital_listing_%s.csv'%str(datetime.datetime.now().date())
+        self.excel_file_name1 = 'hospital_profile_%s.csv'%str(datetime.datetime.now().date())
         if os.path.isfile(self.excel_file_name):
             os.system('rm %s'%self.excel_file_name)
         if os.path.isfile(self.excel_file_name1):
@@ -16,27 +16,27 @@ class Medecurecsv(object):
         self.file_dirs = os.path.join(os.getcwd(),'OUTPUT')
         self.QUERY_FILES_DIR = os.path.join(self.file_dirs, 'load_script/processing')
         self.QUERY_FILES_CRAWLOUT_DIR = os.path.join(self.file_dirs, 'load_script/crawl_out')
-        self.tableschema = 'INSERT INTO practo_final_table ('
-        self.na = 'practo_final_table'
+        self.tableschema = 'INSERT INTO practo_hospital_table ('
+        self.na = 'practo_hospital_table'
         self.tables_file = self.get_tables_file()
-        self.query1 = 'select * from %s where date(modified_at) >= "2018-01-04"'
+        self.query1 = 'select * from %s where date(modified_at)>="2017-11-22"'
         self.query2 = 'select * from %s where %s = "%s"'
-        self.columns_query = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "MEDECURE" and table_name = "%s"'
-        self.max_count_query = "select count(*)  from %s group by doctor_id order by count(*) desc limit 1"
-        doct_info_columns = fetchmany(self.cur, self.columns_query%('DoctorInfo'))
+        self.columns_query = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "PRACTO" and table_name = "%s"'
+        self.max_count_query = "select count(*)  from %s where date(modified_at)>= '2017-11-13' group by hospital_id order by count(*) desc limit 1"
+        doct_info_columns = fetchmany(self.cur, self.columns_query%('HospitalInfo'))
         doc_info_list = list(doct_info_columns)
         self.doc_info_uplist = list(chain.from_iterable(doc_info_list))[:-3]
-        #self.doc_info_uplist.extend(['phone_number', 'extension', 'city', 'Availability Text'])
-        self.doc_info_uplist.extend(['city'])
-        doct_meta_columns = fetchmany(self.cur, self.columns_query%('DoctorMeta'))
+        self.doc_info_uplist.extend(['phone_number', 'extension'])
+        doct_meta_columns = fetchmany(self.cur, self.columns_query%('HospitalMeta'))
         doct_meta_ls = list(doct_meta_columns)
-        self.doc_meta_uplist = list(chain.from_iterable(doct_meta_ls))[1:-3]
-        hospital_columns = fetchmany(self.cur, self.columns_query%('DoctorHospital'))
+        self.doc_meta_uplist = list(chain.from_iterable(doct_meta_ls))[:-3]
+        hospital_columns = fetchmany(self.cur, self.columns_query%('HospitalDoctor'))
         doct_hospitals = list(hospital_columns)
         self.doct_hospitals = list(chain.from_iterable(doct_hospitals))[2:-4]
-        feedback_columns = fetchmany(self.cur, self.columns_query%('DoctorFeedback'))
+        feedback_columns = fetchmany(self.cur, self.columns_query%('HospitalFeedback'))
         feed_col = list(feedback_columns)
         self.feedback_col = list(chain.from_iterable(feed_col))[2:-4]
+        #self.feedback_col[0]='feedback_counts'
         self.columns_pft = ''
 
         self.headerlisting = []
@@ -68,48 +68,39 @@ class Medecurecsv(object):
 
 
     def send_csv(self):
-        records = fetchall(self.cur, self.query1%('DoctorInfo'))
-        counterpa = 0
+        count_check = 0
+        records = fetchall(self.cur, self.query1%('HospitalInfo'))
         for inde, rec in enumerate(records):
             info_rec = list(rec)[:-2]
-            '''phone_no, extension, city_name,avilability_text = ['']*4
+            phone_no, extension = ['']*2
             try:
                 jsd = json.loads(info_rec[-1])
                 if jsd:
                     phone_no = jsd.get('phone_number','')
                     extension = jsd.get('extension','')
-                    city_name = jsd.get('city', '')
-                    availability_text = jsd.get('doc_avilability_text','')
             except:
                 pass
-
             info_rec[-1] = phone_no
             info_rec.extend([extension])
-            info_rec.extend([city_name])
-            info_rec.extend([availability_text])'''
             print info_rec[0], '>>>>'
-            counterpa+=1
-            print counterpa
+            count_check += 1
+            print count_check
             #if '316500' in info_rec[0]  or '555819' in info_rec[0]: continue
             if inde == 0:
                 self.headerlisting.extend(self.doc_info_uplist)
                 self.headerprofiles.extend(self.doc_meta_uplist)
-                #import pdb;pdb.set_trace()
-                self.headerprofiles.extend(['city'])
                 self.todays_excel_file.writerow(self.headerlisting)
             info_rec = [normalize(i) for i in info_rec]
             self.todays_excel_file.writerow(info_rec)
             values_final = []
-            doctor_id = info_rec[1]
-            sk = info_rec[0]
-            meta_ = fetchall(self.cur, self.query2%("DoctorMeta", 'sk', sk))
+            doctor_id = info_rec[0]
+            meta_ = fetchall(self.cur, self.query2%("HospitalMeta", 'hospital_id', doctor_id))
             meta_rec = []
             status = 'Available'
             if meta_:
-                meta_rec = list(meta_[0])[1:-2]
-                #meta_rec[-1] = json.loads(meta_rec[-2]).get('city', '')
+                meta_rec = list(meta_[0])[:-3]
             else:
-                meta_rec = ['' for i in range(23)]
+                meta_rec = ['' for i in range(29)]
                 meta_rec[0] = doctor_id
                 status = 'Not Available'
             values_final.extend(meta_rec)
@@ -120,9 +111,9 @@ class Medecurecsv(object):
             if inde == 0:
                 self.headerprofiles.extend(['Status'])
                 self.todays_excel_file1.writerow(self.headerprofiles)
-                table_schema =  "%s%s%s"%("CREATE TABLE `practo_final_table` (`id` int(11) NOT NULL AUTO_INCREMENT, ",''.join(["%s%s%s%s"%('`' , i, '`',' text COLLATE utf8_unicode_ci, ') for i in self.headerprofiles]), "`created_at` datetime NOT NULL,   `modified_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,   `last_seen` datetime NOT NULL,   PRIMARY KEY (`id`) ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci; ")
+                table_schema =  "%s%s%s"%("CREATE TABLE `practo_hospital_table` (`id` int(11) NOT NULL AUTO_INCREMENT, ",''.join(["%s%s%s%s"%('`' , i, '`',' text COLLATE utf8_unicode_ci, ') for i in self.headerprofiles]), "`created_at` datetime NOT NULL,   `modified_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,   `last_seen` datetime NOT NULL,   PRIMARY KEY (`id`) ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci; ")
                 execute_query(self.cur, table_schema)
-                columns_pfinalt = fetchmany(self.cur, self.columns_query%('practo_final_table'))
+                columns_pfinalt = fetchmany(self.cur, self.columns_query%('practo_hospital_table'))
                 self.columns_pft = list(chain.from_iterable(list(columns_pfinalt)[1:-3]))
             orig_vals = values_final
             countr=0
@@ -142,42 +133,26 @@ class Medecurecsv(object):
                 #execute_query(self.cur, "%s%s"%(final_qryto, tuple(final_table_values)))
                 self.tables_file.write('%s\n%s\n' %(final_qryto, tuple(final_table_values)))
                 self.tables_file.flush()
-                del orig_vals[-13:]
-
-
-            """values_final.extend([callfun])
-            if inde == 0: self.todays_excel_file1.writerow(self.headerprofiles)
-            values_final =  [normalize(i) for i in values_final]
-            self.todays_excel_file1.writerow(values_final)"""
+                del orig_vals[-14:]
+            print doctor_meta_id
         self.close_all_opened_query_files()
 
 
     def querydesign(self, doctor_meta_id, hindex):
         if hindex == 0: self.headerprofiles.extend(self.feedback_col)
         final_to_update = []
-        values = fetchmany(self.cur, self.query2%("DoctorFeedback", 'doctor_id', doctor_meta_id))
+        values = fetchmany(self.cur, self.query2%("HospitalFeedback", 'hospital_id', doctor_meta_id))
         for ind, val in enumerate(values):
             vals_ = list(val)[2:-4]
             final_to_update.append(vals_)
         if not final_to_update:
             final_to_update.append(['' for i in self.feedback_col])
         return final_to_update
-        """if hindex == 0:  self.headerprofiles.extend(['Feedback'])
-        values = fetchmany(self.cur, self.query2%("DoctorFeedback", 'doctor_id', doctor_meta_id))
-        final_to_update = []
-        for ind, val in enumerate(values):
-                vals_ = list(val)[2:-4]
-                indes = '%s%s'%('_',str(ind+1))
-                feed_ = self.feedback_col
-                feedb_= map(lambda x:x+indes, feed_)
-                valf = filter(None, map(lambda a,b: (a+':-'+b) if b else '', feedb_,vals_))
-                final_to_update.append(', '.join(valf))
-        return ' <> '.join(final_to_update) """
 
 
 
     def values_for(self, inde, doctor_meta_id):
-        large_count = fetchmany(self.cur, self.max_count_query%('DoctorHospital'))
+        large_count = fetchmany(self.cur, self.max_count_query%('HospitalDoctor'))
         max_count = ''
         try: max_count = int(large_count[0][0])
         except: max_count = ''
@@ -185,9 +160,9 @@ class Medecurecsv(object):
         if max_count:
             for fi in range(1,max_count+1):
                 for fl in self.doct_hospitals:
-                    va.append("%s%s%s%s"%('hospital_', str(fi), '_', fl.split('hospital_')[-1]))
+                    va.append("%s%s%s%s"%('doctor_', str(fi), '_', fl.split('doctor_')[-1]))
         if inde == 0: self.headerprofiles.extend(va)
-        countrec = fetchmany(self.cur, self.query2%("DoctorHospital", 'doctor_id', doctor_meta_id))
+        countrec = fetchmany(self.cur, self.query2%("HospitalDoctor", 'hospital_id', doctor_meta_id))
         cntf_ = []
         if countrec:
                 cntf = map(lambda x:(x[2:-4]), countrec)
@@ -204,4 +179,4 @@ if __name__ == '__main__':
         parser = optparse.OptionParser()
         parser.add_option('-m', '--modified-at', default='', help = 'modified_at')
         (options, args) = parser.parse_args()
-        Medecurecsv(options)
+        PractoHospcsv(options)

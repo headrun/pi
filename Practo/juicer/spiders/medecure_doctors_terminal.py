@@ -77,7 +77,7 @@ class MedecureTerminal(JuicerSpider):
         if recomm_count=='0': recomm_count=''
         else: recomm_count=recomm_count
         recomm_text = extract_data(sel, '//div[@class="recommendations_text_div left"]//text()')
-        recomm_te = extract_data(sel, '//div[@class="recommend_by left small-font"]//text()')
+        recomm_te = extract_data(sel, '//div[@class="recommend_by left small-font"]//text()').replace('|','<>')
         doc_article_title = extract_data(sel, '//div[@class="TabbedPanelsContent"]/ul/li[@class="open_sans"]/a/text()')
         doc_article_desc = extract_data(sel, '//div[@class="TabbedPanelsContent"]/ul//li/div[@class="clear"]//text()')
         doc_article_author = extract_data(sel, '//div[@class="TabbedPanelsContent"]/ul/li/div[@class="small-font clear"]/a/text()')
@@ -185,8 +185,8 @@ class MedecureTerminal(JuicerSpider):
         review_dec = extract_data(sel, '//div[@class="TabbedPanelsContent"]/div[@class="left review_div"]/p/text()')
         if 'No reviews' in review_dec: review_dec=''
         else: review_dec = review_dec
-        review_by = extract_data(sel, '//div[@class="left review_div"]/div[@class="left clear margin-top"]/text()')
-        review_on = extract_data(sel, '//div[@class="left review_div"]/div[@class="left clear margin-top"]/span[@class="small-font"]/text()')
+        review_by = extract_data(sel, '//div[@class="left review_div"]/div[@class="left clear margin-top"]/text()').replace('-','')
+        review_on = extract_data(sel, '//div[@class="left review_div"]/div[@class="left clear margin-top"]/span[@class="small-font"]/text()').replace('(','').replace(')','')
         review_sk = md5(normalize(doctor_sk)+normalize(review_dec)+normalize(review_by)+normalize(review_on))
         if review_sk and review_by:
             review_item = DoctorFeedback()

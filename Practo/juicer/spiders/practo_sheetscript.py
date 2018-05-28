@@ -2,7 +2,7 @@ from linkedin_functions import *
 
 class Practocsv(object):
     def __init__(self, *args, **kwargs):
-        self.con, self.cur = get_mysql_connection('localhost', 'PRACTO', '')
+        self.con, self.cur = get_mysql_connection('localhost', 'credihealth', '')
         self.excel_file_name = 'doctor_listing_%s.csv'%str(datetime.datetime.now().date())
         self.excel_file_name1 = 'doctor_profile_%s.csv'%str(datetime.datetime.now().date())
         if os.path.isfile(self.excel_file_name):
@@ -19,23 +19,24 @@ class Practocsv(object):
         self.tableschema = 'INSERT INTO practo_final_table ('
         self.na = 'practo_final_table'
         self.tables_file = self.get_tables_file()
-        self.query1 = 'select * from %s'
-        self.query2 = 'select * from %s where %s = "%s"'
+        self.query1 = 'select * from %s where date(modified_at)>="2018-01-03"'
+        self.query2 = 'select * from %s where %s = "%s" and date(modified_at)>="2018-01-03"'
         self.columns_query = 'SELECT COLUMN_NAME FROM information_schema.columns where table_schema= "PRACTO" and table_name = "%s"'
         self.max_count_query = "select count(*)  from %s group by doctor_id order by count(*) desc limit 1"
         doct_info_columns = fetchmany(self.cur, self.columns_query%('DoctorInfo'))
         doc_info_list = list(doct_info_columns)
         self.doc_info_uplist = list(chain.from_iterable(doc_info_list))[:-3]
-        self.doc_info_uplist.extend(['phone_number', 'extension', 'city', 'Availability Text'])
+        #self.doc_info_uplist.extend(['phone_number', 'extension', 'city', 'Availability Text'])
         doct_meta_columns = fetchmany(self.cur, self.columns_query%('DoctorMeta'))
         doct_meta_ls = list(doct_meta_columns)
         self.doc_meta_uplist = list(chain.from_iterable(doct_meta_ls))[1:-3]
         hospital_columns = fetchmany(self.cur, self.columns_query%('DoctorHospital'))
         doct_hospitals = list(hospital_columns)
         self.doct_hospitals = list(chain.from_iterable(doct_hospitals))[2:-4]
-        feedback_columns = fetchmany(self.cur, self.columns_query%('DoctorFeedback'))
-        feed_col = list(feedback_columns)
-        self.feedback_col = list(chain.from_iterable(feed_col))[3:-4]
+        #feedback_columns = fetchmany(self.cur, self.columns_query%('DoctorFeedback'))
+        #feed_col = list(feedback_columns)
+        #self.feedback_col = list(chain.from_iterable(feed_col))[2:-4]
+        self.feedback_col = []
         self.columns_pft = ''
 
         self.headerlisting = []
@@ -67,6 +68,7 @@ class Practocsv(object):
 
 
     def send_csv(self):
+        availability_text = ''
         records = fetchall(self.cur, self.query1%('DoctorInfo'))
         counterpa = 0
         for inde, rec in enumerate(records):
@@ -94,7 +96,7 @@ class Practocsv(object):
                 self.headerlisting.extend(self.doc_info_uplist)
                 self.headerprofiles.extend(self.doc_meta_uplist)
                 #import pdb;pdb.set_trace()
-                self.headerprofiles.extend(['city'])
+                #self.headerprofiles.extend(['city'])
                 self.todays_excel_file.writerow(self.headerlisting)
             info_rec = [normalize(i) for i in info_rec]
             self.todays_excel_file.writerow(info_rec)
@@ -125,22 +127,23 @@ class Practocsv(object):
             orig_vals = values_final
             countr=0
             final_qryto = "%s%s%s%s%s%s"%(self.tableschema,', '.join(self.columns_pft), ', created_at, modified_at, last_seen) values (' , ', '.join(['%s' for i in range(len(self.columns_pft))]), ', now(), now(), now()) ON DUPLICATE KEY UPDATE last_seen=now(), ', ', '.join([str(i)+'=%s' for i in self.columns_pft]))
-            for cf in callfun:
-                countr+=1
-                uptovalues_here = orig_vals
-                uptovalues_here.extend(cf)
-                uptovalues_here.extend([status])
-                uptovalues_here =  [normalize(i) for i in uptovalues_here]
-                if len(self.headerprofiles) != len(uptovalues_here):
-                    print len(self.headerprofiles)
-                    print len(uptovalues_here)
-                self.todays_excel_file1.writerow(uptovalues_here)
-                final_table_values = []
-                final_table_values = uptovalues_here+uptovalues_here
-                #execute_query(self.cur, "%s%s"%(final_qryto, tuple(final_table_values)))
-                self.tables_file.write('%s\n%s\n' %(final_qryto, tuple(final_table_values)))
-                self.tables_file.flush()
-                del orig_vals[-13:]
+            #for value_final in values_final:
+            #for cf in callfun:
+            countr+=1
+            uptovalues_here = orig_vals
+            #uptovalues_here.extend(cf)
+            #uptovalues_here.extend([status])
+            uptovalues_here =  [normalize(i) for i in uptovalues_here]
+            if len(self.headerprofiles) != len(uptovalues_here):
+                print len(self.headerprofiles)
+                print len(uptovalues_here)
+            self.todays_excel_file1.writerow(uptovalues_here)
+            final_table_values = []
+            final_table_values = uptovalues_here+uptovalues_here
+            #execute_query(self.cur, "%s%s"%(final_qryto, tuple(final_table_values)))
+            self.tables_file.write('%s\n%s\n' %(final_qryto, tuple(final_table_values)))
+            self.tables_file.flush()
+            del orig_vals[-13:]
 
 
             """values_final.extend([callfun])
@@ -159,7 +162,8 @@ class Practocsv(object):
             final_to_update.append(vals_)
         if not final_to_update:
             final_to_update.append(['' for i in self.feedback_col])
-        return final_to_update
+        #return final_to_update
+        return []
         """if hindex == 0:  self.headerprofiles.extend(['Feedback'])
         values = fetchmany(self.cur, self.query2%("DoctorFeedback", 'doctor_id', doctor_meta_id))
         final_to_update = []
