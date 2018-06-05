@@ -83,7 +83,8 @@ class TicketNewBrowse(JuicerSpider):
         lang = "".join(sel.xpath('//div[@class="movie-details tn-entity-details"]//span[@itemprop="inLanguage"]//text()').extract())
         genre = "<>".join(sel.xpath('//div[@class="movie-details tn-entity-details"]//span[@itemprop="genre"]//text()').extract())
         published_date = "".join(sel.xpath('//div[@class="movie-details tn-entity-details"]//span[@itemprop="datePublished"]//text()').extract())
-        duration = "".join(sel.xpath('//div[@class="movie-details tn-entity-details"]//h6//text()').extract()[-1]).replace('|','')
+        try : duration = "".join(sel.xpath('//div[@class="movie-details tn-entity-details"]//h6//text()').extract()[-1]).replace('|','')
+        except : duration = ''
         actors = "".join(sel.xpath('//div[@class="movie-details tn-entity-details"]//p[@itemprop="actor"]//text()').extract())
         director = "".join(sel.xpath('//div[@class="movie-details tn-entity-details"]//p[@itemprop="director"]//text()').extract())
         music = "".join(sel.xpath('//div[@class="movie-details tn-entity-details"]//p[@itemprop="musicBy"]//text()').extract())

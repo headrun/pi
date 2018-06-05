@@ -1,14 +1,16 @@
 import requests
-from juicer.utils import *
 from juicer.items import *
-
+from juicer.utils import *
 
 class FlipkartBestsellersterminal(JuicerSpider):
     name = "flipkart_bestsellers_terminal"
     handle_httpstatus_list = [404, 302, 303, 403, 500, 999,503,400]
+
     def __init__(self, *args, **kwargs):
         super(FlipkartBestsellersterminal, self).__init__(*args, **kwargs)
         self.URL = "http://www.flipkart.com"
+
+
 
     def name_clean(self, text):
         text = re.sub('\((.*?)\)','',text)
@@ -17,41 +19,51 @@ class FlipkartBestsellersterminal(JuicerSpider):
 
     def parse(self, response):
         sel = Selector(response)
+        print response.meta
         page_value = response.meta.get('page',1)
         start_count = response.meta.get('start',0)
-        title = response.meta.get('data',{}).get('product_title','')
-        sub_title = response.meta.get('data',{}).get('sub_title','')
-        item_id = response.meta.get('data',{}).get('item_id','')
-        price =  response.meta.get('data',{}).get('price','')
-        currency = response.meta.get('data',{}).get('currency','')
-        discount = response.meta.get('data',{}).get('discount','')
-        features = response.meta.get('data',{}).get('features','')   
-        category = response.meta.get('data',{}).get('category','')
+        data = {}
+        try : data  = json.loads(sel.xpath('//script[@type="application/ld+json"]//text()').extract()[0])[0]
+        except : print "NO data Available and format has changed"
+        reviews = data.get('aggregateRating',{}).get('reviewCount','')
+        rating = data.get('aggregateRating',{}).get('ratingValue','')
+        image = "<>".join(sel.xpath('//div[@class="_4m8kDI"]//img//@src').extract())
+        title = normalize("".join(sel.xpath('//div[@class="_29OxBi"]//h1//text()').extract()))
+        sub_title = normalize("".join(sel.xpath('//div[@class="_3xgqrA"]//text()').extract()))
+        item_id = response.url.split('?')[0].split('/')[-1]
+        price =  normalize("".join(sel.xpath('//div[@class="_1vC4OE _3qQ9m1"]//text()').extract()))
+        currency = 'INR'
+        discount =  normalize("".join(sel.xpath('//div[@class="_2XDAh9"]//span//text()').extract()))
+        features = "<>".join(sel.xpath('//div[@class="_3WHvuP"]//ul//li[@class="_2-riNZ"]//text()').extract())
+        category = 'Tvs&Appliances < Washing_machine'
         sk = response.meta.get('sk','')
-        description = normalize(extract_data(sel,'//div[@class="_3rQFTN"]//text()'))
+        description = normalize("".join(sel.xpath('//div[@class="_3rQFTN"]//text()').extract()))
         specifications = ''
-        specif_list = []
-        product_data = sel.xpath('//div[span[span[contains(text(),"Specifications")]]]/following-sibling::div//div[@class="HoUsOy"]/parent::div/div[@class="HoUsOy"]/text()').extract()
-        for product in product_data:
-           nodes = sel.xpath('.//div[div[contains(text(),"%s")]]/ul/li'%product)
-           for i in nodes:
-               data = i.xpath('.//text()').extract()
-               data = " : ".join(data)
-               specif_list.append(data)
-           specifications = ",".join(specif_list)
-
         aux_info = {}
-        if specifications : aux_info.update({'specifications':specifications})
+        spec = json.loads(sel.xpath('//script[@id="is_script"]//text()').extract()[0].split('window.__INITIAL_STATE__ =')[-1].replace(';\n','')).get('productPage').get('productDetails').get('data').get('product_specification_1').get('data')[0].get('value').get('attributes')
+        for spec_node in spec :
+                key  = normalize(spec_node.get('name',{}))
+                vals = normalize("<>".join(spec_node.get('values',{})))
+                aux_info.update({key:vals})
+
+        best_sellers = BestSellers()
+        best_sellers.update({"product_id":str(sk),"name":normalize(title),"star_rating":str(rating),"no_of_reviews":str(reviews),"price":str(price),"category":normalize(category),"product_url":normalize(response.url),"reference_url":response.url})
+        yield best_sellers
+        if image : 
+                image = image.replace('{@width}','832').replace('{@height}','832').replace('{@quality}','70')
+                richmedia_item = RichMedia()
+                richmedia_item.update({"sk":md5(image+response.url),"product_id":normalize(sk), "category":normalize(category),"image_url":normalize(image),"reference_url":normalize(response.url)})
+                yield  richmedia_item
+
         if sub_title : aux_info.update({'sub_title':sub_title})
         products_item = Products()
-        products_item.update({"id":str(sk),"name":normalize(title),"original_price":str(price),"discount_price":str(discount),"features":normalize(" , ".join(features)),"description":normalize(description),"reference_url":normalize(response.url),'aux_info':json.dumps(aux_info)})
+        products_item.update({"id":str(sk),"name":normalize(title),"original_price":str(price),"discount_price":str(discount),"features":features,"description":normalize(description),"reference_url":normalize(response.url),'aux_info':json.dumps(aux_info)})
         yield products_item
-        
-        #import pdb;pdb.set_trace()
-        seller_link =  extract_data(sel, '//a[contains(@href, "seller")]/@href')
+        self.got_page(sk,1)
+        seller_link =  "".join(sel.xpath('//a[contains(@href, "seller")]/@href').extract())
         if seller_link :
-            seller_link = self.URL+seller_link
-            headers = {
+                seller_link = self.URL+seller_link
+                headers = {
         'x-user-agent': 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36 FKUA/website/41/website/Desktop',
         'Origin': 'https://www.flipkart.com',
         'Accept-Encoding': 'gzip, deflate, br',
@@ -61,16 +73,17 @@ class FlipkartBestsellersterminal(JuicerSpider):
         'Cache-Control': 'max-age=0',
         'Referer': str(seller_link),
         'Connection': 'keep-alive'}
-            url = 'https://www.flipkart.com/api/3/page/dynamic/product-sellers'
-            payload = {"requestContext":{"productId":str(sk)}}
-            yield Request(url, callback=self.parse_sellers,headers=headers,method="POST",body=json.dumps(payload), meta= {"sk":sk, "title":title, 'category':category,'ref_url':response.url,'seller_url':seller_link})
+                url = 'https://www.flipkart.com/api/3/page/dynamic/product-sellers'
+                payload = {"requestContext":{"productId":str(sk)}}
+                yield Request(url, callback=self.parse_sellers,headers=headers,method="POST",body=json.dumps(payload), meta= {"sk":sk, "title":title, 'category':category,'ref_url':response.url,'seller_url':seller_link})
 
       
-        customer_reviews = extract_data(sel, '//a[contains(@href, "product-reviews")]/@href')
+        customer_reviews = "".join(sel.xpath('//a[contains(@href, "product-reviews")]/@href').extract())
+ 
         if customer_reviews : 
-            customer_review_url = self.URL+customer_reviews
-            rev_url = customer_review_url.split('?')[0]+'?page='+str(page_value)+'&'+str(sk)
-            headers = {
+                customer_review_url = self.URL+customer_reviews
+                rev_url = customer_review_url.split('?')[0]+'?page='+str(page_value)+'&'+str(sk)
+                headers = {
         'x-user-agent': 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36 FKUA/website/41/website/Desktop',
         'Origin': 'https://www.flipkart.com',
         'Accept-Encoding': 'gzip, deflate, br',
@@ -80,8 +93,25 @@ class FlipkartBestsellersterminal(JuicerSpider):
         'Cache-Control': 'max-age=0',
         'Referer': str(rev_url),
         'Connection': 'keep-alive'}
-            req_url = 'https://www.flipkart.com/api/3/product/reviews?productId='+str(sk)+'&start='+str(start_count)+'&count=10&ratings=ALL&reviewerType=ALL&sortOrder=MOST_HELPFUL'
-            yield Request(req_url, callback=self.parse_reviews,headers=headers, meta= {"sk":sk, "title":title, 'category':category,'ref_url':response.url,'rev_url':rev_url,'headers':headers})
+                req_url = 'https://www.flipkart.com/api/3/product/reviews?productId='+str(sk)+'&start='+str(start_count)+'&count=10&ratings=ALL&reviewerType=ALL&sortOrder=MOST_HELPFUL'
+                yield Request(req_url, callback=self.parse_reviews,headers=headers, meta= {"sk":sk, "title":title, 'category':category,'ref_url':response.url,'rev_url':rev_url,'headers':headers})
+        else : 
+            try : 
+                data_ = json.loads(sel.xpath('//script[@id="is_script"]//text()').extract()[0].split('window.__INITIAL_STATE__ =')[-1].replace(';\n','')).get('productPage',{}).get('productDetails',{}).get('data',{}).get('product_review_page_default_1',{}).get('data',[])
+                for data in data_:
+                    rev_text = meta_data.get('value',{}).get('text','')
+                    rev_title = meta_data.get('value',{}).get('title','')
+                    rating = meta_data.get('value',{}).get('rating','')
+                    rev_sk = meta_data.get('value',{}).get('id','')
+                    review_by = meta_data.get('value',{}).get('author','')
+                    review_url = meta_data.get('value',{}).get('url','')
+                    review_on = meta_data.get('value',{}).get('created','')
+                    try : rev_on = datetime.datetime.strptime(str(review_on.replace(',','')), '%d %B %Y')
+                    except : rev_on = ''
+                    review_item = CustomerReviews()
+                    review_item.update({"sk":str(rev_sk),"product_id":str(sk),"name":normalize(title),"reviewed_by":normalize(review_by),"reviewed_on":str(rev_on),"review":normalize(rev_text),"category":normalize(category),"review_url":normalize(rev_url),"review_rating":str(rating)})
+                    yield review_item
+            except : data = {}   
 
 
     def parse_reviews(self, response):

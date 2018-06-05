@@ -26,7 +26,6 @@ class FlipkartBestsellersbrowse(JuicerSpider):
 
     def parse_next(self,response):
         sel = Selector(response)
-        import pdb;pdb.set_trace()
         body = json.loads(response.body)
         start = response.meta.get('start_count',0)
         data = body['RESPONSE']['storeMetaInfoList']
@@ -68,6 +67,7 @@ class FlipkartBestsellersbrowse(JuicerSpider):
              try : 
                  for i in range(1,range_):
                      title = str(response.meta['title'].replace(' ','-'))
+                    
                      headers = response.meta['headers']
                      start = int(response.meta['start']) + 40
                      payload = {"requestContext":{"store":str(response.meta['id_']),"start":str(start),"disableProductData":"true","count":60,"q":"bestsellers"}}
@@ -93,6 +93,7 @@ class FlipkartBestsellersbrowse(JuicerSpider):
                 item_id = meta_data['itemId']
                 reviews = meta_data.get('rating',{}).get('reviewCount','')
                 title = meta_data.get('titles',{}).get('title','')
+                print title
                 price = meta_data.get('pricing',{}).get('finalPrice',{}).get('value','')
                 discount = meta_data.get('pricing',{}).get('finalPrice',{}).get('discount','')
                 currency = meta_data.get('pricing',{}).get('finalPrice',{}).get('currency','')

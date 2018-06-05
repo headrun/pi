@@ -15,7 +15,7 @@ class AmazonBestsellersbrowse(JuicerSpider):
 
     def parse(self, response):
         sel = Selector(response)
-        navigation_list = get_nodes(sel,'//ul[contains(@id,"browse")]//ul[li]/li/a')[7:8]
+        navigation_list = get_nodes(sel,'//ul[contains(@id,"browse")]//ul[li]/li/a')
         for nv in navigation_list:
             main_url = extract_data(nv,'./@href')
             main_category = extract_data(nv, './text()')
@@ -33,9 +33,8 @@ class AmazonBestsellersbrowse(JuicerSpider):
                 main_url = extract_data(av,'./@href')
                 main_category = extract_data(av, './text()')
                 if 'http' in main_url: yield Request(main_url, callback=self.parse_nexttab, meta={"main_category":main_category,"next_page":''},dont_filter=True)
-             
-        if 'Sunglasses & Spectacle Frames' in fortext.encode('utf8') or 'Sunglasses' in fortext.encode('utf8') or 'Spectacle Frames' in fortext.encode('utf8'):
-
+         
+        if response.url : 
             nodes = get_nodes(sel,'//div[@class="zg_itemImmersion"]')
             for nd in nodes:
                 rank = extract_data(nd,'.//span[contains(@class,"rankNumber")]//text()')
@@ -52,15 +51,12 @@ class AmazonBestsellersbrowse(JuicerSpider):
                 stars_ratings = textify(re.findall('(.*?) out',stars_rating))
                 is_pri = ''
                 if prime_icon: is_pri = True
-                if '/ref' in sk : continue
                 if sk and product_link:
                     product_link = "%s%s"%(self.URL,product_link)
                     best_sellers = BestSellers()
                     best_sellers.update({"product_id":normalize(sk),"name":normalize(product_title),"star_rating":normalize(stars_ratings),"no_of_reviews":normalize(no_of_reviews),"price":normalize(price),"rank":normalize(rank.strip('.')),"week_number":str(datetime.datetime.now().isocalendar()[1]),"category":normalize(fortext),"is_prime":is_pri,"product_url":normalize(product_link),"reference_url":normalize(response.url)})
                     yield best_sellers
                     aux_info = {"category":fortext,"product_title":product_title}
-                    print product_link
-                    if '/ref' in sk : continue
                     self.get_page('amazon_bestsellers_terminal', product_link, sk, aux_info)
             navigation = extract_data(sel,'//ol[contains(@class,"pagination")]/li[contains(@class,"selected")]/following-sibling::li[1]/a/@href')
             if navigation:

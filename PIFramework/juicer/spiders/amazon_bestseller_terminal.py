@@ -8,7 +8,9 @@ from juicer.items import *
 
 class AmazonBestsellersterminal(JuicerSpider):
     name = "amazon_bestsellers_terminal"
+    #name = "amazon_bestseller_browse"
     handle_httpstatus_list = [404, 302, 303, 403, 500, 999,503]
+    #start_urls = ['https://www.amazon.in/SARAH-Plastic-Adjustable-Loading-Automatic/dp/B07DH8JXKN/ref=sr_1_762?s=kitchen&ie=UTF8&qid=1528110855&sr=1-762&keywords=washing+machines']
 
     def __init__(self, *args, **kwargs):
         super(AmazonBestsellersterminal, self).__init__(*args, **kwargs)
@@ -31,6 +33,9 @@ class AmazonBestsellersterminal(JuicerSpider):
 
     def parse(self, response):
         sel = Selector(response)
+        print response.url
+        #title = ''
+        #category=''
         if self.headers.get('Referer',''):
             del self.headers['Referer']
         self.headers.update({"Referer":response.url})
@@ -53,14 +58,19 @@ class AmazonBestsellersterminal(JuicerSpider):
             seller_rk = normalize(self.name_clean("%s%s%s"%(seller_mrank,'<>',seller_rank)))
         if date_first_avail:
             date_first_avail = str(parse_date(date_first_avail))
-        customer_reviews = extract_list_data(sel, '//td[h2[contains(text(),"Product details")]]//a[contains(text(), "customer reviews")]/@href')
-        if customer_reviews: customer_reviews[0]
+        customer_reviews = extract_data(sel, '//td[h2[contains(text(),"Product details")]]//a[contains(text(), "customer reviews")]/@href') or extract_data(sel, '//a[@id="acrCustomerReviewLink"]//@href')
+        if customer_reviews and 'http' not in customer_reviews: customer_reviews = "https://www.amazon.in" + customer_reviews
         produ_aux = {}
+        tech_nodes = sel.xpath('//div[@id="prodDetails"]//span[contains(text(),"Technical Details")]/..//..//preceding-sibling::table//tr')
+        for tech_node in tech_nodes :
+            key = normalize("".join(tech_node.xpath('./td[@class="label"]//text()').extract()))
+            val = normalize("".join(tech_node.xpath('./td[@class="value"]//text()').extract()))
+            produ_aux.update({key:val})
+        print tech_nodes
         original_price = extract_data(sel,'//div[@id="price"]//span[@class="a-text-strike"]/text()').strip()
         if not original_price: original_price = extract_data(sel, '//div[@id="price"]//span[@id="priceblock_ourprice"]/text()').strip()
         discount_price = extract_data(sel, '//div[@id="price"]//span[@id="priceblock_saleprice"]/text()').strip()
         if product_dime: produ_aux.update({"product_dimensions":product_dime})
-        #import pdb;pdb.set_trace()
         products_item = Products()
         products_item.update({"id":normalize(sk),"name":normalize(title),"original_price":normalize(original_price),"discount_price":normalize(discount_price),"features":normalize(features),"description":normalize(description),"item_number":normalize(item_part_number),"date_available":normalize(date_first_avail),"best_sellerrank":normalize(seller_rk),"reference_url":normalize(response.url)})
         if produ_aux:
@@ -92,7 +102,7 @@ class AmazonBestsellersterminal(JuicerSpider):
             if aux_relatedsel1:
                 relatedsellersitem.update({"aux_info":normalize(json.dumps(aux_relatedsel1, ensure_ascii=False, encoding="utf-8"))})
             yield relatedsellersitem
-
+            #print relatedsellersitem
         other_sellers_nodes = get_nodes(sel,'//div[div[h5[span[contains(text(),"Other Sellers on Amazon")]]]]/following-sibling::div[contains(@class,"box")]')
         for seller_nd in other_sellers_nodes:
             price_pop = extract_data(seller_nd,'.//span[contains(@class,"color-price")]/text()')
@@ -141,7 +151,7 @@ class AmazonBestsellersterminal(JuicerSpider):
                 if reviw_aux:
                     review_item.update({"aux_info":normalize(json.dumps(reviw_aux, ensure_ascii=False, encoding="utf-8"))})
                 yield review_item
-
+                print review_item
         next_review_link = extract_data(sel, '//li[@class="a-last"]/a/@href')
         if next_review_link:
             next_review_url = "{}{}".format(self.URL,next_review_link)

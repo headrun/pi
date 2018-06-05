@@ -69,8 +69,8 @@ class PaytmBrowse(JuicerSpider):
         count = 0
         movie_list = result.get('movies',{}).keys()
         date_list = []
-        date = datetime.datetime.now().date()
-        for i in range(1,7):
+        date = datetime.datetime.now().date()-datetime.timedelta(days=1) 
+        for i in range(1,8):
             date_list.append(date+datetime.timedelta(days=i))
         for date in date_list :        
             for movie in movie_list :
@@ -86,7 +86,7 @@ class PaytmBrowse(JuicerSpider):
             movie_id,movie_title,image_url,censor,genre,content,duration,trailor_url,language,opening_date,reference_url = row_
             vals_data = [movie_id,movie_title,image_url,censor,genre,content,duration,trailor_url,language,opening_date,reference_url]
             self.todays_movieef.writerow(vals_data)
-            if 'O9IW2O' in movie_id or 'O9IX6F' in movie_id : self.todays_movie.writerow(vals_data) 
+            #if 'O9IW2O' in movie_id or 'O9IX6F' in movie_id : self.todays_movie.writerow(vals_data) 
         self.cur.execute(self.select_qry % self.crawler_start_time)
         data = self.cur.fetchall()
         for row in data :
@@ -94,7 +94,7 @@ class PaytmBrowse(JuicerSpider):
                 values = [session_id,Movie_code,theater_name,provider_name,address,latitude,longitude,multiple_ticket,real_show_time,free_seating,token_fee_only,token_fee_pickup_time,grouped_seats,max_tickets,seats_avail,seats_unavail,seats_total,ticket_type,ticket_price,crawler_start_time,crawler_end_time,reference_url]
                 self.todays_excel_file1.writerow(values)
                 
-                if 'O9IW2O' in Movie_code or 'O9IX6F' in Movie_code :self.todays_session.writerow(values)
+                #if 'O9IW2O' in Movie_code or 'O9IX6F' in Movie_code :self.todays_session.writerow(values)
         statinfo = os.stat(self.excel_file_name1)
         size = statinfo.st_size 
         self.oupf.close()
@@ -107,8 +107,8 @@ class PaytmBrowse(JuicerSpider):
             for file_ in files :
                 file_id = Googleupload().main('Paytm_Availability', email_from_list, file_)
             other = [self.excel_file_name2,self.excel_file_name3]
-            for oth in other :
-                file_id = Googleupload().main('paytm', email_from_list, oth)     
+            """for oth in other :
+                file_id = Googleupload().main('paytm', email_from_list, oth)     """
                 #self.alert_mail(email_from_list,file_id, file_)
         self.cur.close()
         self.conn.close()

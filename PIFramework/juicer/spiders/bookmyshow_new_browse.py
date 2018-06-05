@@ -32,24 +32,27 @@ class Bookmyshow(JuicerSpider):
         self.todays_excel_file.writerow(self.header_params)
         self.processed_path = '/root/PIFramework/juicer/spiders/paytm_csv_files'
         self.del_qry = 'delete from bookmyshow_sessions'
+        self.cur.execute(self.del_qry)
         dispatcher.connect(self.spider_closed, signals.spider_closed)
 
     def parse(self, response):
+        #self.cur.execute(self.del_qry)
         sel = Selector(response)
         movies = sel.xpath('//div[@class="mv-row"]/div[@class="wow fadeIn movie-card-container"]')
         for movie in movies:
             url = ''.join(movie.xpath('.//div[@class="book-button"]/a/@href').extract())
 	    if url:
                 normal_url = 'https://in.bookmyshow.com/' + url
-                yield Request(normal_url, callback = self.parse_new)
+                #print normal_url
+                yield Request(normal_url, callback = self.parse_new,dont_filter=True)
             else:
 	        format_ =  movie.xpath('.//div[@class="experience-list"]//div[@class="content"]/a/@href').extract()
                 for url in format_:
                     format_url = 'https://in.bookmyshow.com/' + url
-                    yield Request(format_url, callback = self.parse_new, meta = {'format_':format_url})
+                    #print format_url
+                    yield Request(format_url, callback = self.parse_new, meta = {'format_':format_url},dont_filter=True)
 
     def parse_new(self, response):
-        self.cur.execute(self.del_qry)
         format_ = response.meta.get('format_','')
         sel = Selector(response)
         day = sel.xpath('//div[@class="showtime-filters struktur  "]/div[@class="date-container "]/ul/li/a/@href').extract()
@@ -92,6 +95,7 @@ class Bookmyshow(JuicerSpider):
             data = json.loads(response.body.replace('arrShowInfo=','').strip(';'))
             session_id = response.meta.get('session_id','')
             movie_title = response.meta.get('movie_name', '')
+            print movie_title
             movie_code = response.meta.get('movie_code', '')
             theatre_name = response.meta.get('theatre_name','')
             movie_duration = response.meta.get('movie_dur','')
