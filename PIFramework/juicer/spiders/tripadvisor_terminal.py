@@ -2,13 +2,13 @@ from juicer.utils import *
 from scrapy.http import FormRequest
 
 class TripAvisorTerminal(JuicerSpider):
-	name = 'tripadvisor_search_browse1'
-	start_urls = ['https://www.tripadvisor.in']
+	name = 'tripadvisor_search_terminal'
+	start_urls = ['https://www.tripadvisor.in/Restaurant_Review-g293924-d12593669-Reviews-Duong_s_2_Restaurant_Cooking_Class-Hanoi.html']
 	handle_httpstatus_list = [302,301]
 
 	def __init__(self, *args, **kwargs):
 	    super(TripAvisorTerminal, self).__init__(*args, **kwargs)
-	    self.insert_query1 = "INSERT INTO tripadvisor_meta(sk,title,no_of_reviews,address,contact_number,image,reference_url,created_at,modified_at,last_seen) values(%s,%s,%s,%s,%s,%s,%s,now(),now(),now()) on duplicate key update modified_at = now()"
+	    self.insert_query1 = "INSERT INTO tripadvisor_meta(sk,title,no_of_reviews,address,contact_number,image,reference_url,created_at,modified_at,last_seen) values(%s,%s,%s,%s,%s,%s,%s,now(),now(),now()) on duplicate key update modified_at = now(), title=%s, no_of_reviews=%s, address=%s, contact_number=%s, image=%s"
 	    self.insert_query2 = "INSERT INTO tripadvisor_review(sk,program_sk,review_id,review_title,reviewed_on, reviewed_with,description,user_thank,user_likes,reviewed_by, location, contributor, votes, review_rating, image, excellent, very_good, average, poor, terrible, reference_url, created_at,modified_at,last_seen) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now(),now()) on duplicate key update modified_at = now()"
 
             self.conn = MySQLdb.connect(db='Trip_Advisor',user='root',passwd='root',
@@ -16,23 +16,15 @@ class TripAvisorTerminal(JuicerSpider):
             self.cur = self.conn.cursor()
 
 	def parse(self, response):
-	   sel = Selector(response)
-	   urls = ['https://www.tripadvisor.in/Attraction_Review-g304556-d1218500-Reviews-Sathyam_Cinema-Chennai_Madras_Chennai_District_Tamil_Nadu.html',
-		'https://www.tripadvisor.in/Attraction_Review-g304556-d2561232-Reviews-Escape_Cinemas-Chennai_Madras_Chennai_District_Tamil_Nadu.html',
-		'https://www.tripadvisor.in/Attraction_Review-g304556-d6562814-Reviews-Luxe_Cinemas-Chennai_Madras_Chennai_District_Tamil_Nadu.html',
-		'https://www.tripadvisor.in/Attraction_Review-g304556-d9597309-Reviews-Palazzo-Chennai_Madras_Chennai_District_Tamil_Nadu.html',
-		'https://www.tripadvisor.in/Attraction_Review-g304556-d3370076-Reviews-S2_Cinemas_Perambur-Chennai_Madras_Chennai_District_Tamil_Nadu.html',
-		'https://www.tripadvisor.in/Attraction_Review-g304556-d12215260-Reviews-S2_Cinemas_Thiruvanmiyur-Chennai_Madras_Chennai_District_Tamil_Nadu.html',
-		'https://www.tripadvisor.in/Attraction_Review-g297675-d2360275-Reviews-Brookefields_Mall-Coimbatore_Coimbatore_District_Tamil_Nadu.html',
-		'https://www.tripadvisor.in/Attraction_Review-g1457560-d11962315-Reviews-Archana_Theatre-Nellore_Nellore_District_Andhra_Pradesh.html']
-	   for url in urls:
-	   	yield Request(url, self.parse_1)
-	
-	def parse_1(self, response):
-            sel = Selector(response)
+	    sel = Selector(response)
 	    sk = "-".join(response.url.split('-')[1:3])
-	    title = normalize(''.join(sel.xpath('//div[@id="taplc_location_detail_header_attractions_0"]/h1/text()').extract()))
+	    title = normalize(''.join(sel.xpath('//h1[@class="heading_title"]/text()').extract()))
+	    if not title:
+		title = normalize(''.join(sel.xpath('//h1[@id="HEADING"]/text()').extract()))
 	    no_of_reviews = normalize(''.join(sel.xpath('//div[@class="rs rating"]/a/span/text()').extract())) 
+	    if not no_of_reviews:
+		no_of_reviews = normalize(''.join(sel.xpath('//div[@class="ratingContainer"]/a/span/text()').extract()))
+	    no_of_reviews = normalize(''.join(re.findall('(\d+) of ', no_of_reviews)))
 	    streetadress = normalize(''.join(sel.xpath('//div[@class="blRow"]/div//span[@class="street-address"]/text()').extract()))
 	    extend_ad = normalize(''.join(sel.xpath('//div[@class="blRow"]/div//span[@class="extended-address"]/text()').extract()))
 	    locality= normalize(''.join(sel.xpath('//div[@class="blRow"]/div//span[@class="locality"]/text()').extract()))
@@ -40,9 +32,14 @@ class TripAvisorTerminal(JuicerSpider):
 	    tes = normalize(''.join(sel.xpath('//div[@class="blRow"]/div/text()').extract())).strip(',').strip(' ')
 	    full_address = streetadress+extend_ad+locality+coun+tes
 	    full_address1 = full_address.strip('|')
-	    contact_no = normalize(''.join(sel.xpath('//div[@class="blEntry phone"]/span/text()').extract()))
-	    images = normalize('<>'.join(sel.xpath('//div[@class="carousel_images"]//img//@data-src').extract()))
-	    values1 =(normalize(sk),title,no_of_reviews,full_address1,contact_no,images,normalize(response.url))
+	    contact_no = normalize(''.join(sel.xpath('//div[@class="blEntry phone"]//span/text()').extract()))
+	    images = normalize('<>'.join(sel.xpath('//div[@class="prw_rup prw_common_location_photos photos"]//img//@src').extract()))
+	    if not images:
+		images = normalize('<>'.join(sel.xpath('//div[@class="carousel_images"]//img//@data-lazyurl').extract()))
+	    if not images:
+		images = normalize('<>'.join(sel.xpath('//div[@class="carousel_images"]//img//@data-src').extract()))
+	    images = images.replace('https://static.tacdn.com/img2/x.gif', '').replace('<><>', '<>').strip('<>')
+	    values1 =(normalize(sk),title,no_of_reviews,full_address1,contact_no,images,normalize(response.url), title,no_of_reviews,full_address1,contact_no,images)
 	    self.cur.execute(self.insert_query1 , values1)
             headers = {
             'Origin': 'https://www.tripadvisor.in',
@@ -70,13 +67,13 @@ class TripAvisorTerminal(JuicerSpider):
 	    sel = Selector(response)
 	    sk = response.meta['sk']
 	    rating_num = sel.xpath('//div[@id="ratingFilter"]/ul/li[@class="filterItem"]/label//span/text()').extract()
-	    urls1 = sel.xpath('//div[@class="wrap"]/div[@class="quote"]/a/@href').extract()  
-	    urls2 = sel.xpath('//div[@class="wrap"]/div[@class="quote isNew"]//a//@href').extract()
+	    urls1 = sel.xpath('//div[@class="quote"]/a/@href').extract()  
+	    urls2 = sel.xpath('//div[@class="quote isNew"]//a//@href').extract()
 	    urls1.extend(urls2)
 	    for url in urls1:
 		url1 = 'https://www.tripadvisor.in'+(''.join(url))
 	        yield Request(normalize(url1), callback=self.parse_next, meta={"sk":sk})
-	    offset = normalize(''.join(response.xpath('//div[@class="unified pagination north_star "]/span[@class="nav next taLnk "]//@data-offset').extract()[:1]))
+	    offset = normalize(''.join(response.xpath('//div[@class="unified ui_pagination north_star "]/a[@class="nav next taLnk ui_button primary"]/@data-offset').extract()[:1]))
 	    if offset:
             	    links = response.url.split('-Reviews-')
 		    links1 = ''.join(links[0])+'-Reviews-'+'or'+offset+'-'+''.join(links[1])
@@ -87,7 +84,10 @@ class TripAvisorTerminal(JuicerSpider):
 	def parse_next(self, response):
 	    sel = Selector(response)
 	    sk = response.meta['sk']
-	    review_id = normalize(''.join(sel.xpath('//div[@class="prw_rup prw_reviews_basic_review_hsx"]/div/@data-reviewid').extract()[0]))
+	    try:	
+	    	review_id = normalize(''.join(sel.xpath('//div[contains(@class, "prw_rup prw_reviews")]/div/@data-reviewid').extract()[0]))
+	    except:
+	    	review_id = normalize(''.join(sel.xpath('//div[@class="prw_rup prw_reviews_basic_review_responsive"]/div/@data-reviewid').extract()[0])) 
 	    rating_num = sel.xpath('//div[@id="ratingFilter"]/ul/li[@class="filterItem"]/label//span/text()').extract()
             if rating_num:
             	excellent = rating_num[0]
@@ -95,6 +95,12 @@ class TripAvisorTerminal(JuicerSpider):
             	average = rating_num[2]
             	poor = rating_num[3]
             	terrible = rating_num[4]
+	    else:
+		excellent = normalize(''.join(sel.xpath('//div[@data-tracker="Excellent"]//span/text()').extract()[0]))
+		very_good = normalize(''.join(sel.xpath('//div[@data-tracker="Very good"]//span/text()').extract()[0]))
+		average = normalize(''.join(sel.xpath('//div[@data-tracker="Average"]//span/text()').extract()[0]))
+		poor = normalize(''.join(sel.xpath('//div[@data-tracker="Poor"]//span/text()').extract()[0]))
+		terrible = normalize(''.join(sel.xpath('//div[@data-tracker="Terrible"]//span/text()').extract()[0]))
 	    r_rating = normalize(''.join(sel.xpath('//div[@class="rating"]/span/span/@alt').extract()))
 	    if r_rating: r_rat = normalize(''.join(re.findall('(\d+) of ', r_rating)))
 	    else: r_rat = ''
@@ -122,6 +128,8 @@ class TripAvisorTerminal(JuicerSpider):
 	    location = normalize(''.join(sel.xpath('//div[@class="location"]/span/text()').extract()))
 	    reviewed_on = normalize(''.join(sel.xpath('//div[@class="rating reviewItemInline"]/span/@title').extract()))
 	    review_title = normalize(''.join(sel.xpath('//div[@class="quote"]/a/span/text()').extract()))
+	    if not review_title:
+		review_title = normalize(''.join(sel.xpath('//div[@class="quote isNew"]/a/span/text()').extract()))
 	    review_sk = md5(review_title+normalize(response.url))
 	    description = normalize(''.join(sel.xpath('//div[@class="prw_rup prw_reviews_text_summary_hsx"]/div/p//text()').extract()))
 	    thank_user = normalize(''.join(sel.xpath('//span[@class="helpful_text"]/span[@class="thankUser"]/text()').extract()))
@@ -131,3 +139,4 @@ class TripAvisorTerminal(JuicerSpider):
 			reviewed_by,location,contributor,votes,r_rat,image,normalize(excellent),normalize(very_good),\
 			normalize(average),normalize(poor),normalize(terrible),normalize(ref_url))
 	    self.cur.execute(self.insert_query2 , values2)
+	    self.got_page(sk, '1')
