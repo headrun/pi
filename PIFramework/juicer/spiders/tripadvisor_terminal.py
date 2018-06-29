@@ -43,12 +43,7 @@ class TripAvisorTerminal(JuicerSpider):
 	    self.cur.execute(self.insert_query1 , values1)
             headers = {
             'Origin': 'https://www.tripadvisor.in',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept-Language': 'en-US,en;q=0.8,fil;q=0.6',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-            'Accept': 'text/html, */*',
-            'Cache-Control': 'no-cache',
             'X-Requested-With': 'XMLHttpRequest',
             'Connection': 'keep-alive',
         	}
@@ -61,9 +56,10 @@ class TripAvisorTerminal(JuicerSpider):
             ('reqNum', '1'),
             ('changeSet', 'REVIEW_LIST'),
             	]
-            yield FormRequest(response.url, callback=self.details, formdata = data, headers=headers,meta={"sk":sk})
+            yield FormRequest(response.url, callback=self.details, formdata = data, headers=headers,meta={"sk":sk, 'retry':True})
 
 	def details(self,response):
+	    print response.meta
 	    sel = Selector(response)
 	    sk = response.meta['sk']
 	    rating_num = sel.xpath('//div[@id="ratingFilter"]/ul/li[@class="filterItem"]/label//span/text()').extract()
@@ -79,7 +75,7 @@ class TripAvisorTerminal(JuicerSpider):
 		    links1 = ''.join(links[0])+'-Reviews-'+'or'+offset+'-'+''.join(links[1])
 		    extra = "-".join(links1.split('-or')[-1].split('-')[1:])
 		    main_link = ''.join(links[0])+'-Reviews-'+'or'+offset+'-'+extra
-		    yield Request(normalize(main_link), callback=self.details, meta={'sk':sk}, dont_filter=True)
+		    yield Request(normalize(main_link), callback=self.details, meta={'sk':sk, 'retry':True}, dont_filter=True)
 	
 	def parse_next(self, response):
 	    sel = Selector(response)
