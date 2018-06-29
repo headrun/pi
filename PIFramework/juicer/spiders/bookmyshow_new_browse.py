@@ -11,7 +11,7 @@ from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
 import smtplib,ssl
-
+import shutil
 
 class Bookmyshow(JuicerSpider):
     name = "bookmyshow_new_browse"
@@ -36,20 +36,17 @@ class Bookmyshow(JuicerSpider):
         dispatcher.connect(self.spider_closed, signals.spider_closed)
 
     def parse(self, response):
-        #self.cur.execute(self.del_qry)
         sel = Selector(response)
         movies = sel.xpath('//div[@class="mv-row"]/div[@class="wow fadeIn movie-card-container"]')
         for movie in movies:
             url = ''.join(movie.xpath('.//div[@class="book-button"]/a/@href').extract())
 	    if url:
                 normal_url = 'https://in.bookmyshow.com/' + url
-                #print normal_url
                 yield Request(normal_url, callback = self.parse_new,dont_filter=True)
             else:
 	        format_ =  movie.xpath('.//div[@class="experience-list"]//div[@class="content"]/a/@href').extract()
                 for url in format_:
                     format_url = 'https://in.bookmyshow.com/' + url
-                    #print format_url
                     yield Request(format_url, callback = self.parse_new, meta = {'format_':format_url},dont_filter=True)
 
     def parse_new(self, response):
@@ -128,6 +125,7 @@ class Bookmyshow(JuicerSpider):
             self.oupf.close()
             email_from_list = ['anusha.boyina19@gmail.com']
             file_id = Googleupload().main('Bookmyshow_Availability', email_from_list, self.excel_file_name)
+	    shutil.move('/root/PIFramework/juicer/spiders/%s'%self.excel_file_name, '/root/PIFramework/juicer/spiders/paytm_csv_files')
         self.cur.close()
         self.conn.close()
 

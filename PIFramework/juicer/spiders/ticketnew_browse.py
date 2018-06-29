@@ -21,6 +21,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import COMMASPACE, formatdate
 from to_udrive import *
+import shutil
 
 class TicketNewBrowse(JuicerSpider):
     name = 'ticketnew_browse'
@@ -34,7 +35,6 @@ class TicketNewBrowse(JuicerSpider):
         self.meta_query = 'insert into Ticketnew_sessions(sk,movie_title,Movie_code,session_id,theater_name,address,published_date,duration,language,genre,actors,director,music,description,real_show_time,max_tickets,seats_avail,seats_unavail,seats_total,ticket_type,ticket_price,status,crawler_starttime,reference_url,created_at,modified_at)values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now()) on duplicate key update modified_at = now()'
         self.select_qry = 'select movie_title,Movie_code,session_id,theater_name,address,published_date,duration,language,genre,actors,director,music,description,real_show_time,max_tickets,seats_avail, seats_unavail, seats_total,ticket_type,ticket_price,status,crawler_starttime,reference_url from Ticketnew_sessions where crawler_starttime = "%s"'
         self.crawler_start_time = str(datetime.datetime.now() + timedelta(hours=9,minutes=34)).split('.')[0]
-        #import pdb;pdb.set_trace()
         self.excel_file_name = 'ticketnew_session_data_ON_%s.csv'% self.crawler_start_time
         self.oupf = open(self.excel_file_name, 'wb+')
         self.todays_excel_file  = csv.writer(self.oupf)
@@ -57,6 +57,7 @@ class TicketNewBrowse(JuicerSpider):
             self.oupf.close()
             email_from_list = ['anusha.boyina19@gmail.com']
             file_id = Googleupload().main('Ticketnew_Availability', email_from_list, self.excel_file_name)
+	    shutil.move('/root/PIFramework/juicer/spiders/%s'%self.excel_file_name, '/root/PIFramework/juicer/spiders/paytm_csv_files')
         self.cur.close()
         self.conn.close()
         
