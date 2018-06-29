@@ -1,28 +1,56 @@
-import scrapy
-import logging
+from scrapy import log
+from proxy import PROXIES
+from agents import AGENTS
+from scrapy.downloadermiddlewares.retry import RetryMiddleware
+import time
 import random
-import netifaces
-from netifaces import AF_INET 
 
-round_robin_iplist = [ "eth0:0", "eth0:1", "eth0:2", "eth0:3", "eth0:4", "eth0:5", "eth0:6", "eth0:7", "eth0:8", "eth0:9", "eth0:10", "eth0:11", "eth0:12", "eth0:13", "eth0:14", "eth0:15", "eth0:16", "eth0:17", "eth0:18", "eth0:19", "eth0:20", "eth0:21", "eth0:22", "eth0:23", "eth0:24", "eth0:25", "eth0:26", "eth0:27", "eth0:28", "eth0:29", "eth0:30"]
-
-#Here, we shall give list of ips in the below list variable. Instead of getting the computers IP, we shall check in net and get few public ips.
-round_robin_ips = ['176.9.181.35', '176.9.181.40', '144.76.48.150', '144.76.48.148']
-
-class InterfaceRoundRobinMiddleware(object):
+"""
+Custom proxy provider. 
+"""
+class CustomHttpProxyMiddleware(object):
+    
     def process_request(self, request, spider):
-        vir_itf_count = 30
-        #round_robin_ip = netifaces.ifaddresses( 'eth0:%d'%(random.randrange(0,vir_itf_count) ) )[AF_INET][0]['addr']
-        #round_robin_ip = netifaces.ifaddresses('wlan0')[AF_INET][0]['addr']
-        round_robin_ip = random.choice(round_robin_ips)
-        #request.meta["bindaddress"]= ("127.0.0.1",random.randrange(49152,65535))
-        ip_port_tuple = ( round_robin_ip , 3279)#random.randrange(49152,65535) )
-        request.meta["bindaddress"]= ip_port_tuple
-        logging.warning("request bindaddress ip_tuple = ('%s','%s')"%ip_port_tuple)
-        return None
+        # TODO implement complex proxy providing algorithm
+        if self.use_proxy(request):
+            p = random.choice(PROXIES)
+            try:
+                request.meta['proxy'] = "http://%s" % p['ip_port']
+		print request.meta['proxy'] 
+            except Exception, e:
+                log.msg("Exception %s" % e, _level=log.CRITICAL)
+                
+    
+    def use_proxy(self, request):
+        """
+        using direct download for depth <= 2
+        using proxy with probability 0.3
+        """
+        if "depth" in request.meta and int(request.meta['depth']) <= 2:
+            return False
+        i = random.randint(1, 10)
+        return i <= 2
+    
+    
+"""
+change request header nealy every time
+"""
+class CustomUserAgentMiddleware(object):
+    def process_request(self, request, spider):
+        agent = random.choice(AGENTS)
+        request.headers['User-Agent'] = agent
 
+from scrapy.downloadermiddlewares.retry import RetryMiddleware
+import time
+class CustomRetryMiddleware(RetryMiddleware):
     def process_response(self, request, response, spider):
+        url = response.url
+        if request.meta.get('retry', ''):
+                url = response.url
+                #check_xpath = response.xpath('//p//text').extract()
+                check_xpath = response.xpath('//div[@class="quote"]/a/@href').extract() or response.xpath('//div[@class="quote isNew"]//a//@href').extract()
+                if not check_xpath:
+                        return self._retry(request, 'meta', spider) or response
+
         return response
 
-    def process_exception(self, request, exception, spider):
-        return None
