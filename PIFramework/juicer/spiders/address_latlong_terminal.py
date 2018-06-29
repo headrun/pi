@@ -22,9 +22,17 @@ class AddressLatLongTerminal(JuicerSpider):
     def parse(self, response):
         sel = Selector(response)
         sk = response.meta['sk']
+	url1 = response.url
+	url1 = re.sub('AIzaSyAnsHV3SaNlzdrksvU444jYeB35tJEY-tg','AIzaSyBJ1o4zueCrf7irujcupTizi93Hio3MF9c', url1)
+	url1 = re.sub('AIzaSyAXJv_NphiyloIbvWb1zvGdWDVhrxD2qHw', 'AIzaSyBJ1o4zueCrf7irujcupTizi93Hio3MF9c', url1)
+	yield Request(url1,self.parse_meta,meta=response.meta, dont_filter=True)
+
+    def parse_meta(self, response):
+        sel = Selector(response)
+        sk = response.meta['sk']
         old_address = response.meta['data']['full_address']
         mobile_no = response.meta['data']['s_no']
-        yield Request(response.url,self.parse_data,meta={'sk' : sk, 'count': mobile_no,'full_address': old_address},dont_filter=True) 
+        yield Request(response.url,self.parse_data,meta={'sk' : sk, 'count': mobile_no,'full_address': old_address},dont_filter=True)
    
     def parse_data(self,response):
         data_ = json.loads(response.body)
@@ -48,6 +56,8 @@ class AddressLatLongTerminal(JuicerSpider):
         status = data['status']
         if status : status = status
         else : status = ''
+	if 'OK' not in status or 'ZERO_RESULTS' not in status:
+		self.got_page(sk, 2)
         if not data_ : 
             vals = ('',old_address,'', '', '','','','','','','','','','', '','','','',str(status),str(response.url),'','','',mobile_no)
 	    self.cur.execute(self.address_qry, vals)
