@@ -1,4 +1,4 @@
-import scrapy 
+import scrapy
 import requests
 import csv
 from juicer.utils import *
@@ -17,7 +17,7 @@ class Bookmyshow(JuicerSpider):
     name = "bookmyshow_new_browse"
     allowed_domains = ['bookmyshow.com']
     start_urls = ['https://in.bookmyshow.com/chennai/movies']
-
+    
     def __init__(self, *args,  **kwargs):
         super(Bookmyshow, self).__init__(*args, **kwargs)
         self.conn = MySQLdb.connect(db = 'paytm_movie', user='root', host = 'localhost', passwd='root', charset   = "utf8", use_unicode=False)
@@ -37,26 +37,28 @@ class Bookmyshow(JuicerSpider):
 
     def parse(self, response):
         sel = Selector(response)
-        movies = sel.xpath('//div[@class="mv-row"]/div[@class="wow fadeIn movie-card-container"]')
+	movies = sel.xpath('//div[@class="mv-row"]/div[@class="card-container wow fadeIn movie-card-container"]')
         for movie in movies:
-            url = ''.join(movie.xpath('.//div[@class="book-button"]/a/@href').extract())
+	    url = ''.join(movie.xpath('./a/@href').extract()) 
 	    if url:
-                normal_url = 'https://in.bookmyshow.com/' + url
-                yield Request(normal_url, callback = self.parse_new,dont_filter=True)
-            else:
-	        format_ =  movie.xpath('.//div[@class="experience-list"]//div[@class="content"]/a/@href').extract()
-                for url in format_:
-                    format_url = 'https://in.bookmyshow.com/' + url
-                    yield Request(format_url, callback = self.parse_new, meta = {'format_':format_url},dont_filter=True)
+                normal_url = 'https://in.bookmyshow.com' + url
+                yield Request(normal_url, callback = self.parse_book,dont_filter=True)
+
+    def parse_book(self, response):
+	sel = Selector(response)
+	booking_link = extract_list_data(sel, '//div[@class="more-showtimes"]/a/@href')
+	if booking_link:
+		booking_link = 'https://in.bookmyshow.com' + booking_link[0]
+		yield Request(booking_link, callback = self.parse_new, dont_filter=True)
 
     def parse_new(self, response):
         format_ = response.meta.get('format_','')
         sel = Selector(response)
-        day = sel.xpath('//div[@class="showtime-filters struktur  "]/div[@class="date-container "]/ul/li/a/@href').extract()
+        day = sel.xpath('//div[@class="date-container "]/ul/li/a/@href').extract()
         for i in day:
 	    day_navigation_url = 'https://in.bookmyshow.com' + i
             yield Request(day_navigation_url,callback=self.parse_meta,meta={'main_url':format_},dont_filter=True)
-
+	
     def parse_meta(self,response):
         sel = Selector(response)        
         movie_code = response.url.split('/')[-2]
@@ -85,14 +87,12 @@ class Bookmyshow(JuicerSpider):
                         show_info_link = "https://in.bookmyshow.com/serv/getData?cmd=GETSHOWINFO&vid="+str(venue_code)+"&ssid="+str(session_id)
                         if show_info_link :
                             yield Request(show_info_link, callback = self.parse_next, meta= {'url':response.url, 'date':date, 'movie_name':movie_name, 'theatre_name':theatre_name, 'time':show_time, 'main_url':main_url,'avail':avail,'ref_url':response.url,'genre':genre,'rel_date':rel_date,'vote_percent':percent,'no_of_votes':no_of_votes,'movie_dur':movie_duration,'movie_code':movie_code,'session_id':session_id},dont_filter=True)
-
             
     def parse_next(self, response):
             sel = Selector(response)
             data = json.loads(response.body.replace('arrShowInfo=','').strip(';'))
             session_id = response.meta.get('session_id','')
             movie_title = response.meta.get('movie_name', '')
-            print movie_title
             movie_code = response.meta.get('movie_code', '')
             theatre_name = response.meta.get('theatre_name','')
             movie_duration = response.meta.get('movie_dur','')
