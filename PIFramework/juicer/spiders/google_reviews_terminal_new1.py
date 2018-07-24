@@ -4,138 +4,94 @@ from selenium.webdriver.support.ui import WebDriverWait #2
 from selenium.webdriver.support import expected_conditions as EC #3
 import time
 import re
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import Select
-import csv
 import md5
-import datetime
-from scrapy.selector import Selector
 import  MySQLdb
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+import json
 
-class GoogleReviewsTerminaln(object):
+class GoogleReviewsTerminal(object):
 
     def __init__(self):
         
-        self.con = MySQLdb.connect(db   = 'urlqueue_dev', \
-        host = 'localhost', charset="utf8", use_unicode=True, \
-        user = 'root', passwd = 'hdrn59!')
+        self.con = MySQLdb.connect(db='google_reviews', host='localhost', charset="utf8", use_unicode=True, user='root', passwd='root')
         self.cur = self.con.cursor()
-        self.base_url = "https://www.google.co.in/"
-        self.header_params = ['Main_keyword','Sub_keyword','reviewed_by', 'Review_text','Review_Star_Rating','Rating','No_of_Reviews','Time','reference_url', 'main_url', 'status']
-        self.insert_qry2 = 'insert into Reviews_meta(sk, program_sk, main_keyword, sub_keyword, reviewed_by, Review_text, Review_Star_Rating, Rating, No_of_Reviews, Time, reference_url, main_url, status, created_at, modified_at) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now(),now()) on duplicate key update modified_at = now()' 
-        self.select_query = 'select sk,url,main_keyword,sub_keyword,ref_url from reviews_crawl where crawl_status=0 limit 50'
-	#self.select_query = 'select sk , url , main_keyword, sub_keyword, ref_url from reviews_crawl where sk = "0fc8cc6e9a7a9f477598da398c291f4a"'
-        self.update_query1 = "update reviews_crawl set crawl_status=9 where sk='%s' and crawl_status=0"
-        self.upd_qry2 = "update reviews_crawl set crawl_status=1 where sk='%s' "
-        self.upd_qry3 = "update reviews_crawl set crawl_status=2 where sk='%s'"
-        self.del_qry = 'delete from Reviews_meta where sk="%s"'
-        self.base_url = "https://www.google.co.in/"
-        self.header_params = ['Processed Timestamp','keyword','reviewed_by', 'Review_text','Review_Star_Rating','Rating','No_of_Reviews','Time']
-        self.excel_file_name = 'google_places_reviews_data_20171115.csv'
-        oupf = open(self.excel_file_name, 'ab+')
-        self.todays_excel_file  = csv.writer(oupf)
-        self.todays_excel_file.writerow(self.header_params)
+	self.insert_query = 'insert into reviewslink_crawl(sk, url, crawl_type, content_type, related_type, crawl_status, meta_data, created_at, modified_at)values(%s, %s, %s, %s, %s, %s, %s, now(), now()) on duplicate key update modified_at = now(), meta_data=%s, url=%s'
+	self.select_query = 'select sk,url,main_keyword,sub_keyword from reviews_crawl where crawl_status=0'
+        self.upd_qry1 = "update reviews_crawl set crawl_status=1 where sk='%s' "
+        self.upd_qry2 = "update reviews_crawl set crawl_status=2 where sk='%s'"
+	self.insert_qry1 = 'insert into Reviews_meta(sk, program_sk, main_keyword, sub_keyword, reviewed_by, Review_text, Review_Star_Rating, Rating, No_of_Reviews, Time, reference_url, main_url, status, created_at, modified_at) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, now(),now()) on duplicate key update modified_at = now()'
  
     def get_driver(self):
-        profile = webdriver.FirefoxProfile() 
-        profile.set_preference("network.proxy.type", 1)
-        profile.set_preference("network.proxy.http", "144.76.48.143")
-        profile.set_preference("network.proxy.http_port", 3279)
-        profile.update_preferences() 
-        driver = webdriver.Firefox(profile) 
+	PROXY = '103.56.30.128'
+	PORT = 8080
+        desired_capability = webdriver.DesiredCapabilities.FIREFOX
+        desired_capability['proxy']={
+            "proxyType":"manual",
+            "httpProxy":PROXY,
+            "httpProxyPort": PORT,
+            "ftpProxy":PROXY,
+            "ftpProxyPort": PORT,
+            "sslProxy":PROXY,
+            "sslProxyPort" : PORT}
+        firefox_profile = webdriver.FirefoxProfile()
+        firefox_profile.set_preference("browser.privatebrowsing.autostart", True)
+        firefox_profile.set_preference("intl.accept_languages", "en")
+        driver = webdriver.Firefox(firefox_profile=firefox_profile)
         self.cur.execute(self.select_query)
         data = self.cur.fetchall()
         for row in data :
-            program_sk, url, main_keyword, sub_keyword, ref_url = row
-            time.sleep(2)
+            program_sk, url, main_keyword, sub_keyword = row
+	    meta_data = {"url":url, "main_keyword":main_keyword, "sub_keyword":sub_keyword}
             driver.get(url)
+            time.sleep(6)
             driver.wait = WebDriverWait(driver, 3)
 	    try : 
-		time.sleep(5)
                 driver.find_element_by_css_selector("button.widget-pane-link").click()
+		time.sleep(10)
+		ref_url = driver.current_url
+		no_of_rev = driver.find_element_by_xpath('//div[@class="section-reviewchart-numreviews"]').text.split(' ')[0].replace(',', '')
+		main_rating = driver.find_element_by_xpath('//div[@class="section-reviewchart-right"]/span/span').text
+		meta_data.update({"reviews":str(no_of_rev), "main_rating":str(main_rating)})
                 driver.wait = WebDriverWait(driver, 3)
-            except : 
-                try :
-		    time.sleep(5) 
-                    driver.find_element_by_class_name("section-reviewchart-numreviews").click() 
-                except :
-			print 'nodata', url
-                        sk = md5.md5(driver.current_url).hexdigest() 
-                        values = (sk, program_sk, main_keyword, sub_keyword, '', '', '', 0, 0, '', str(driver.current_url), ref_url, 'Reviews Not Available')
-                        self.cur.execute(self.del_qry % sk)
-			self.cur.execute(self.insert_qry2,values)
-                        self.cur.execute(self.update_query1 % program_sk)
-                        self.con.commit()
-                        continue
-	    time.sleep(5)
-            try : no_of_rev = int(driver.find_element_by_xpath('//div[@class="section-reviewchart-numreviews"]').text.split()[0])
-            except : no_of_rev = 0
-	    print no_of_rev
-	    if no_of_rev == 0:
-	    	print 'no_reviews', url
-            time.sleep(2)
-            if no_of_rev > 10 : page_counter  = int(no_of_rev)/10
-            else : page_counter = 1
-	    if no_of_rev != 1 or no_of_rev != 0:
-		    try : 
-			    dk = driver.find_element_by_xpath('//div[@class="section-listbox section-scrollbox scrollable-y scrollable-show"]')
-			    time.sleep(10)
-			    scroll = True
-			    counter = 0
-			    while scroll:
-				driver.execute_script("arguments[0].scrollTop = arguments[0].scrollHeight", dk)
-				time.sleep(5)
-				counter += 1
-				time.sleep(2)
-				if counter == int(page_counter):
-				    scroll = False
-
-		    except : 
-			    try : self.cur.execute(self.upd_qry2 % program_sk)
-			    except : print "wrong one"
-			    self.con.commit()
-			    continue
-            try : 
-	        reviews_count = driver.find_element_by_xpath('//div[@class="section-reviewchart-numreviews"]').text
-                time.sleep(3)
-	        count_review = ''.join(re.findall('(\d+) reviews', reviews_count))
-		if not count_review:
-			count_review = 0
-                main_rating = driver.find_element_by_xpath('//div[@class="section-reviewchart-right"]/span/span').text
-		if not main_rating:
-			main_rating = 0
-	        nodes = driver.find_elements_by_xpath('//div[@style="position:relative"]')
-		time.sleep(2)
-	        for nod in nodes:
+                time.sleep(2)
+		nodes = driver.find_elements_by_xpath('//div[@style="position:relative"]')
+		time.sleep(5)
+		reviews_list = []
+		for nod in nodes:
 		    re_by = nod.find_element_by_xpath('.//div[@class="section-review-title"]/span').text
                     time.sleep(1)
-		    rew_text = nod.find_element_by_xpath('.//span[@class="section-review-text"]').text
-		    rev_rat = nod.find_element_by_xpath('.//div[@class="section-review-metadata section-review-metadata-with-note"]/span').get_attribute('aria-label')
+                    rev_rat = nod.find_element_by_xpath('.//div[@class="section-review-metadata section-review-metadata-with-note"]/span[2]').get_attribute('aria-label')
                     time.sleep(2)
-		    r_rating = str(''.join(re.findall('(\d+) stars', rev_rat)))
-		    r_on = nod.find_element_by_xpath('.//div[@class="section-review-metadata section-review-metadata-with-note"]/span[@class="section-review-publish-date"]').text
+                    r_rating = str(''.join(re.findall('(\d+) stars', rev_rat)))
+                    r_on = nod.find_element_by_xpath('.//div[@class="section-review-metadata section-review-metadata-with-note"]/span[@class="section-review-publish-date"]').text
                     time.sleep(2)
-                    sk = md5.md5(driver.current_url+re_by).hexdigest()
-	            if str(count_review) == '':
-			count_reivew = 0
-		    values = (sk, str(program_sk), str(main_keyword), str(sub_keyword), re_by.encode('utf-8'), rew_text.encode('utf-8'), str(r_rating), main_rating, count_review, str(r_on), str(driver.current_url), ref_url, 'Available')
-                    self.cur.execute(self.insert_qry2, values)
-                    self.cur.execute(self.upd_qry3 % program_sk)
-                    self.con.commit()
-            except : 
-                    
-                    self.cur.execute(self.upd_qry2 % program_sk)
-                    self.con.commit()
-                    continue
-                  
+		    try:
+			nod.find_element_by_xpath('.//button[@class="section-expand-review blue-link"]').click()
+			time.sleep(5)
+			rew_text = nod.find_element_by_xpath('.//span[@class="section-review-text"]').text
+		    except: rew_text = nod.find_element_by_xpath('.//span[@class="section-review-text"]').text
+		    try: sk = md5.md5(driver.current_url+re_by).hexdigest()
+		    except: sk = md5.md5(driver.current_url+rew_text).hexdigest()
+                    values = (sk, str(program_sk), str(main_keyword), str(sub_keyword), re_by.encode('utf-8'), rew_text.encode('utf-8'), str(r_rating), main_rating, str(no_of_rev), str(r_on), ref_url, url, 'Available')
 
-             
-		    
+		    values1 = (str(main_keyword).replace('\n', ''), '', re_by.encode('utf-8'), rew_text.encode('utf-8'),str(r_rating),main_rating,str(no_of_rev), str(r_on) , ref_url, url,'Available')
+		    reviews_list.append(values1)
+                    self.cur.execute(self.insert_qry1, values)
+                    self.con.commit()
+		    meta_data.update({"reviews_list":reviews_list})
+		    vals = (program_sk, str(ref_url), '', '', '', 0, json.dumps(meta_data), json.dumps(meta_data), str(ref_url))
+		    self.cur.execute(self.insert_query,vals)
+		    self.con.commit()
+		    self.cur.execute(self.upd_qry1%program_sk)
+		    self.con.commit()
+            except :
+		self.cur.execute(self.upd_qry2%program_sk)
+                self.con.commit()
 
     def main(self):
         driver = self.get_driver()
-        #self.open_home_page(driver)
 
 if __name__ == "__main__":
-     GoogleReviewsTerminaln().main()
+     GoogleReviewsTerminal().main()

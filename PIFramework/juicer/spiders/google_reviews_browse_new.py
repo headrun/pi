@@ -13,14 +13,13 @@ import datetime
 from scrapy.selector import Selector
 import  MySQLdb
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-#from input_file import keyword
 
 class GoogleReviews(object):
 
     def __init__(self):
-        self.con = MySQLdb.connect(db   = 'urlqueue_dev', \
+        self.con = MySQLdb.connect(db   = 'google_reviews', \
         host = 'localhost', charset="utf8", use_unicode=True, \
-        user = 'root', passwd ='hdrn59!')
+        user = 'root', passwd ='root')
         self.cur = self.con.cursor()
         self.insert_query = 'insert into reviews_crawl(sk, url, crawl_status, main_keyword, sub_keyword, ref_url, created_at, modified_at)values(%s, %s, %s, %s,  %s, %s, now(), now()) on duplicate key update modified_at = now()'
 
@@ -35,31 +34,37 @@ class GoogleReviews(object):
         profile.update_preferences() 
         driver = webdriver.Firefox(profile)
         driver.get(self.base_url + "/maps/@12.9291104,77.6249622,15z")
-	time.sleep(2)
-        driver.get(self.base_url + "/maps/")
-        driver.wait = WebDriverWait(driver, 5)
+	time.sleep(10)
+        driver.wait = WebDriverWait(driver, 10)
         driver.find_element_by_id("searchboxinput").clear()
-        with open('input_file1.txt', 'r') as f: rows = f.readlines()
+        with open('data.txt', 'r') as f: rows = f.readlines()
 	counter = 0
         for row in rows:
 	    counter += 1
             i = row.replace('\r\n','')
+            if i == "Dr. Safinaaz, Chennai" : break
+            
             driver.find_element_by_id("searchboxinput").clear()
             driver.find_element_by_id("searchboxinput").send_keys(i)
+            time.sleep(15)
+            try : 
+                driver.find_element_by_id("searchbox-searchbutton").click()
+            	time.sleep(10)
+            except : 
+                continue
             time.sleep(4)
-            driver.find_element_by_id("searchbox-searchbutton").click()
-            time.sleep(2)
 	    source_page = driver.page_source
 	    sel = Selector(text=source_page)
             ref_url = driver.current_url
 	    idx_lst = sel.xpath('//div[@class="section-result"]//@data-result-index').extract()
-            if idx_lst :
+            if idx_lst : 
+                    idx_lst = idx_lst[0]
 		    for idx in idx_lst:
 			driver.find_element_by_xpath('//div[@data-result-index=%s]'%int(idx)).click()
-                        time.sleep(6)
+                        time.sleep(3)
 			sk =  md5.md5(driver.current_url).hexdigest()
                         sub_keyword = driver.current_url.split('/')[5].replace('+',' ')
-			vals = (sk,str(driver.current_url),100,str(i),str(sub_keyword),str(ref_url))
+			vals = (sk,str(driver.current_url),0,str(i),str(sub_keyword),str(ref_url))
 			self.cur.execute(self.insert_query,vals)
                         self.con.commit()
 			try:
@@ -71,7 +76,7 @@ class GoogleReviews(object):
                     time.sleep(4)
             else :
                 sk =  md5.md5(driver.current_url).hexdigest()
-                vals = (sk,str(driver.current_url),100,i,'',str(ref_url))
+                vals = (sk,str(driver.current_url),0,i,'',str(ref_url))
                 self.cur.execute(self.insert_query,vals)
                 self.con.commit()
 
