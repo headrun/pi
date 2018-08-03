@@ -39,7 +39,6 @@ class deskcustomerbrowse(JuicerSpider):
 	def parse_customer(self, response):
 		customer_links = response.meta.get('customer_link', '')
                 output = response.body
-                import pdb;pdb.set_trace()
                 output = json.loads(output.strip('\n'))
 		total_entries = output.get('_embedded', {}).get('entries', [])
 		if not total_entries:
@@ -84,9 +83,14 @@ class deskcustomerbrowse(JuicerSpider):
 			language = ttl_en.get('language', '')
 			last_name = ttl_en.get('last_name', '')
 			locked_until = ttl_en.get('locked_until', '')
-			phone_numbers = '<>'.join(ttl_en.get('phone_numbers', []))
+			try:
+				phone_numbers = '<>'.join(ttl_en.get('phone_numbers', []))
+			except:
+				phone_numbers_dict = ttl_en.get('phone_numbers', [])
+				phone_numbers = '<>'.join(phone_numbers_dict[0]['value'])
+				
 			title = ttl_en.get('title', '')
 			uid = ttl_en.get('uid', '')
 			updated_at = ttl_en.get('updated_at', '')
 			values = (customer_links, id_, company_links, twitter_user, access_company_cases, access_private_portal, addresses, avatar, background, company, company_name, created_at, custom_fields, display_name, emails, external_id, first_name, label_ids, language, last_name, locked_until, phone_numbers, title, uid, updated_at, customer_links, id_, company_links, twitter_user, access_company_cases, access_private_portal, addresses, avatar, background, company, company_name, created_at, custom_fields, display_name, emails, external_id, first_name, label_ids, language, last_name, locked_until, phone_numbers, title, uid, updated_at)
-			#self.cur.execute(self.customer_insert, values)	
+			self.cur.execute(self.customer_insert, values)	
