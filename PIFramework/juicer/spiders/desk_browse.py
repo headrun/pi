@@ -4,7 +4,7 @@ from w3lib.http import basic_auth_header
 class deskbrowse(JuicerSpider):
 	name = "desk_browse"
 	start_urls = ('https://www.desk.com/',)
-
+	handle_httpstatus_list = [401]
 	def __init__(self, *args, **kwargs):
 		super(deskbrowse, self).__init__(*args, **kwargs)
 		self.auth = basic_auth_header('chetan.m@positiveintegers.com', 'Welcome@123')
@@ -21,7 +21,7 @@ class deskbrowse(JuicerSpider):
 	        self.cur.execute('SET CHARACTER SET utf8;')
         	self.cur.execute('SET character_set_connection=utf8;')
 		self.filter_insert = "INSERT INTO desk_filter(filter_id, filter_name, filter_position, filter_routing_enabled, filter_sort_direction, filter_sort_field, filter_self_link, filter_cases_link, filter_reference_url, created_at, modified_at, last_seen) values(%s, %s, %s, %s,  %s, %s, %s, %s, %s, now(), now(), now()) on duplicate key update modified_at = now(), filter_id=%s, filter_name=%s, filter_position=%s, filter_routing_enabled=%s, filter_sort_direction=%s, filter_sort_field=%s, filter_self_link=%s, filter_cases_link=%s, filter_reference_url=%s"
-		self.cases_insert = "INSERT INTO desk_cases(case_sk, case_id, filter_id, filter_name, case_assigned_group, case_active_at, case_active_attachments_count, case_active_notes_count, case_blurb, case_changed_at, case_label_ids, case_labels, case_language, case_locked_until, case_priority, case_opened_at, case_received_at, case_resolved_at, case_route_status, case_status, case_subject, case_type, case_updated_at, case_created_at, case_custom_fields, case_description, case_external_id, case_first_opened_at, case_first_resolved_at, case_has_failed_interactions, case_has_pending_interactions, case_customer_url, case_last_url, case_next_url, case_reference_url, created_at, modified_at, last_seen ) values(%s, %s, %s, %s, %s,  %s, %s, %s, %s, %s, %s, %s, %s, %s,  %s, %s, %s, %s, %s, %s, %s, %s, %s,  %s, %s, %s, %s, %s, %s, %s, %s, %s,  %s, %s, %s, now(), now(), now()) on duplicate key update modified_at = now(), case_sk=%s, case_id=%s, filter_id=%s, filter_name=%s, case_assigned_group=%s, case_active_at=%s, case_active_attachments_count=%s, case_active_notes_count=%s, case_blurb=%s, case_changed_at=%s, case_label_ids=%s, case_labels=%s, case_language=%s, case_locked_until=%s, case_priority=%s, case_opened_at=%s, case_received_at=%s, case_resolved_at=%s, case_route_status=%s, case_status=%s, case_subject=%s, case_type=%s, case_updated_at=%s, case_created_at=%s, case_custom_fields=%s, case_description=%s, case_external_id=%s, case_first_opened_at=%s, case_first_resolved_at=%s, case_has_failed_interactions=%s, case_has_pending_interactions=%s, case_customer_url=%s, case_last_url=%s, case_next_url=%s, case_reference_url=%s"
+		self.crawl_insert = "INSERT INTO desk_crawl(sk, url, crawl_type, content_type, related_type, crawl_status, meta_data, created_at, modified_at) values(%s, %s, %s, %s, %s, %s, %s, now(), now()) on duplicate key update modified_at=now()"
 
 	def __del__(self):
         	self.conn.close()
@@ -31,7 +31,7 @@ class deskbrowse(JuicerSpider):
 	def parse(self, response):
                 sel = Selector(response)
 		url = "%s%s" % (self.main_url, '/api/v2/filters/')
-		yield Request(url, callback=self.prase_login, headers = self.headers)
+		yield Request(url.encode('utf8'), callback=self.prase_login, headers = self.headers)
 
 	def prase_login(self, response):
 		output = response.body
@@ -115,4 +115,7 @@ class deskbrowse(JuicerSpider):
 			updated_at = ttl_en.get('updated_at', '')
 			case_sk = md5("%s%s%s%s" % (normalize(filter_name), id_, normalize(subject), normalize(blurb)))
 			values = (case_sk, id_, filter_id, filter_name, attachment_links, active_at, active_attachments_count, active_notes_count, blurb, changed_at, label_ids, labels, language, locked_until, priority, opened_at, received_at, resolved_at, route_status, status, subject, type_, updated_at, created_at, custom_fields, description, external_id, first_opened_at, first_resolved_at, has_failed_interactions, has_pending_interactions, customer_links, last_page, next_page, response.url, case_sk, id_, filter_id, filter_name, attachment_links, active_at, active_attachments_count, active_notes_count, blurb, changed_at, label_ids, labels, language, locked_until, priority, opened_at, received_at, resolved_at, route_status, status, subject, type_, updated_at, created_at, custom_fields, description, external_id, first_opened_at, first_resolved_at, has_failed_interactions, has_pending_interactions, customer_links, last_page, next_page, response.url)
-			self.cur.execute(self.cases_insert, values)
+			case_url = 'https://sathyamcinemas.desk.com/api/v2/cases/%s/message'%id_
+			meta_data = {'values':values}
+			value = (case_sk, case_url, '', 'case', '', '0', json.dumps(meta_data))
+			self.cur.execute(self.crawl_insert, value)

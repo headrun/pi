@@ -84,11 +84,10 @@ class deskcustomerbrowse(JuicerSpider):
 			last_name = ttl_en.get('last_name', '')
 			locked_until = ttl_en.get('locked_until', '')
 			try:
-				phone_numbers = '<>'.join(ttl_en.get('phone_numbers', []))
-			except:
 				phone_numbers_dict = ttl_en.get('phone_numbers', [])
-				phone_numbers = '<>'.join(phone_numbers_dict[0]['value'])
-				
+				phone_numbers = phone_numbers_dict[0]['value']
+			except:
+				phone_numbers = ''
 			title = ttl_en.get('title', '')
 			uid = ttl_en.get('uid', '')
 			updated_at = ttl_en.get('updated_at', '')

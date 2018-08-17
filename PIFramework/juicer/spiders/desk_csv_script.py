@@ -56,8 +56,8 @@ class Deskcsv(object):
 		self.todays_excel_file = todays_excel_file
 		self.header_params = ['id', 'filter_id', 'filter_name', 'assigned_group', 'active_at', 'active_attachments_count', 'active_notes_count', 'blurb', 'changed_at', 'label_ids', 'labels', 'language', 'locked_until', 'priority', 'opened_at', 'received_at', 'resolved_at', 'route_status', 'status', 'subject', 'type', 'updated_at', 'created_at', 'custom_fields', 'description', 'external_id', 'first_opened_at', 'first_resolved_at', 'has_failed_interactions', 'has_pending_interactions', 'customer_url', 'customer_id', 'customer_company_link', 'customer_twitter_user', 'customer_access_company_cases', 'customer_access_private_portal', 'customer_addresses', 'customer_avatar', 'customer_background', 'customer_company', 'customer_company_name', 'customer_created_at', 'customer_custom_fields', 'customer_display_name', 'customer_emails', 'customer_external_id', 'customer_first_name', 'customer_label_ids', 'customer_language', 'customer_last_name', 'customer_locked_until', 'customer_phone_numbers', 'customer_title', 'customer_uid', 'customer_updated_at']
 		self.todays_excel_file.writerow(self.header_params)
-		self.query1 = 'select * from desk_cases  where date(modified_at)="2018-07-31"'
-		self.query2 = 'select * from desk_customer where customer_link = "%s" and date(modified_at)="2018-07-31"'
+		self.query1 = 'select * from desk_cases  where date(modified_at)>="2018-08-16"'
+		self.query2 = 'select * from desk_customer where customer_link = "%s" and date(modified_at)>="2018-08-16"'
 
 
 	def main(self):
