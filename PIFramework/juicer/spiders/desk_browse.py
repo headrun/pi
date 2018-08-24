@@ -27,7 +27,6 @@ class deskbrowse(JuicerSpider):
         	self.conn.close()
 	        self.cur.close()
 
-
 	def parse(self, response):
                 sel = Selector(response)
 		url = "%s%s" % (self.main_url, '/api/v2/filters/')

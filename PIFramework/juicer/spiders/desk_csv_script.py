@@ -54,10 +54,11 @@ class Deskcsv(object):
 		self.excel_file_name = 'desk_cases_data_on_%s.csv' % (str(datetime.datetime.now().date()))
 		todays_excel_file = self.is_path_file_name(self.excel_file_name)
 		self.todays_excel_file = todays_excel_file
-		self.header_params = ['id', 'filter_id', 'filter_name', 'assigned_group', 'active_at', 'active_attachments_count', 'active_notes_count', 'blurb', 'changed_at', 'label_ids', 'labels', 'language', 'locked_until', 'priority', 'opened_at', 'received_at', 'resolved_at', 'route_status', 'status', 'subject', 'type', 'updated_at', 'created_at', 'custom_fields', 'description', 'external_id', 'first_opened_at', 'first_resolved_at', 'has_failed_interactions', 'has_pending_interactions', 'customer_url', 'customer_id', 'customer_company_link', 'customer_twitter_user', 'customer_access_company_cases', 'customer_access_private_portal', 'customer_addresses', 'customer_avatar', 'customer_background', 'customer_company', 'customer_company_name', 'customer_created_at', 'customer_custom_fields', 'customer_display_name', 'customer_emails', 'customer_external_id', 'customer_first_name', 'customer_label_ids', 'customer_language', 'customer_last_name', 'customer_locked_until', 'customer_phone_numbers', 'customer_title', 'customer_uid', 'customer_updated_at']
+		self.header_params = ['id', 'filter_id', 'filter_name', 'assigned_group', 'active_at', 'active_attachments_count', 'active_notes_count', 'blurb', 'changed_at', 'label_ids', 'labels', 'language', 'locked_until', 'priority', 'opened_at', 'received_at', 'resolved_at', 'route_status', 'status', 'subject', 'type', 'updated_at', 'created_at', 'custom_fields', 'description', 'external_id', 'first_opened_at', 'first_resolved_at', 'has_failed_interactions', 'has_pending_interactions', 'customer_url', 'customer_id', 'customer_company_link', 'customer_twitter_user', 'customer_access_company_cases', 'customer_access_private_portal', 'customer_addresses', 'customer_avatar', 'customer_background', 'customer_company', 'customer_company_name', 'customer_created_at', 'customer_custom_fields', 'customer_display_name', 'customer_emails', 'customer_external_id', 'customer_first_name', 'customer_label_ids', 'customer_language', 'customer_last_name', 'customer_locked_until', 'customer_phone_numbers', 'customer_title', 'customer_uid', 'customer_updated_at', 'reply_updated_at', 'reply_from', 'reply']
 		self.todays_excel_file.writerow(self.header_params)
-		self.query1 = 'select * from desk_cases  where date(modified_at)>="2018-08-16"'
-		self.query2 = 'select * from desk_customer where customer_link = "%s" and date(modified_at)>="2018-08-16"'
+		self.query1 = 'select * from desk_cases  where date(modified_at)>="2018-08-22"'
+		self.query2 = 'select * from desk_customer where customer_link = "%s" and date(modified_at)>="2018-08-22"'
+		self.query3 = 'select * from desk_replies where case_sk="%s" and date(modified_at)>="2018-08-22"'
 
 
 	def main(self):
@@ -81,15 +82,39 @@ class Deskcsv(object):
 			else:
 				inner_records = ['' for i in range(24)]
 			values_final.extend(inner_records)
-                        values_final_ = []
-			for i in values_final :
-                            if i==None :
-                                i = ''
-                                values_final_.append(i)
-                            else :
-                                 values_final_.append(normalize(i))
-			try : self.todays_excel_file.writerow(values_final_)
-                        except : print "Found error while writing into sheet"
+			self.cur.execute(self.query3 % rec[0])
+			reply_records = self.cur.fetchall()
+			if reply_records:
+				for r_record in reply_records:
+					r_record = list(r_record[4:-2])
+					values_dup = list(values_final)
+					values_dup.extend(r_record)
+					values_final_ = []
+ 	                       		for i in values_dup :
+                            			if i==None :
+                                			i = ''
+                                			values_final_.append(i)
+						elif not i:
+							i = ''
+                                                        values_final_.append(i)
+                            			else :
+                                 			values_final_.append(normalize(i))
+					try : self.todays_excel_file.writerow(values_final_)
+                                	except : print "Found error while writing into sheet"
+
+			else:
+				r_record = ['' for i in range(4)]
+				values_final.extend(r_record)
+                        	values_final_ = []
+				for i in values_final :
+                            		if i==None :
+                                		i = ''
+                                		values_final_.append(i)
+                            		else :
+                                 		values_final_.append(normalize(i))
+			
+				try : self.todays_excel_file.writerow(values_final_)
+                        	except : print "Found error while writing into sheet"
 
 if __name__ == '__main__':
     Deskcsv().main()
