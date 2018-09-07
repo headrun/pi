@@ -20,7 +20,7 @@ sys.setdefaultencoding('UTF8')
 import MySQLdb
 from datetime import timedelta
 import shutil
-
+sys.path.insert(0, '../')
 def run_scraper(p, k, path):
     os.chdir(path)
     os.system(p)
@@ -72,9 +72,51 @@ class MultiProcess(object):
             files = [self.excel_file_name1,self.excel_file_name]
             for file_ in files :
                 file_id = Googleupload().main('Paytm_Availability', email_from_list, file_)
-		shutil.move('/root/PIFramework/juicer/spiders/%s'%file_, '/root/PIFramework/juicer/spiders/paytm_csv_files')
+		cmd = 'mv /root/PIFramework/juicer/spiders/"%s" /root/PIFramework/juicer/spiders/paytm_csv_files'%file_
+		os.system(cmd)
         self.cur.close()
         self.conn.close()
+
+    def alert_mail(self, email_from_list, file_id, paytm_file_name):
+	try:
+	    sender_mail = 'positiveintegersproject@gmail.com'
+	    receivers_mail_list = email_from_list
+	    sender, receivers  = sender_mail, ','.join(receivers_mail_list)
+	    msg = MIMEMultipart('alternative')
+	    msg['Subject'] = 'paytm session data on %s' % self.crawler_start_time
+	    mas = '<p>File name : %s</p>'% str(paytm_file_name)
+	    mas += '<p>File is uploaded in paytm [sub-folder] of paytm_session_data [folder] in google drive of %s</p>' % sender_mail
+	    mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+	    msg['From'] = sender
+	    msg['To'] = receivers
+	    tem = MIMEText(''.join(mas), 'html')
+	    msg.attach(tem)
+	    s = smtplib.SMTP('smtp.gmail.com:587')
+	    s.ehlo()
+	    s.starttls()
+	    s.login(sender_mail, 'integers')
+	    s.sendmail(sender, receivers_mail_list, msg.as_string())
+	    s.quit()
+	except:
+	    sender_mail = 'positiveintegersproject@gmail.com'
+            receivers_mail_list = email_from_list
+            sender, receivers  = sender_mail, ','.join(receivers_mail_list)
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = 'paytm session data on %s' % self.crawler_start_time
+            mas = '<p>File name : %s</p>'% str(paytm_file_name)
+            mas += '<p>File is uploaded in paytm [sub-folder] of paytm_session_data [folder] in google drive of %s</p>' % sender_mail
+            mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+            msg['From'] = sender
+            msg['To'] = receivers
+            tem = MIMEText(''.join(mas), 'html')
+            msg.attach(tem)
+            s = smtplib.SMTP('smtp.gmail.com:587')
+            s.ehlo()
+            s.starttls()
+            s.login(sender_mail, 'integers')
+            s.sendmail(sender, receivers_mail_list, msg.as_string())
+            s.quit()
+
 
     def main(self):
         processes = []

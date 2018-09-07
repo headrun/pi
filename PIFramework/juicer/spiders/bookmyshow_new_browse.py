@@ -125,7 +125,7 @@ class Bookmyshow(JuicerSpider):
             self.oupf.close()
             email_from_list = ['anusha.boyina19@gmail.com']
             file_id = Googleupload().main('Bookmyshow_Availability', email_from_list, self.excel_file_name)
-	    shutil.move('/root/PIFramework/juicer/spiders/%s'%self.excel_file_name, '/root/PIFramework/juicer/spiders/paytm_csv_files')
+	    move_file('/root/PIFramework/juicer/spiders/"%s"'%self.excel_file_name, '/root/PIFramework/juicer/spiders/paytm_csv_files')
         self.cur.close()
         self.conn.close()
 
