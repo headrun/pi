@@ -39,7 +39,7 @@ class TicketNewBrowse(JuicerSpider):
         self.oupf = open(self.excel_file_name, 'wb+')
         self.todays_excel_file  = csv.writer(self.oupf)
         self.todays_excel_file.writerow(self.header_params)
-        self.processed_path = '/root/PIFramework/juicer/spiders/paytm_csv_files'
+        self.processed_path = '/root/PIFramework/juicer/spiders/Paytm_csv_files'
         self.del_qry = 'delete from Ticketnew_sessions'
         dispatcher.connect(self.spider_closed, signals.spider_closed)
 
@@ -57,7 +57,7 @@ class TicketNewBrowse(JuicerSpider):
             self.oupf.close()
             email_from_list = ['anusha.boyina19@gmail.com']
             file_id = Googleupload().main('Ticketnew_Availability', email_from_list, self.excel_file_name)
-	    move_file('/root/PIFramework/juicer/spiders/"%s"'%self.excel_file_name, '/root/PIFramework/juicer/spiders/paytm_csv_files')
+	    move_file('/root/PIFramework/juicer/spiders/"%s"'%self.excel_file_name, '/root/PIFramework/juicer/spiders/Paytm_csv_files')
         self.cur.close()
         self.conn.close()
         

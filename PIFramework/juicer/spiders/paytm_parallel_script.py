@@ -37,7 +37,7 @@ class MultiProcess(object):
         self.crawler_start_time  = str(datetime.datetime.now() + timedelta(hours=9,minutes=34)).split('.')[0]
         self.excel_file_name1 = 'paytm_session_data_ON_%s.csv'% self.crawler_start_time
         self.excel_file_name = 'paytm_Movie_data_ON_%s.csv'% self.crawler_start_time
-	self.processed_path = '/root/PIFramework/juicer/spiders/paytm_csv_files'
+	self.processed_path = '/root/PIFramework/juicer/spiders/Paytm_csv_files'
 	self.oupf = open(self.excel_file_name, 'ab+')
 	self.oupf1 = open(self.excel_file_name1, 'ab+')
         self.todays_movieef  = csv.writer(self.oupf)
@@ -72,7 +72,7 @@ class MultiProcess(object):
             files = [self.excel_file_name1,self.excel_file_name]
             for file_ in files :
                 file_id = Googleupload().main('Paytm_Availability', email_from_list, file_)
-		cmd = 'mv /root/PIFramework/juicer/spiders/"%s" /root/PIFramework/juicer/spiders/paytm_csv_files'%file_
+		cmd = 'mv /root/PIFramework/juicer/spiders/"%s" /root/PIFramework/juicer/spiders/Paytm_csv_files'%file_
 		os.system(cmd)
         self.cur.close()
         self.conn.close()
