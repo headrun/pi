@@ -12,10 +12,16 @@ NEWSPIDER_MODULE = 'juicer.spiders'
 DEFAULT_ITEM_CLASS = 'juicer.items.JuicerItem'
 
 #USER_AGENT = "Mozilla/5.0 (Linux; Pibot; + http://positiveintegers.com/) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0"
-USER_AGENT_LIST = [i.strip() for i in list(open('/root/PIFramework/juicer/useragents2.list'))]
+#USER_AGENT_LIST = [i.strip() for i in list(open('/root/PIFramework/juicer/useragents2.list'))]
+
+USER_AGENT_LIST = ["Mozilla/5.0 (Linux; Pibot; + http://positiveintegers.com/) AppleWebKit/535.21 (KHTML, like Gecko) Chrome/19.0.1042.0",\
+                   "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785",\
+                   "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1)",\
+                   "Mozilla/5.0 (X11; U; Linux i686; en-US) AppleWebKit/534.3 (KHTML, like Gecko) Chrome/6.0.472.63 Safari/534.3"]
+
 #USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36"
 #USER_AGENT =  'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36'
-USER_AGENT =  'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36'
+#USER_AGENT =  'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36'
 
 ITEM_PIPELINES = {
     #'juicer.validations_pipeline.ValidateRecordPipeline': 300,
@@ -110,7 +116,8 @@ COUNTER_PREFIX  = "services.intervod.stats"
 #USER_AGENT_LIST = ["Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/53.0.2785.143 Chrome/53.0.2785.143 Safari/537.36",\
 #                   "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:35.0) Gecko/20100101 Firefox/35.0"]
 #USER_AGENT_LIST = [i.strip() for i in list(open('/root/pi_crawling/Practo/juicer/useragents.list'))]
-PROXIES_LIST = ['http://%s:3279' % random.choice(list(open('/root/PIFramework/juicer/proxy.list'))).strip()]
+#PROXIES_LIST = ['http://%s:3279' % random.choice(list(open('/root/PIFramework/juicer/proxy.list'))).strip()]
+PROXIES_LIST = ["https://melb.au.torguardvpnaccess.com:6060","https://melb.au.torguardvpnaccess.com:6060","https://bul.torguardvpnaccess.com:6060",'https://au.torguardvpnaccess.com:6060','https://ro.torguardvpnaccess.com:6060','https://ru.torguardvpnaccess.com:6060','https://mos.ru.torguardvpnaccess.com:6060',"https://swe.torguardvpnaccess.com:6060",'https://swiss.torguardvpnaccess.com:6060','https://bg.torguardvpnaccess.com:6060',"https://hk.torguardvpnaccess.com:6060",'https://ind.torguardvpnaccess.com:6060','https://thai.torguardvpnaccess.com:6060','https://turk.torguardvpnaccess.com:6060','https://mx.torguardvpnaccess.com:6060','https://singp.torguardvpnaccess.com:6060','https://saudi.torguardvpnaccess.com:6060','https://fr.torguardvpnaccess.com:6060','https://pl.torguardvpnaccess.com:6060','https://czech.torguardvpnaccess.com:6060','https://it.torguardvpnaccess.com:6060','https://sp.torguardvpnaccess.com:6060','https://no.torguardvpnaccess.com:6060','https://por.torguardvpnaccess.com:6060','https://za.torguardvpnaccess.com:6060','https://den.torguardvpnaccess.com:6060','https://vn.torguardvpnaccess.com:6060','https://pa.torguardvpnaccess.com:6060','https://sk.torguardvpnaccess.com:6060','https://lux.torguardvpnaccess.com:6060','https://nz.torguardvpnaccess.com:6060','https://md.torguardvpnaccess.com:6060','https://uae.torguardvpnaccess.com:6060','https://slk.torguardvpnaccess.com:6060','https://fl.east.usa.torguardvpnaccess.com:6060','https://atl.east.usa.torguardvpnaccess.com:6060','https://ny.east.usa.torguardvpnaccess.com:6060','https://lv.west.usa.torguardvpnaccess.com:6060','https://sa.west.usa.torguardvpnaccess.com:6060','https://nj.east.usa.torguardvpnaccess.com:6060','https://east.usa.torguardvpnaccess.com:6060','https://eastusa.torguardvpnaccess.com:6060','https://egy.torguardvpnaccess.com:6060','https://cn.torguardvpnaccess.com:6060','https://la.west.usa.torguardvpnaccess.com:6060','https://west.usa.torguardvpnaccess.com:6060','https://westusa.torguardvpnaccess.com:6060','https://centralusa.torguardvpnaccess.com:6060','https://dal.central.usa.torguardvpnaccess.com:6060','https://cp.torguardvpnaccess.com:6060','https://chi.central.usa.torguardvpnaccess.com:6060','https://cr.torguardvpnaccess.com:6060','https://tun.torguardvpnaccess.com:6060','https://bul.torguardvpnaccess.com:6060','https://hg.torguardvpnaccess.com:6060','https://central.usa.torguardvpnaccess.com:6060','https://my.torguardvpnaccess.com:6060','https://lv.torguardvpnaccess.com:6060','https://cp.torguardvpnaccess.com:6060','https://gre.torguardvpnaccess.com:6060']
 #PROXIES_LIST = [i.strip() for i in list(open('/root/PIFramework/juicer/proxy.list'))]
 
 #HTTP_PROXY = '%s'
