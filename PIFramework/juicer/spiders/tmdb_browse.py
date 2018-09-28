@@ -12,12 +12,12 @@ from juicer.items import *
 class Baby(JuicerSpider):
     name = 'tmdb_browse'
     start_urls = []
-    with open('20180402_movie_list_2014-2017.txt', 'r') as f: rows = f.readlines()
+    """#with open('20180402_movie_list_2014-2017.txt', 'r') as f: rows = f.readlines()
     for row in rows:
         i = row.replace('\r\n','')
         link = "https://api.themoviedb.org/3/search/movie?api_key=ddbd4a97b535574e0c4a405cee1be8d4&query=%s"%i
         #link = "https://api.themoviedb.org/3/search/movie?api_key=ddbd4a97b535574e0c4a405cee1be8d4&query=VELLACHI"
-        start_urls.append(link)
+        start_urls.append(link)"""
 
     
     def __init__(self, *args, **kwargs):
