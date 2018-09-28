@@ -1,0 +1,11 @@
+Set-Cookie: cityName=Warangal; Domain=.lybrate.com; Expires=Thu, 27-Sep-2018 23:46:02 GMT; Path=/
+Set-Cookie: CITY_ID=591; Domain=.lybrate.com; Expires=Tue, 15-Oct-2086 15:00:09 GMT; Path=/
+Set-Cookie: CITY_ID=143; Domain=.lybrate.com; Expires=Thu, 01-Jan-1970 00:00:10 GMT; Path=/
+Set-Cookie: fnc=|||||||; Domain=.lybrate.com; Expires=Tue, 15-Oct-2086 15:00:09 GMT; Path=/
+Expires: Thu, 01 Jan 1970 05:30:00 IST
+Vary: Accept-Encoding
+Server: Apache-Coyote/1.1
+Cache-Control: private
+Date: Thu, 27 Sep 2018 11:46:02 GMT
+P3P: policyref="http://www.lybrate.com/w3c/p3p.xml", CP="NOI CURa ADMa DEVa TAIa OUR BUS IND UNI COM NAV INT"
+Content-Type: application/json;charset=UTF-8

@@ -141,6 +141,7 @@ class JuicerSpider(Spider):
             sections_table_name = "%s_sections" % (source)
 
             SHOW_QUERY = 'SHOW TABLES LIKE "%s_%%";' % (source)
+            import pdb;pdb.set_trace()
             self.get_urlQ_cursor().execute(SHOW_QUERY)
             if self.get_urlQ_cursor().rowcount > 0:
                 self.log.info("Tables: %s - %s Already Exist.", crawl_table_name, sections_table_name)

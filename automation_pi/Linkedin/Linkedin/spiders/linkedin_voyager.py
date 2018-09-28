@@ -24,6 +24,7 @@ class Linkedinpremiumapivoyager(Voyagerapi):
                 self.domain = domain_premium
 
 	def parse(self, response):
+                import pdb;pdb.set_trace()
                 sel = Selector(response)
                 command_prxy = cvs = response.meta.get('proxy','')\
                 .replace('http://','').replace(':3279','')\

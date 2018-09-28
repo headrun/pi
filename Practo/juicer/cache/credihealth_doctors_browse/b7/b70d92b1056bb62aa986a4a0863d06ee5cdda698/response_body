@@ -1,0 +1,29 @@
+##################
+### app server ###
+##################
+
+User-agent: *
+Disallow: /admin
+Disallow: /search*
+Disallow: /*?amp=true
+Disallow: /hi/*
+Disallow: /ta/*
+Disallow: /bn/*
+Disallow: */video_consult
+Disallow: /articles/*
+Sitemap: https://www.credihealth.com/sitemap.xml.gz
+Sitemap: https://www.credihealth.com/sitemap1.xml.gz
+Sitemap: https://www.credihealth.com/sitemap-hospitals.xml.gz
+Sitemap: https://www.credihealth.com/sitemap-doctors.xml.gz
+Sitemap: https://www.credihealth.com/blog/sitemap_index.xml
+Sitemap: https://www.credihealth.com/sitemap-categories.xml.gz
+Sitemap: https://www.credihealth.com/sitemap-community-questions.xml.gz
+Sitemap: https://www.credihealth.com/sitemap-doctors1.xml.gz
+Sitemap: https://www.credihealth.com/sitemap-doctors-amp.xml.gz
+
+##################
+#new admin server#
+##################
+#User-agent: *
+#Disallow: /
+

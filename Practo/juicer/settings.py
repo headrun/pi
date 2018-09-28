@@ -47,7 +47,7 @@ LOG_LEVEL = 'INFO' #'DEBUG'
 # DB Details
 DB_HOST ='localhost'
 DB_USERNAME = 'root'
-DB_PASSWORD = 'hdrn59!'
+DB_PASSWORD = 'root'
 URLQ_DATABASE_NAME = 'urlqueue_dev'                         # Fill with actual DATABASE NAME.
 
 SCRIPT_LOG_FILE = 'juicer.log'
@@ -106,4 +106,4 @@ USER_AGENT_LIST = ["Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHT
 #                   "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:35.0) Gecko/20100101 Firefox/35.0"]
 
 #PROXIES_LIST = ['http://%s:3279' % random.choice(list(open('/root/pi_crawling/Practo/juicer/proxy.list'))).strip()]
-PROXIES_LIST = [i.strip() for i in list(open('/root/pi_crawling/Practo/juicer/proxy1.list'))]
+PROXIES_LIST = [i.strip() for i in list(open('/root/Practo/juicer/proxy.list'))]

@@ -38,6 +38,7 @@ class Facebookgetcrawl(object):
 
 
     def main(self):
+        import pdb;pdb.set_trace()
         email_from_list = self.email_dev_list
         check_inprocess = ''
         if len(sys.argv) == 2 and sys.argv[1] == 'prod':

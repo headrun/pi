@@ -19,9 +19,10 @@ class Pimail(object):
 
 	def main(self):
 		mid = imaplib.IMAP4_SSL("imap.gmail.com")
+                import pdb;pdb.set_trace()
 		mid.login(sender_mail_pi, sender_pwd_pi)
 		mid.select('INBOX')
-		items = mid.search(None, "FLAGGED")
+		items = mid.search(None, "UNSEEN")
 		email_from_list = email_dev_list 
 		if self.set_up == 'prod':
 			items = mid.search(None, "UNSEEN")
@@ -33,12 +34,15 @@ class Pimail(object):
 			email_body = data[0][1]
 			mail = email.message_from_string(email_body)
 			mail_from = mail['From']
+                        import pdb;pdb.set_trace()
 			mail_from = textify(re.findall('<(.*?)>', mail_from))
 			email_from_list = email_dev_list 
 			if mail_from in mailids_from_list:
 				subject = mail['Subject']
 				date_time = mail['Date']
+
 				if 'profiles' in subject.lower() or "Run the crawler for FB" in subject.lower():
+                                    import pdb;pdb.set_trace()
 				    check_true = 'yes'
 				    for part in mail.walk():
 					    if part.get_content_maintype() == 'multipart':

@@ -19,7 +19,9 @@ from pptx.enum.shapes import MSO_CONNECTOR
 from pptx.enum.dml import MSO_COLOR_TYPE
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.enum.shapes import MSO_SHAPE
-from constants import *
+#from constants import *
+#from ppt_db_constants import *
+from new_ppt_input import *
 from pptx.dml.color import ColorFormat, RGBColor
 from pptx.enum.dml import MSO_COLOR_TYPE, MSO_THEME_COLOR
 from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, MSO_AUTO_SIZE

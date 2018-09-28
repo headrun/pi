@@ -65,6 +65,7 @@ class Facebookbrowse(BaseSpider):
 
     def parse_next(self, response):
 	yield Request(self.domain, callback=self.parse_close)
+        import pdb;pdb.set_trace()
         sel = Selector(response)
         noti_xpath = "".join(sel.xpath('//div//span[contains(text(),"temporarily")]//text()').extract())
         if noti_xpath :
@@ -120,6 +121,7 @@ class Facebookbrowse(BaseSpider):
     def parse_profile(self, response):
         sel = Selector(response)
         sk = response.meta['sk']
+        import pdb;pdb.set_trace()
 	#if response.status != 200: self.cur.execute(update_get_params%(2,sk))
 	if response.status != 200: self.update_status(sk, 2, 'facebook_crawl', update_get_params)
         not_found = ''.join(sel.xpath('//title/text()').extract())

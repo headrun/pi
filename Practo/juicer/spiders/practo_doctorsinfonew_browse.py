@@ -223,6 +223,6 @@ class Practoinfodoctor(JuicerSpider):
                     doctor_listing['reference_url'] = str(city_url)
                     if aux_infos:
                         doctor_listing['aux_info'] = json.dumps(aux_infos)
-                    yield doctor_listing'''
+                    yield doctor_listing
 
       

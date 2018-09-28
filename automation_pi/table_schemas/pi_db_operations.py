@@ -1,10 +1,10 @@
 insert_script_query = 'insert into %s(sk, url, content_type ,crawl_status, meta_data,created_at, modified_at) values("%s", "%s", "%s", "%s", "%s", now(), now()) on duplicate key update modified_at=now(), meta_data="%s"'
 insert_pi_crawl_query = 'insert into pi_crawl (sk, profiles_start_modified_at, profiles_end_modified_at, profiles_sheet_status, profiles_run_status, social_media_type, created_at, modified_at) values("%s", "%s", "%s", "%s", "%s", "%s", now(), now()) on duplicate key update modified_at=now()'
-email_dev_list = ['kiranmayi@headrun.com', 'anushab@headrun.com']
-email_prod_list = ['kiranmayi@headrun.com', 'anushab@headrun.com']
+email_dev_list = ['kiranmayi@headrun.com']
+email_prod_list = ['kiranmayi@headrun.com']
 sender_mail_pi = 'positiveintegersproject@gmail.com'
 sender_pwd_pi = 'integers'
-mailids_from_list = ['anushab@headrun.com']
+mailids_from_list = ['kiranmayi@headrun.com']
 zero_quer = "select count(*) from %s where modified_at >= '%s' and crawl_status=0"
 
 #Access and Consumer Tokens
@@ -38,7 +38,7 @@ ln_linkedin_taken_qry = "select profiles_start_modified_at, profiles_end_modifie
 ln_zero_queryi = 'select  sk, url from linkedin_crawl where crawl_status = 0 and modified_at >= "%s"'
 ln_grp_tt_qury = "select count(*), crawl_status  from linkedin_crawl where  modified_at >= '%s' group by crawl_status"
 
-constants_dict_fb = {'email':['yagnasree@headrun.com','yagna^123']}
+constants_dict_fb = {'email':['yagnasree@headrun.com','yagna^123'],'anu':['anusha.boyina19@gmail.com','Zeevan@143']}
 
 scrapy_run_cmd_fb = '/usr/local/bin/scrapy crawl facebook_crawler -a login="%s" --set  ROBOTSTXT_OBEY=0 -a mpi="%s" --set HTTPCACHE_ENABLED=0'
 

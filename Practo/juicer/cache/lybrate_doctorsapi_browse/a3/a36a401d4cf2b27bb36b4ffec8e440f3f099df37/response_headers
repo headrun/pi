@@ -1,0 +1,15 @@
+Set-Cookie: JSESSIONID=6896167F032E5FAD17DDF6A28AABD787; Path=/; Secure; HttpOnly
+Set-Cookie: countryCode=DE; Domain=.lybrate.com; Expires=Thu, 27-Sep-2018 23:45:20 GMT; Path=/
+Set-Cookie: latitude=51.2993; Domain=.lybrate.com; Expires=Thu, 27-Sep-2018 23:45:20 GMT; Path=/
+Set-Cookie: longitude=9.491; Domain=.lybrate.com; Expires=Thu, 27-Sep-2018 23:45:20 GMT; Path=/
+Set-Cookie: suid=029f8244-cdf5-4760-b095-27d5f9c0bf35; Domain=.lybrate.com; Expires=Tue, 26-Sep-2023 11:45:20 GMT; Path=/
+Set-Cookie: est=""; Expires=Fri, 25-Jan-2019 11:45:20 GMT; Path=/
+Set-Cookie: AWSELB=8DB10D0D12B32CE1C73D9DEDD9DD7EF2419AC70126E993E2F407F8BC35B3EAF2FF2B702B7B707DABCED3641AEF029286503C08864472CEDC2329600D0C7E2A569FF25EE95D;PATH=/;MAX-AGE=1800
+Expires: Thu, 01 Jan 1970 05:30:00 IST
+Server: Apache-Coyote/1.1
+Last-Modified: Wed, 26 Sep 2018 15:09:25 GMT
+Cache-Control: private
+Cache-Control: no-cache="set-cookie"
+Date: Thu, 27 Sep 2018 11:45:19 GMT
+P3P: policyref="http://www.lybrate.com/w3c/p3p.xml", CP="NOI CURa ADMa DEVa TAIa OUR BUS IND UNI COM NAV INT"
+Content-Type: text/plain

@@ -1,0 +1,17 @@
+Status: 200 OK
+X-Request-Id: 94f18520-ffbe-4f9a-8a91-0ff83e28de87
+X-Powered-By: Phusion Passenger 5.1.12
+Set-Cookie: current_city=Delhi+NCR; path=/; secure
+Set-Cookie: current_city_flag=1; path=/; secure
+Set-Cookie: _credi_health_session=faac6760b3921b874cc9ced7cca9e1f9; path=/; expires=Sat, 27 Oct 2018 11:41:49 -0000; secure; HttpOnly
+Strict-Transport-Security: max-age=15552000; includeSubDomains
+Vary: Accept-Encoding
+Vary: User-Agent
+Server: nginx/1.12.2 + Phusion Passenger 5.1.12
+X-Runtime: 1.526391
+Etag: W/"3468e9ef5fc82bf61dac048ccebeafac"
+Cache-Control: max-age=0, private, must-revalidate
+Date: Thu, 27 Sep 2018 11:41:49 GMT
+Access-Control-Allow-Origin: *
+Content-Type: text/html; charset=utf-8
+X-Frame-Options: ALLOWALL
