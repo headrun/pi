@@ -539,12 +539,12 @@ def Request(url, callback=None, response=None, **kwargs):
 
     if settings['PROXIES_LIST']:
         kwargs['meta']['proxy'] = random.choice(settings['PROXIES_LIST'])
-	kwargs['headers'] = {}
+	#import pdb;pdb.set_trace()
+	"""kwargs['headers'] = {}
 	import base64
 	proxy_user_pass = "chetan.m@positiveintegers.com:Headrun@123"
 	encoded_user_pass = base64.encodestring(proxy_user_pass)
-	kwargs['headers']['Proxy-Authorization'] = 'Basic ' + encoded_user_pass
-
+	kwargs['headers']['Proxy-Authorization'] = 'Basic ' + encoded_user_pass"""
 
     urls = url if isinstance(url, (tuple, list)) else [url]
 

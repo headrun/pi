@@ -118,7 +118,7 @@ COUNTER_PREFIX  = "services.intervod.stats"
 #USER_AGENT_LIST = [i.strip() for i in list(open('/root/pi_crawling/Practo/juicer/useragents.list'))]
 PROXIES_LIST = ['http://%s:3279' % random.choice(list(open('/root/PIFramework/juicer/proxy.list'))).strip()]
 
-#PROXIES_LIST = [i.strip() for i in list(open('/root/PIFramework/juicer/proxy.list'))]
+#PROXIES_LIST = ["%s%s" % ("http://", i.strip()) for i in list(open('/root/PIFramework/juicer/proxy.list'))]
 
-#HTTP_PROXY = '%s'
+#HTTP_PROXY = 'http://144.76.48.144:3279'
 
