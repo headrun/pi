@@ -13,7 +13,7 @@ from juicer.utils import *
 
 class McmasterTerminal(JuicerSpider):
     name = 'mcmaster_data_terminal'
-    handle_httpstatus_list = [403]
+    handle_httpstatus_list = [403, 500]
 
 
     def __init__(self, *args, **kwargs):
@@ -22,10 +22,7 @@ class McmasterTerminal(JuicerSpider):
         self.cur = self.conn.cursor()
         self.header_params = ['id','title','Image','Description','Price','Item_data','Reference_url','Main_link']
 	self.excel_file_name = 'Mcmaster_sample_data_on_%s.csv'%str(datetime.datetime.now().date())
-        #oupf = open(self.excel_file_name, 'ab+')
-        #self.todays_excel_file  = csv.writer(oupf)
-        #self.todays_excel_file.writerow(self.header_params)
-        self.inser_qry = 'insert into mcmaster(sk,title,category,description,image_url,price,item_data,reference_url,main_link,created_at,modified_at)values(%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())on duplicate key update modified_at = now()'
+        self.inser_qry = 'insert into mcmaster(sk,title,category,description,image_url,price,item_data,reference_url,main_link,created_at,modified_at)values(%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())on duplicate key update title=%s, description=%s, image_url=%s, item_data=%s,reference_url=%s,modified_at = now()'
         dispatcher.connect(self.spider_closed, signals.spider_closed)
         
 
@@ -34,16 +31,28 @@ class McmasterTerminal(JuicerSpider):
         self.cur.close()
         self.conn.close()
 
+    '''def parse(self, response):
+	url = response.url.replace('%E2%80%A1', '').replace('%E2%80%A2', '').encode('ascii','ignore').decode()
+	#import pdb;pdb.set_trace()
+	yield Request(url, self.parse_next, meta=response.meta, dont_filter=True)'''
+
     def parse(self, response):
 	sel = Selector(response)
         print response.meta
         if response.status==403 :
             proxy = response.meta.get('proxy','')
             #self.send_mail(proxy)
-        price = json.loads(response.meta.get('data','')).get('price','')
-        product_id = json.loads(response.meta.get('data','')).get('product_id','')
-        price_link = json.loads(response.meta.get('data','')).get('constructed_url','')
-        category = normalize(json.loads(response.meta.get('data','')).get('category',''))
+	print response
+	try:
+            price = response.meta.get('data','').get('price','')
+            product_id = response.meta.get('data','').get('product_id','').replace(u'\u2022', '')
+            price_link = response.meta.get('data','').get('constructed_url','')
+            category = normalize(response.meta.get('data','').get('category',''))
+	except:
+	    price = json.loads(response.meta.get('data','')).get('price','')
+            product_id = json.loads(response.meta.get('data','')).get('product_id','').replace(u'\u2022', '')
+            price_link = json.loads(response.meta.get('data','')).get('constructed_url','')
+            category = normalize(json.loads(response.meta.get('data','')).get('category',''))
         aux_info = {}
         image = "".join(sel.xpath('//div[contains(@id,"ImgCaptionCntnr")]//img//@src').extract())
         title = normalize("".join(sel.xpath('//h3[contains(@class,"header")]//text()').extract()))
@@ -55,10 +64,14 @@ class McmasterTerminal(JuicerSpider):
                 aux_info.update({header:value})
 
         aux_info = json.dumps(aux_info)
-        values = (product_id,title,category,desc,image,price,aux_info,response.url,price_link)
-        if values : 
+        values = (product_id,title,category,desc,image,price,aux_info,response.url,price_link, title, desc,image, aux_info,response.url)
+ 
+        if title: 
+            self.cur = self.conn.cursor()
             self.cur.execute(self.inser_qry,values)
+	    self.conn.commit()
             self.got_page(product_id,1)
+       
 
     def send_mail(self,proxy):
            from email.mime.multipart import MIMEMultipart
