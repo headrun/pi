@@ -243,7 +243,7 @@ class JuicerSpider(Spider):
 
             sks = ', '.join(['"%s"' % sk for sk in selected_sks])
             delete_query = 'DELETE FROM ' + self.crawl_table_name + ' WHERE crawl_status=9 AND content_type="%s" AND sk in (%s);'
-            self.get_urlQ_cursor().execute(delete_query  % (content_type, sks))
+            #self.get_urlQ_cursor().execute(delete_query  % (content_type, sks))
 
             update_query = 'UPDATE ' + self.crawl_table_name + ' SET crawl_status=9, modified_at=NOW() WHERE content_type="%s"'
             update_query += ' AND crawl_status=0 AND sk="%s";'
@@ -270,7 +270,7 @@ class JuicerSpider(Spider):
             for k, vals in self._sks.iteritems():
                 self.log.info("Source: %s - Content Type: %s - Status: %s - Sks Length: %s", source, content_type, k, len(vals))
                 sks = ", ".join(['"%s"' % val for val in vals])
-                self.get_urlQ_cursor().execute(delete_query % (k, content_type, sks))
+                #self.get_urlQ_cursor().execute(delete_query % (k, content_type, sks))
 
                 for sk in vals:
                     try:
