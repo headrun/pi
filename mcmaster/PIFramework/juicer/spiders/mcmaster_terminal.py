@@ -3,61 +3,76 @@ import md5
 import scrapy
 import MySQLdb
 import csv
-from mcmaster_config import *
+from scrapy.spiders import BaseSpider
 from scrapy.selector import Selector
 from scrapy.http import Request
 from scrapy import signals
 from scrapy.xlib.pydispatch import dispatcher
 import datetime
-from juicer.utils import *
+import ast
 
-class McmasterTerminal(JuicerSpider):
-    name = 'mcmaster_data_terminal'
-    handle_httpstatus_list = [403]
-
+class McmasterBrowse(BaseSpider):
+    name = 'mcmaster_browse'
+    handle_httpstatus_list = [403, 500, 502]
 
     def __init__(self, *args, **kwargs):
-        super(McmasterTerminal, self).__init__(*args, **kwargs)
+        super(McmasterBrowse, self).__init__(*args, **kwargs)
         self.conn = MySQLdb.connect(db='MCMASTER',user='root',passwd='root', host='localhost', use_unicode=True)
-        self.cur = self.conn.cursor()
-        self.header_params = ['id','title','Image','Description','Price','Item_data','Reference_url','Main_link']
-	self.excel_file_name = 'Mcmaster_sample_data_on_%s.csv'%str(datetime.datetime.now().date())
-        #oupf = open(self.excel_file_name, 'ab+')
-        #self.todays_excel_file  = csv.writer(oupf)
-        #self.todays_excel_file.writerow(self.header_params)
-        self.inser_qry = 'insert into mcmaster(sk,title,category,description,image_url,price,item_data,reference_url,main_link,created_at,modified_at)values(%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())on duplicate key update modified_at = now()'
+        self.cur = self.conn.cursor()	
+        self.conn1 = MySQLdb.connect(db='urlqueue_dev',user='root',passwd='root', host='localhost', use_unicode=True)
+        self.cur1 = self.conn1.cursor()
+        self.inser_qry = 'insert into mcmaster(sk,title,category,description,image_url,price,item_data,reference_url,main_link,created_at,modified_at)values(%s,%s,%s,%s,%s,%s,%s,%s,%s,now(),now())on duplicate key update title=%s, description=%s, image_url=%s, item_data=%s,reference_url=%s,category=%s,modified_at = now()'
+	self.query1 = 'update mcmaster_crawl set crawl_status=%s where sk=%s'
         dispatcher.connect(self.spider_closed, signals.spider_closed)
-        
+
+    def start_requests(self):
+	query = "select sk,url,meta_data from mcmaster_crawl where crawl_status=0 order by rand() limit 2"
+	self.cur1.execute(query)
+	rows = self.cur1.fetchall()
+	for row in rows:
+	    sk , url, meta_data = row
+	    try:
+		meta_data = json.loads(str(meta_data).replace("\'",''))
+	    except:
+		meta_data = json.loads(ast.literal_eval(meta_data))
+	    yield Request(url.replace('*',''), self.parse, meta=meta_data)	    
 
     def spider_closed(self, spider):
+	print "spider closed"
         self.cur.close()
         self.conn.close()
+	self.cur1.close()
+        self.conn1.close()
 
     def parse(self, response):
 	sel = Selector(response)
-        print response.meta
-        if response.status==403 :
-            proxy = response.meta.get('proxy','')
-            #self.send_mail(proxy)
-        price = json.loads(response.meta.get('data','')).get('price','')
-        product_id = json.loads(response.meta.get('data','')).get('product_id','')
-        price_link = json.loads(response.meta.get('data','')).get('constructed_url','')
-        category = normalize(json.loads(response.meta.get('data','')).get('category',''))
-        aux_info = {}
-        image = "".join(sel.xpath('//div[contains(@id,"ImgCaptionCntnr")]//img//@src').extract())
-        title = normalize("".join(sel.xpath('//h3[contains(@class,"header")]//text()').extract()))
-        desc = normalize("".join(sel.xpath('//div[@class="CpyCntnr"]//text()').extract()))
-        nodes = sel.xpath('//div[@class="cntnr--product-info"]//table[@class="spec-table--pd"]//tr')
-        for node in nodes :
-		header = normalize("".join(node.xpath('.//td[1]//text()').extract()))
-                value =  normalize("".join(node.xpath('.//td[2]//text()').extract()))
-                aux_info.update({header:value})
-
-        aux_info = json.dumps(aux_info)
-        values = (product_id,title,category,desc,image,price,aux_info,response.url,price_link)
-        if values : 
+	price = response.meta.get('price','')
+        product_id = response.meta.get('product_id','').replace(u'\u2022', '')
+        price_link = response.meta.get('constructed_url','')
+        category = response.meta.get('main_cat','').encode('utf8')
+	if response.status != 200:
+	    q_values = ('2', product_id)
+	    self.cur1.execute(self.query1,q_values)
+            self.conn1.commit()
+	else:	
+	    aux_info = {}
+	    image = "".join(sel.xpath('//div[contains(@id,"ImgCaptionCntnr")]//img//@src').extract())
+	    title = "".join(sel.xpath('//h3[contains(@class,"header")]//text()').extract()).encode('utf8', '')
+	    desc = "".join(sel.xpath('//div[@class="CpyCntnr"]//text()').extract()).encode('utf8', '')
+	    nodes = sel.xpath('//div[@class="cntnr--product-info"]//table[@class="spec-table--pd"]//tr')
+	    for node in nodes :
+	        header = "".join(node.xpath('.//td[1]//text()').extract()).encode('utf8')
+	        value =  "".join(node.xpath('.//td[2]//text()').extract()).encode('utf8')
+	        aux_info.update({header:value})
+	    if image and 'http' not in image:
+	        image = 'https://images1.mcmaster.com%s'%image
+	    aux_info = json.dumps(aux_info)
+	    values = (product_id,title,category,desc,image,price,aux_info,response.url,price_link, title, desc,image, aux_info,response.url, category)
             self.cur.execute(self.inser_qry,values)
-            self.got_page(product_id,1)
+	    self.conn.commit()
+	    q_values = ('1', product_id)
+	    self.cur1.execute(self.query1,q_values)
+	    self.conn1.commit()
 
     def send_mail(self,proxy):
            from email.mime.multipart import MIMEMultipart
@@ -74,11 +89,6 @@ class McmasterTerminal(JuicerSpider):
            msg['To'] = ''.join(receivers)
            msg['Cc'] = 'anushab@headrun.com'
            mas = 'Hi'
-           #part = MIMEBase('application', "octet-stream")
-           #part.set_payload(open(self.excel_file_name , "rb").read())
-           #encoders.encode_base64(part)
-           #part.add_header('Content-Disposition', 'attachment', filename = self.excel_file_name)
-           #msg.attach(part)
            tem = MIMEText(''.join(mas), 'html')
            msg.attach(tem)
            s = smtplib.SMTP('smtp.gmail.com:587')
