@@ -46,7 +46,7 @@ class MultiProcess(object):
         self.todays_movieef.writerow(self.header_params)
         self.select_qry = 'select session_id,Movie_code,theater_name,provider_name,address,latitude,longitude,multiple_ticket,audi,real_show_time,free_seating,token_fee_only,token_fee_pickup_time,grouped_seats,max_tickets,seats_avail,seats_unavail,seats_total,ticket_type,ticket_price,crawler_starttime,reference_url from Movie_sessions'
         self.movie_query = 'select Movie_code,Movie_title,image_url,censor,genres,content,duration,trailor_url,language,opening_date,reference_url from Movie'
-        self.r_list = ['export PATH=$PATH:/usr/local/bin;scrapy crawl paytm_browse -a min_=0 -a max_=10', 'export PATH=$PATH:/usr/local/bin;scrapy crawl paytm_browse -a min_=10 -a max_=20', 'export PATH=$PATH:/usr/local/bin;scrapy crawl paytm_browse -a min_=20 -a max_=30']
+        self.r_list = ['export PATH=$PATH:/usr/local/bin;scrapy crawl paytm_browse -a min_=0 -a max_=5', 'export PATH=$PATH:/usr/local/bin;scrapy crawl paytm_browse -a min_=5 -a max_=10', 'export PATH=$PATH:/usr/local/bin;scrapy crawl paytm_browse -a min_=10 -a max_=15', 'export PATH=$PATH:/usr/local/bin;scrapy crawl paytm_browse -a min_=15 -a max_=20', 'export PATH=$PATH:/usr/local/bin;scrapy crawl paytm_browse -a min_=20 -a max_=25', 'export PATH=$PATH:/usr/local/bin;scrapy crawl paytm_browse -a min_=25 -a max_=30']
         self.main()
 
     def run_script(self):

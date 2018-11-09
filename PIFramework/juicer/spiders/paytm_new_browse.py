@@ -24,7 +24,7 @@ import smtplib,ssl
 class PaytmBrowse(JuicerSpider):
     name = 'paytm_browse'
     start_urls = ['https://apiproxy-moviesv2.paytm.com//v2/movies/search?city=chennai&channel=web&version=2&child_site_id=1&site_id=1']
-    
+    handle_httpstatus_list = [404, 412, 204, 412, 502,504]    
     def __init__(self, *args, **kwargs):
         super(PaytmBrowse, self).__init__(*args, **kwargs)
 	self.conn = MySQLdb.connect(db='paytm_movie', user='root', host='localhost', passwd='root', charset="utf8", use_unicode=False)
@@ -51,12 +51,17 @@ class PaytmBrowse(JuicerSpider):
         date_list = []
         date = datetime.datetime.now().date()
 	for len_ in range(int(self.min_), int(self.max_)):
-		movie_id = movie_list.keys()[len_]
-		movie = movie_list[movie_id]
-		m_title = movie['title'].replace('(', '').replace(')', '').replace(' ', '-').replace('--', '')
-                main_url = 'https://paytm.com/movies/chennai'
-		movie_link = 'https://paytm.com/movies/chennai/%s-m/%s?fromdate=%s'%(m_title, movie_id, str(date))
-                yield Request(movie_link,callback=self.parse_date, meta={'movie_id':movie_id,'ref_url':main_url,'count':count},dont_filter=True)
+		print str(len_)
+		try:
+		    movie_id = movie_list.keys()[len_]
+		except:
+		    movie_id = ''
+		if movie_id:
+		    movie = movie_list[movie_id]
+		    m_title = movie['title'].replace('(', '').replace(')', '').replace(' ', '-').replace('--', '')
+                    main_url = 'https://paytm.com/movies/chennai'
+		    movie_link = 'https://paytm.com/movies/chennai/%s-m/%s?fromdate=%s'%(m_title, movie_id, str(date))
+                    yield Request(movie_link,callback=self.parse_date, meta={'movie_id':movie_id,'ref_url':main_url,'count':count},dont_filter=True)
 
     def parse_date(self, response):
 	sel = Selector(response)
