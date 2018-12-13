@@ -17,7 +17,7 @@ class Bookmyshow(JuicerSpider):
     name = "bookmyshow_new_browse"
     allowed_domains = ['bookmyshow.com']
     start_urls = ['https://in.bookmyshow.com/chennai/movies']
-    
+    handle_httpstatus_list = [301, 302]    
     def __init__(self, *args,  **kwargs):
         super(Bookmyshow, self).__init__(*args, **kwargs)
         self.conn = MySQLdb.connect(db = 'paytm_movie', user='root', host = 'localhost', passwd='root', charset   = "utf8", use_unicode=False)
@@ -41,16 +41,10 @@ class Bookmyshow(JuicerSpider):
         for movie in movies:
 	    url = ''.join(movie.xpath('./a/@href').extract()) 
 	    if url:
-                normal_url = 'https://in.bookmyshow.com' + url
-                yield Request(normal_url, callback = self.parse_book,dont_filter=True)
-
-    def parse_book(self, response):
-	sel = Selector(response)
-	booking_link = extract_list_data(sel, '//div[@class="more-showtimes"]/a/@href')
-	if booking_link:
-		booking_link = 'https://in.bookmyshow.com' + booking_link[0]
+		date_=datetime.datetime.now().date().strftime('%Y%m%d')
+		booking_link = 'https://in.bookmyshow.com/buytickets/%s/movie-chen-%s-MT/%s'%(url.split('/')[-2], url.split('/')[-1], date_)
 		yield Request(booking_link, callback = self.parse_new, dont_filter=True)
-
+    
     def parse_new(self, response):
         format_ = response.meta.get('format_','')
         sel = Selector(response)
@@ -126,18 +120,26 @@ class Bookmyshow(JuicerSpider):
             email_from_list = ['anusha.boyina19@gmail.com']
             file_id = Googleupload().main('Bookmyshow_Availability', email_from_list, self.excel_file_name)
 	    move_file('/root/PIFramework/juicer/spiders/"%s"'%self.excel_file_name, '/root/PIFramework/juicer/spiders/Paytm_csv_files')
+	else:
+            self.alert_mail('', '', '')
         self.cur.close()
         self.conn.close()
 
     def alert_mail(self, email_from_list, file_id, paytm_file_name):
         sender_mail = 'positiveintegersproject@gmail.com'
-        receivers_mail_list = email_from_list
-        sender, receivers  = sender_mail, ','.join(receivers_mail_list)
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = 'Bookmyshow session data on %s' % self.crawler_start_time
-        mas = '<p>File name : %s</p>'% str(paytm_file_name)
-        mas += '<p>File is uploaded in paytm [sub-folder] of paytm_session_data [folder] in google drive of %s</p>' % sender_mail
-        mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+	msg = MIMEMultipart('alternative')
+	if email_from_list:
+        	receivers_mail_list = email_from_list
+        	msg['Subject'] = 'Bookmyshow session data on %s' % self.crawler_start_time
+        	mas = '<p>File name : %s</p>'% str(paytm_file_name)
+        	mas += '<p>File is uploaded in paytm [sub-folder] of paytm_session_data [folder] in google drive of %s</p>' % sender_mail
+        	mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+	else:   
+                receivers_mail_list = ['alekhya@headrun.com', 'kiranmayi@headrun.com','pi@headrun.com']
+                msg['Subject'] = 'Empty sheet of Bookmyshow Source'
+                mas = '<p><h1>We got empty data for Bookmyshow Source</h1></p>'
+                mas += '<p><h3>Please check on priority base</h3></p>'
+	sender, receivers  = sender_mail, ','.join(receivers_mail_list)
         msg['From'] = sender
         msg['To'] = receivers
         tem = MIMEText(''.join(mas), 'html')
