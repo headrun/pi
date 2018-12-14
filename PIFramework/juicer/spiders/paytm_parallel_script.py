@@ -74,19 +74,27 @@ class MultiProcess(object):
                 file_id = Googleupload().main('Paytm_Availability', email_from_list, file_)
 		cmd = 'mv /root/PIFramework/juicer/spiders/"%s" /root/PIFramework/juicer/spiders/Paytm_csv_files'%file_
 		os.system(cmd)
+	else:
+	    self.alert_mail('', '', '')
         self.cur.close()
         self.conn.close()
 
     def alert_mail(self, email_from_list, file_id, paytm_file_name):
 	try:
 	    sender_mail = 'positiveintegersproject@gmail.com'
-	    receivers_mail_list = email_from_list
-	    sender, receivers  = sender_mail, ','.join(receivers_mail_list)
 	    msg = MIMEMultipart('alternative')
-	    msg['Subject'] = 'paytm session data on %s' % self.crawler_start_time
-	    mas = '<p>File name : %s</p>'% str(paytm_file_name)
-	    mas += '<p>File is uploaded in paytm [sub-folder] of paytm_session_data [folder] in google drive of %s</p>' % sender_mail
-	    mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+	    if email_from_list:
+		receivers_mail_list = email_from_list
+	    	msg['Subject'] = 'paytm session data on %s' % self.crawler_start_time
+	    	mas = '<p>File name : %s</p>'% str(paytm_file_name)
+	    	mas += '<p>File is uploaded in paytm [sub-folder] of paytm_session_data [folder] in google drive of %s</p>' % sender_mail
+	    	mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+	    else:
+		receivers_mail_list = ['alekhya@headrun.com', 'kiranmayi@headrun.com','pi@headrun.com']
+                msg['Subject'] = 'Empty sheet of Paytm Source'
+                mas = '<p><h1>We got empty data for Paytm Source</h1></p>'
+                mas += '<p><h3>Please check on priority base</h3></p>'
+	    sender, receivers  = sender_mail, ','.join(receivers_mail_list)
 	    msg['From'] = sender
 	    msg['To'] = receivers
 	    tem = MIMEText(''.join(mas), 'html')
@@ -99,13 +107,19 @@ class MultiProcess(object):
 	    s.quit()
 	except:
 	    sender_mail = 'positiveintegersproject@gmail.com'
-            receivers_mail_list = email_from_list
-            sender, receivers  = sender_mail, ','.join(receivers_mail_list)
-            msg = MIMEMultipart('alternative')
-            msg['Subject'] = 'paytm session data on %s' % self.crawler_start_time
-            mas = '<p>File name : %s</p>'% str(paytm_file_name)
-            mas += '<p>File is uploaded in paytm [sub-folder] of paytm_session_data [folder] in google drive of %s</p>' % sender_mail
-            mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+	    msg = MIMEMultipart('alternative')
+	    if email_from_list:
+            	receivers_mail_list = email_from_list
+            	msg['Subject'] = 'paytm session data on %s' % self.crawler_start_time
+            	mas = '<p>File name : %s</p>'% str(paytm_file_name)
+            	mas += '<p>File is uploaded in paytm [sub-folder] of paytm_session_data [folder] in google drive of %s</p>' % sender_mail
+            	mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+	    else:
+                receivers_mail_list = ['alekhya@headrun.com', 'kiranmayi@headrun.com','pi@headrun.com']
+                msg['Subject'] = 'Empty sheet of Paytm Source'
+                mas = '<p><h1>We got empty data for Paytm Source</h1></p>'
+                mas += '<p><h3>Please check on priority base</h3></p>'
+	    sender, receivers  = sender_mail, ','.join(receivers_mail_list)
             msg['From'] = sender
             msg['To'] = receivers
             tem = MIMEText(''.join(mas), 'html')

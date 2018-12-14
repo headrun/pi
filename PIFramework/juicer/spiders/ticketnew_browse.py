@@ -25,8 +25,9 @@ import shutil
 
 class TicketNewBrowse(JuicerSpider):
     name = 'ticketnew_browse'
-    start_urls = ['http://www.ticketnew.com/online-advance-booking/Movies/C/Chennai']
-    
+    start_urls = ['https://www.ticketnew.com/online-advance-booking/Movies/C/Chennai']
+    handle_httpstatus_list = [301, 302]   
+ 
     def __init__(self, *args, **kwargs):
         super(TicketNewBrowse, self).__init__(*args, **kwargs)
         self.conn = MySQLdb.connect(db = 'paytm_movie', user='root', host = 'localhost', passwd='root', charset   = "utf8", use_unicode=False)
@@ -58,6 +59,8 @@ class TicketNewBrowse(JuicerSpider):
             email_from_list = ['anusha.boyina19@gmail.com']
             file_id = Googleupload().main('Ticketnew_Availability', email_from_list, self.excel_file_name)
 	    move_file('/root/PIFramework/juicer/spiders/"%s"'%self.excel_file_name, '/root/PIFramework/juicer/spiders/Paytm_csv_files')
+	else:
+            self.alert_mail('', '', '')
         self.cur.close()
         self.conn.close()
         
@@ -69,7 +72,6 @@ class TicketNewBrowse(JuicerSpider):
         movie_links = sel.xpath('//div[@class="tn-movie tn-section-tile"]//a[contains(@href,"Online-Advance-Booking")]//@href').extract() 
         for movie in movie_links :
             yield Request(movie,callback=self.parse_availability)
-
 
     def parse_availability(self,response):
 	sel = Selector(response)
@@ -123,7 +125,6 @@ class TicketNewBrowse(JuicerSpider):
                         link = 'http://www.ticketnew.com/onlinetheatre/Theatre/' + json.loads(response_text.replace('\\\\','&').replace('u0026','')).get('d').strip('"')
                         yield Request(link,callback=self.parse_meta,meta={'ticket_type':ticket_type,'id_':id_,'rate':rate,'mode':mode,'max_':max_,'status':status,'date_':'date_','reference_url':response.url,'name':name,'real_show_time':real_show_time,'address':address,'movie_title':movie_title,'movie_code':movie_code,'published_date':published_date,'duration':duration,'lang':lang,'genre':genre,'actors':actors,'director':'director','music':music,'desc':desc},dont_filter=True)
                     else :
-
                         sk = md5(str(ticket_type)+str(id_)+str(rate)+str(mode)+str(seat_avail)+str(status)+str(response.url)+str(time)+str(name))
                         seat_unavail = total - seat_avail
                         vals = (sk,movie_title,movie_code,id_,name,address,published_date,duration,lang,genre,actors,director,music,desc,real_show_time,max_,seat_avail,seat_unavail,total,ticket_type,rate,status,self.crawler_start_time,response.url)
@@ -157,6 +158,32 @@ class TicketNewBrowse(JuicerSpider):
         sk = md5(str(ticket_type)+str(id_)+str(rate)+str(mode)+str(seat_avail)+str(status)+str(response.url)+str(real_show_time)+str(name))
         vals = (sk,movie_title,movie_code,id_,name,address,published_date,duration,lang,genre,actors,director,music,desc,real_show_time,max_,seat_avail,seat_unavail,total,ticket_type,rate,status,self.crawler_start_time,reference_url)
         self.cur.execute(self.meta_query,vals)
+
+    def alert_mail(self, email_from_list, file_id, file_name):
+        sender_mail = 'positiveintegersproject@gmail.com'
+        msg = MIMEMultipart('alternative')
+        if email_from_list:
+                receivers_mail_list = email_from_list
+                msg['Subject'] = 'Ticketnew session data on %s' % self.crawler_start_time
+                mas = '<p>File name : %s</p>'% str(file_name)
+                mas += '<p>File is uploaded in paytm [sub-folder] of paytm_session_data [folder] in google drive of %s</p>' % sender_mail
+                mas += '<p>Doc Link : "https://docs.google.com/spreadsheets/d/%s"</p>' % str(file_id)
+        else:   
+                receivers_mail_list = ['alekhya@headrun.com', 'kiranmayi@headrun.com','pi@headrun.com']
+                msg['Subject'] = 'Empty sheet of Ticketnew Source'
+                mas = '<p><h1>We got empty data for Ticketnew Source</h1></p>'
+                mas += '<p><h3>Please check on priority base</h3></p>'
+        sender, receivers  = sender_mail, ','.join(receivers_mail_list)
+        msg['From'] = sender
+        msg['To'] = receivers
+        tem = MIMEText(''.join(mas), 'html')
+        msg.attach(tem)
+        s = smtplib.SMTP('smtp.gmail.com:587')
+        s.ehlo()
+        s.starttls()
+        s.login(sender_mail, 'integers')
+        s.sendmail(sender, receivers_mail_list, msg.as_string())
+        s.quit()
 
     def send_mail(self):
 	    from email.mime.multipart import MIMEMultipart
