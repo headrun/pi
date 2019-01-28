@@ -60,10 +60,9 @@ class JuicerSpider(Spider):
             self.related_type = kwargs.get('related_type', '')
             self.content_type = kwargs.get('content_type', '')
             self.request_headers = {}
-            self.allow_duplicate_urls = False
+            self.allow_duplicate_urls = True
             self.is_ott = False
             self.limit = kwargs.get('limit', 0) or getattr(self.__class__, 'limit', 1000)
-
             self.create_logger_obj()
             self.create_default_dirs()
             self.initialize_default_variables()
@@ -73,6 +72,7 @@ class JuicerSpider(Spider):
             self.proxy = None
             if self.proxy_ip:
                 self.proxy = PROXY_PATTERN % (self.proxy_ip, self.proxy_port)
+             
             #settings.overrides['PROXIES_LIST'] = [self.proxy]
 
             ROBOTSTXT_DISALLOW_SOURCES_LIST = parse_genframework_config_file(section='ROBOTSTXT_DISABLED_SOURCES', sub_section='sources')
@@ -118,7 +118,7 @@ class JuicerSpider(Spider):
             self._close_called = False
             self._sks = defaultdict(set)
             self.location_file = self.lineup_file = self.richmedia_file = self.relatedsellers_file= None
-            self.source = self.json_file = self.bestsellers_file = self.products_file = self.customerreviews_file=  None
+            self.source = self.json_file = self.bestsellers_file = self.products_file = self.customerreviews_file= self.openweather_file= self.magicbricks_file = None
             self.custom_query_file  = self.created_file= self.twitter_file = self.comments_file = self.linkedinpositions_file= self.linkedinviewers_file = self.linkedin_file= None
 
             self.urlQ_cursor = None
@@ -323,6 +323,22 @@ class JuicerSpider(Spider):
 
             self._sks[got_pageval].add(sk)
             self.got_page_sks_len += 1
+
+        def get_openweather_file(self):
+            if self.openweather_file: return self.openweather_file
+
+            openweather_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_openweather_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.openweather_file = open(openweather_queries_filename, 'w')
+            return self.openweather_file
+        
+	
+        def get_magicbricks_file(self):
+            if self.magicbricks_file: return self.magicbricks_file
+
+            magicbricks_queries_filename = os.path.join(QUERY_FILES_DIR, "%s_magicbricks_%s.queries" % (self.name, get_current_ts_with_ms()))
+            self.magicbricks_file = open(magicbricks_queries_filename, 'w')
+            return self.magicbricks_file
+
 
         def get_relatedsellers_file(self):
             if self.relatedsellers_file: return self.relatedsellers_file
@@ -536,10 +552,9 @@ def Request(url, callback=None, response=None, **kwargs):
 
     if kwargs.has_key('dont_filter') and not kwargs['dont_filter']:
         kwargs.pop('dont_filter', None)
-
     if settings['PROXIES_LIST']:
         kwargs['meta']['proxy'] = random.choice(settings['PROXIES_LIST'])
-	#import pdb;pdb.set_trace()
+        #print settings['PROXIES_LIST']
 	"""kwargs['headers'] = {}
 	import base64
 	proxy_user_pass = "chetan.m@positiveintegers.com:Headrun@123"
@@ -547,7 +562,9 @@ def Request(url, callback=None, response=None, **kwargs):
 	kwargs['headers']['Proxy-Authorization'] = 'Basic ' + encoded_user_pass"""
 
     urls = url if isinstance(url, (tuple, list)) else [url]
-
+    if 'magicbricks' in "".join(urls) : 
+        kwargs['meta']['proxy'] = 'http://103.216.169.33:8080'
+        
     do_random_scheduling = settings.get('RANDOM_SCHEDULING', True)
     response_url = '' if response is None else response.url
 
