@@ -32,6 +32,23 @@ class JuicerPipeline(object):
 
             self.write_item_into_avail_file(item, spider, 'bestseller')
 
+        if isinstance(item, Openweather):
+            #import pdb;pdb.set_trace()
+            openweather_values = '#<>#'.join([
+                str(item['sk']),str(item.get('cust_no','')), str(item.get('latitude','')), str(item.get('longitude','')), item.get('city', ''),  item.get('country', ''),str(item.get('visibility', '')),str(item.get('dt','')),item.get('base', ''),str(item.get('wind_speed', '')),str(item.get('wind_deg', '')),str(item.get('cod', '')),str(item.get('pressure', '')),str(item.get('temp_min', '')),str(item.get('temp_max', '')),str(item.get('temp', '')),str(item.get('humidity', '')),str(item.get('clouds', '')),str(item.get('weather_id', '')),str(item.get('weather_main', '')),item.get('icon', ''),item.get('description', ''),str(item.get('sunrise', '')),str(item.get('sunset', '')),str(item.get('message', '')),str(item.get('sys_id', '')),str(item.get('type', '')),item.get('reference_url', '')
+            ])
+            spider.get_openweather_file().write('%s\n' %openweather_values)
+            spider.get_openweather_file().flush()
+
+            self.write_item_into_avail_file(item, spider, 'openweather')
+
+        if isinstance(item, Magicbricks):
+            magicbricks_values = '#<>#'.join([str(item['sk']),item.get('data_dict',''),item.get('reference_url','')])
+            spider.get_magicbricks_file().write('%s\n' % magicbricks_values)
+            spider.get_magicbricks_file().flush()
+            self.write_item_into_avail_file(item, spider, 'magicbricks')
+
+
         if isinstance(item, Products):
             product_values = '#<>#'.join([
                 item['id'],item.get('name',''), item.get('original_price',''), item.get('discount_price',''), item.get('features', ''),  item.get('description', ''),item.get('item_number', ''),item.get('date_available',''),item.get('best_sellerrank', ''),str(item.get('aux_info', '')),item.get('reference_url', '')
@@ -40,6 +57,12 @@ class JuicerPipeline(object):
             spider.get_products_file().flush()
 
             self.write_item_into_avail_file(item, spider, 'products')
+
+
+
+
+
+
 
         if isinstance(item, RelatedSellers):
             relatedsellers_values = '#<>#'.join([
