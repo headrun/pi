@@ -16,6 +16,7 @@ class MagicBrowse(JuicerSpider):
 
     def __init__(self, *args, **kwargs):
         super(MagicBrowse, self).__init__(*args, **kwargs)
+        self.excel_file_name = 'Magicbricks_Chennai_data'
 
     def parse(self, response):
         sel = Selector(response)
