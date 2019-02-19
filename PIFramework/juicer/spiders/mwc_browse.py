@@ -1,13 +1,4 @@
 from juicer.utils import *
-from juicer.items import *
-import scrapy
-import hashlib
-import csv
-import datetime
-from scrapy.selector import Selector
-from scrapy.http import Request, FormRequest
-import datetime
-
 
 class MWC(JuicerSpider):
     name = "mwc_exhibitors_browse"
